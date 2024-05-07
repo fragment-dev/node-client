@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cat >dist/cjs/package.json <<!EOF
+{
+  "type": "commonjs",
+  "bin": {
+    "fragment-node-client-codegen": "src/bin.js"
+  }
+}
+!EOF

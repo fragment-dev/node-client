@@ -1,0 +1,6 @@
+{
+  "type": "commonjs",
+  "bin": {
+    "fragment-node-client-codegen": "src/bin.js"
+  }
+}

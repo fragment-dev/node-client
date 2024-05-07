@@ -1,0 +1,7 @@
+yarn.lock linguist-generated=true
+dist/* linguist-generated=true
+dist/**/* linguist-generated=true
+docs/* linguist-generated=true
+docs/**/* linguist-generated=true
+generated/* linguist-generated=true
+generated/**/* linguist-generated=true

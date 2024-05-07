@@ -1,0 +1,117 @@
+{
+  "name": "@fragment-dev/node-client",
+  "sideEffects": false,
+  "scripts": {
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "gen-clients": "rm -rf ./generated && yarn --cwd src graphql-codegen-esm --config src/codegen.ts",
+    "build": "yarn gen-clients && yarn gen-version && rm -rf ./dist && yarn build:cjs && yarn build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json && ./fixup",
+    "build:esm": "tsc -p tsconfig.esm.json && mv ./dist/esm/src/index.js ./dist/esm/src/index.mjs",
+    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "gen-version": "node --loader ts-node/esm scripts/genVersion.ts",
+    "typecheck": "tsc --skipLibCheck --noEmit",
+    "typecheck-special": "tsc --skipLibCheck --noEmit",
+    "start-docs": "node scripts/hostDocs.js",
+    "gen-docs": "yarn typedoc --plugin typedoc-plugin-markdown --entryPointStrategy expand ./src --exclude ./src/bin.ts --exclude ./src/getToken.ts --entryPointStrategy expand ./generated/generated.ts",
+    "prepack": "yarn build",
+    "fragment-node-client-codegen": "node --loader ts-node/esm --no-warnings=ExperimentalWarning src/bin.ts",
+    "prepublishOnly": "yarn build"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/import-types-preset": "^3.0.0",
+    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
+    "@graphql-codegen/typescript-operations": "^4.2.0",
+    "graphql": "^16.8.1",
+    "graphql-request": "^6.1.0",
+    "graphql-tag": "^2.12.6",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@graphql-codegen/plugin-helpers": "5.0.3",
+    "@graphql-tools/graphql-file-loader": "^8.0.1",
+    "@graphql-tools/load": "^8.0.2",
+    "@graphql-tools/url-loader": "^8.0.2",
+    "@graphql-tools/utils": "^10.1.3",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/uuid": "^9.0.8",
+    "@types/yargs": "^17.0.32",
+    "@typescript-eslint/eslint-plugin": "^7.5.0",
+    "@typescript-eslint/parser": "^7.5.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb": "19.0.4",
+    "eslint-config-airbnb-typescript": "16.1.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-json": "^3.1.0",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "express": "^4.19.2",
+    "prettier": "^2.8.8",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^3.17.1",
+    "typescript": "^5.1.6",
+    "typescript-eslint": "^7.5.0",
+    "uuid": "^9.0.1",
+    "vitest": "^1.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "version": "1.0.0",
+  "author": "Fragment Foundries Inc",
+  "license": "Apache-2.0",
+  "files": [
+    "dist/**/*"
+  ],
+  "module": "./dist/esm/src/index.mjs",
+  "type": "module",
+  "bin": {
+    "fragment-node-client-codegen": "./dist/esm/src/bin.js"
+  },
+  "types": "./dist/cjs/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "types": ["./dist/esm/types/src/types.d.ts"]
+    }
+  },
+  "exports": {
+    "./types": {
+      "import": {
+        "types": "./dist/esm/types/src/types.d.ts",
+        "default": "./dist/esm/src/types.js"
+      },
+      "require": {
+        "types": "./dist/cjs/types/src/types.d.ts",
+        "default": "./dist/cjs/src/types.js"
+      }
+    },
+    ".": {
+      "import": {
+        "types": "./dist/esm/types/src/index.d.ts",
+        "default": "./dist/esm/src/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/types/src/index.d.ts",
+        "default": "./dist/cjs/src/index.js"
+      }
+    }
+  },
+  "publishConfig": {
+    "directory": "dist",
+    "access": "public"
+  },
+  "keywords": [
+    "fragment",
+    "ledger",
+    "double-entry",
+    "accounting",
+    "money",
+    "payments"
+  ]
+}
