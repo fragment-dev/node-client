@@ -2862,6 +2862,45 @@ export type GetSchemaQuery = {
   } | null;
 };
 
+export type ListLedgerEntriesQueryVariables = Exact<{
+  ledgerIk: Scalars["SafeString"]["input"];
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  filter?: InputMaybe<LedgerEntriesFilterSet>;
+}>;
+
+export type ListLedgerEntriesQuery = {
+  __typename?: "Query";
+  ledger?: {
+    __typename?: "Ledger";
+    ledgerEntries?: {
+      __typename?: "LedgerEntriesConnection";
+      nodes?: Array<{
+        __typename?: "LedgerEntry";
+        ik: string;
+        type?: string | null;
+        posted: string;
+        lines: {
+          __typename?: "LedgerLinesConnection";
+          nodes?: Array<{
+            __typename?: "LedgerLine";
+            amount: string;
+            account: { __typename?: "LedgerAccount"; path: string };
+          }> | null;
+        };
+      }> | null;
+      pageInfo: {
+        __typename?: "PageInfo";
+        hasNextPage: boolean;
+        endCursor?: string | null;
+        hasPreviousPage: boolean;
+        startCursor?: string | null;
+      };
+    } | null;
+  } | null;
+};
+
 export const StoreSchemaDocument = gql`
   mutation storeSchema($schema: SchemaInput!) {
     storeSchema(schema: $schema) {
@@ -3395,6 +3434,44 @@ export const GetSchemaDocument = gql`
     }
   }
 `;
+export const ListLedgerEntriesDocument = gql`
+  query listLedgerEntries(
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $filter: LedgerEntriesFilterSet
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntries(
+        after: $after
+        first: $first
+        before: $before
+        filter: $filter
+      ) {
+        nodes {
+          ik
+          type
+          posted
+          lines {
+            nodes {
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -3695,6 +3772,22 @@ export function getSdk(
             ...wrappedRequestHeaders,
           }),
         "getSchema",
+        "query",
+        variables
+      );
+    },
+    listLedgerEntries(
+      variables: ListLedgerEntriesQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<ListLedgerEntriesQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<ListLedgerEntriesQuery>(
+            ListLedgerEntriesDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders }
+          ),
+        "listLedgerEntries",
         "query",
         variables
       );

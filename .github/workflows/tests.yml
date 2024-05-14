@@ -5,14 +5,14 @@ on:
 
 jobs:
   integration-tests:
-    runs-on: ubuntu-latest-4-cores
+    runs-on: ubuntu-latest
 
     env:
-      CLIENT_ID: ${{secrets.FRAGMENT_CLIENT_ID}}
-      CLIENT_SECRET: ${{secrets.FRAGMENT_CLIENT_SECRET}}
-      SCOPE: ${{secrets.FRAGMENT_CLIENT_SCOPE}}
-      AUTH_URL: ${{secrets.FRAGMENT_CLIENT_AUTH_URL}}
-      API_URL: ${{secrets.FRAGMENT_CLIENT_API_URL}}
+      CLIENT_ID: ${{secrets.CLIENT_ID}}
+      CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
+      SCOPE: ${{secrets.SCOPE}}
+      AUTH_URL: ${{secrets.AUTH_URL}}
+      API_URL: ${{secrets.API_URL}}
 
     steps:
       - uses: actions/checkout@v4

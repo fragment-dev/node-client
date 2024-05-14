@@ -511,3 +511,35 @@ query getSchema($key: SafeString!, $version: Int) {
     }
   }
 }
+
+query listLedgerEntries(
+  $ledgerIk: SafeString!
+  $after: String
+  $first: Int
+  $before: String
+  $filter: LedgerEntriesFilterSet
+) {
+  ledger(ledger: { ik: $ledgerIk }) {
+    ledgerEntries(after: $after, first: $first, before: $before, filter: $filter) {
+      nodes {
+        ik
+        type
+        posted
+        lines {
+          nodes {
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        hasPreviousPage
+        startCursor
+      }
+    }
+  }
+}

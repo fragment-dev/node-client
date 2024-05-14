@@ -832,6 +832,44 @@ export const GetSchemaDocument = gql `
     }
   }
 `;
+export const ListLedgerEntriesDocument = gql `
+  query listLedgerEntries(
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $filter: LedgerEntriesFilterSet
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntries(
+        after: $after
+        first: $first
+        before: $before
+        filter: $filter
+      ) {
+        nodes {
+          ik
+          type
+          posted
+          lines {
+            nodes {
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -900,6 +938,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
                 ...requestHeaders,
                 ...wrappedRequestHeaders,
             }), "getSchema", "query", variables);
+        },
+        listLedgerEntries(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntries", "query", variables);
         },
     };
 }

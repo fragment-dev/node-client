@@ -2690,6 +2690,46 @@ export type GetSchemaQuery = {
         };
     } | null;
 };
+export type ListLedgerEntriesQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    filter?: InputMaybe<LedgerEntriesFilterSet>;
+}>;
+export type ListLedgerEntriesQuery = {
+    __typename?: "Query";
+    ledger?: {
+        __typename?: "Ledger";
+        ledgerEntries?: {
+            __typename?: "LedgerEntriesConnection";
+            nodes?: Array<{
+                __typename?: "LedgerEntry";
+                ik: string;
+                type?: string | null;
+                posted: string;
+                lines: {
+                    __typename?: "LedgerLinesConnection";
+                    nodes?: Array<{
+                        __typename?: "LedgerLine";
+                        amount: string;
+                        account: {
+                            __typename?: "LedgerAccount";
+                            path: string;
+                        };
+                    }> | null;
+                };
+            }> | null;
+            pageInfo: {
+                __typename?: "PageInfo";
+                hasNextPage: boolean;
+                endCursor?: string | null;
+                hasPreviousPage: boolean;
+                startCursor?: string | null;
+            };
+        } | null;
+    } | null;
+};
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
 export declare const AddLedgerEntryDocument: import("graphql").DocumentNode;
@@ -2708,6 +2748,7 @@ export declare const ListMultiCurrencyLedgerAccountBalancesDocument: import("gra
 export declare const GetLedgerAccountLinesDocument: import("graphql").DocumentNode;
 export declare const GetLedgerAccountBalanceDocument: import("graphql").DocumentNode;
 export declare const GetSchemaDocument: import("graphql").DocumentNode;
+export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -2728,6 +2769,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     getLedgerAccountLines(variables: GetLedgerAccountLinesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLedgerAccountLinesQuery>;
     getLedgerAccountBalance(variables: GetLedgerAccountBalanceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLedgerAccountBalanceQuery>;
     getSchema(variables: GetSchemaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetSchemaQuery>;
+    listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};
