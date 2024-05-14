@@ -2864,6 +2864,9 @@ export type GetSchemaQuery = {
 
 export type ListLedgerEntriesQueryVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
   filter?: InputMaybe<LedgerEntriesFilterSet>;
 }>;
 
@@ -3434,10 +3437,18 @@ export const GetSchemaDocument = gql`
 export const ListLedgerEntriesDocument = gql`
   query listLedgerEntries(
     $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
     $filter: LedgerEntriesFilterSet
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
-      ledgerEntries(filter: $filter) {
+      ledgerEntries(
+        after: $after
+        first: $first
+        before: $before
+        filter: $filter
+      ) {
         nodes {
           ik
           type

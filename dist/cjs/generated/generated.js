@@ -838,10 +838,18 @@ exports.GetSchemaDocument = (0, graphql_tag_1.gql) `
 exports.ListLedgerEntriesDocument = (0, graphql_tag_1.gql) `
   query listLedgerEntries(
     $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
     $filter: LedgerEntriesFilterSet
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
-      ledgerEntries(filter: $filter) {
+      ledgerEntries(
+        after: $after
+        first: $first
+        before: $before
+        filter: $filter
+      ) {
         nodes {
           ik
           type

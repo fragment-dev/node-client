@@ -835,10 +835,18 @@ export const GetSchemaDocument = gql `
 export const ListLedgerEntriesDocument = gql `
   query listLedgerEntries(
     $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
     $filter: LedgerEntriesFilterSet
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
-      ledgerEntries(filter: $filter) {
+      ledgerEntries(
+        after: $after
+        first: $first
+        before: $before
+        filter: $filter
+      ) {
         nodes {
           ik
           type

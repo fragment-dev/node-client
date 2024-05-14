@@ -2692,6 +2692,9 @@ export type GetSchemaQuery = {
 };
 export type ListLedgerEntriesQueryVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
     filter?: InputMaybe<LedgerEntriesFilterSet>;
 }>;
 export type ListLedgerEntriesQuery = {
