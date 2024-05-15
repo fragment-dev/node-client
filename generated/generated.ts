@@ -496,7 +496,9 @@ export type CustomLink = Link & {
   __typename?: "CustomLink";
   /** ISO-8601 timestamp when the Link was created. */
   created: Scalars["String"]["output"];
-  /** ISO-8601 timestamp when the Link was created. */
+  /** URL to the Fragment Dashboard for this Link. */
+  dashboardUrl: Scalars["String"]["output"];
+  /** A list of External Accounts associated with this Link. */
   externalAccounts: ExternalAccountsConnection;
   /** FRAGMENT ID of the Custom Link. */
   id: Scalars["ID"]["output"];
@@ -639,7 +641,9 @@ export type IncreaseLink = Link & {
   __typename?: "IncreaseLink";
   /** ISO-8601 timestamp when the Link was created. */
   created: Scalars["String"]["output"];
-  /** ISO-8601 timestamp when the Link was created. */
+  /** URL to the Fragment Dashboard for this Link. */
+  dashboardUrl: Scalars["String"]["output"];
+  /** A list of External Accounts associated with this Link. */
   externalAccounts: ExternalAccountsConnection;
   /** FRAGMENT ID of the Increase Link. */
   id: Scalars["ID"]["output"];
@@ -698,8 +702,10 @@ export type Ledger = {
   /** When aggregating balances, all transactions within a 24 hour period starting at midnight UTC plus this offset are included in each day. */
   balanceUTCOffset: Scalars["UTCOffset"]["output"];
   created: Scalars["DateTime"]["output"];
+  /** URL to the Fragment Dashboard for this Ledger. */
+  dashboardUrl: Scalars["String"]["output"];
   id: Scalars["ID"]["output"];
-  /** The IK passed into the [createLedger](/api-reference#mutations-createledger) mutation. This is treated as a unique identifier for this ledger. */
+  /** The IK passed into the [createLedger](/api-reference#mutations-createledger) mutation. This is treated as a unique identifier for this Ledger. */
   ik: Scalars["SafeString"]["output"];
   /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
   ledgerAccounts?: Maybe<LedgerAccountsConnection>;
@@ -709,11 +715,11 @@ export type Ledger = {
   ledgerEntryGroup: LedgerEntryGroup;
   /** Query LedgerEntryGroups in Ledger. Ledger Entry Groups are paginated and returned in order lexigraphically key then inverse chronologically by created. */
   ledgerEntryGroups?: Maybe<LedgerEntryGroupsConnection>;
-  /** Schema migrations affecting this ledger. */
+  /** Schema migrations affecting this Ledger. */
   migrations?: Maybe<LedgerMigrationConnection>;
-  /** The name of the ledger. Can be updated with the [updateLedger](/api-reference#mutations-updateledger) mutation. */
+  /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference#mutations-updateledger) mutation. */
   name: Scalars["String"]["output"];
-  /** Schema key associated with this ledger. */
+  /** Schema key associated with this Ledger. */
   schema?: Maybe<Schema>;
   type: LedgerTypes;
   /** @deprecated Callers should not need to query or store this value. */
@@ -1072,6 +1078,8 @@ export type LedgerEntry = {
   conditions: Array<LedgerEntryCondition>;
   /** ISO-8601 timestamp this LedgerEntry was created in Fragment. */
   created: Scalars["DateTime"]["output"];
+  /** URL to the Fragment Dashboard for this Ledger Entry. */
+  dashboardUrl: Scalars["String"]["output"];
   /** Date this LedgerEntry posted to its Ledger e.g. "2021-01-01". */
   date: Scalars["Date"]["output"];
   /** Description posted for this Ledger Entry. */
@@ -1449,6 +1457,8 @@ export type LedgersFilterSet = {
 export type Link = {
   /** ISO-8601 timestamp when the Link was created. */
   created: Scalars["String"]["output"];
+  /** URL to the Fragment Dashboard for this Link. */
+  dashboardUrl: Scalars["String"]["output"];
   /** A list of External Accounts associated with this Link. */
   externalAccounts: ExternalAccountsConnection;
   /** FRAGMENT ID of the Link. */
@@ -1639,6 +1649,8 @@ export type Query = {
   schemas?: Maybe<SchemaConnection>;
   /** Get a Tx by ID */
   tx?: Maybe<Tx>;
+  /** Get the current Workspace */
+  workspace: Workspace;
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference#queries) */
@@ -2115,7 +2127,9 @@ export type StripeLink = Link & {
   __typename?: "StripeLink";
   /** ISO-8601 timestamp when the Link was created. */
   created: Scalars["String"]["output"];
-  /** ISO-8601 timestamp when the Link was created. */
+  /** URL to the Fragment Dashboard for this Link. */
+  dashboardUrl: Scalars["String"]["output"];
+  /** A list of External Accounts associated with this Link. */
   externalAccounts: ExternalAccountsConnection;
   /** FRAGMENT ID of the Custom Link. */
   id: Scalars["ID"]["output"];
@@ -2239,7 +2253,9 @@ export type UnitLink = Link & {
   __typename?: "UnitLink";
   /** ISO-8601 timestamp when the Link was created. */
   created: Scalars["String"]["output"];
-  /** ISO-8601 timestamp when the Link was created. */
+  /** URL to the Fragment Dashboard for this Link. */
+  dashboardUrl: Scalars["String"]["output"];
+  /** A list of External Accounts associated with this Link. */
   externalAccounts: ExternalAccountsConnection;
   /** FRAGMENT ID of the Unit Link. */
   id: Scalars["ID"]["output"];
@@ -2297,6 +2313,14 @@ export type UpdateLedgerResult = {
   __typename?: "UpdateLedgerResult";
   /** The updated Ledger.  */
   ledger: Ledger;
+};
+
+export type Workspace = {
+  __typename?: "Workspace";
+  /** The ID of the Workspace */
+  id: Scalars["String"]["output"];
+  /** The name of the Workspace */
+  name: Scalars["String"]["output"];
 };
 
 export type StoreSchemaMutationVariables = Exact<{
@@ -2901,6 +2925,13 @@ export type ListLedgerEntriesQuery = {
   } | null;
 };
 
+export type GetWorkspaceQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetWorkspaceQuery = {
+  __typename?: "Query";
+  workspace: { __typename?: "Workspace"; id: string; name: string };
+};
+
 export const StoreSchemaDocument = gql`
   mutation storeSchema($schema: SchemaInput!) {
     storeSchema(schema: $schema) {
@@ -3472,6 +3503,14 @@ export const ListLedgerEntriesDocument = gql`
     }
   }
 `;
+export const GetWorkspaceDocument = gql`
+  query getWorkspace {
+    workspace {
+      id
+      name
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -3788,6 +3827,21 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders }
           ),
         "listLedgerEntries",
+        "query",
+        variables
+      );
+    },
+    getWorkspace(
+      variables?: GetWorkspaceQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders
+    ): Promise<GetWorkspaceQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetWorkspaceQuery>(GetWorkspaceDocument, variables, {
+            ...requestHeaders,
+            ...wrappedRequestHeaders,
+          }),
+        "getWorkspace",
         "query",
         variables
       );
