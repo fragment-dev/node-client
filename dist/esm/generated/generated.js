@@ -870,6 +870,14 @@ export const ListLedgerEntriesDocument = gql `
     }
   }
 `;
+export const GetWorkspaceDocument = gql `
+  query getWorkspace {
+    workspace {
+      id
+      name
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -941,6 +949,12 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         listLedgerEntries(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntries", "query", variables);
+        },
+        getWorkspace(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetWorkspaceDocument, variables, {
+                ...requestHeaders,
+                ...wrappedRequestHeaders,
+            }), "getWorkspace", "query", variables);
         },
     };
 }
