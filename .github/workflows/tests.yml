@@ -48,3 +48,9 @@ jobs:
 
       - name: Run ALL tests
         run: yarn test:ci
+
+      - name: Verify generated methods are up-to-date
+        run: |
+          yarn gen-clients
+          git diff --exit-code
+          exit $?
