@@ -53,5 +53,5 @@ generate(
   })
   .catch((error) => {
     console.error(error);
-    throw error;
+    process.exit(1);
   });
