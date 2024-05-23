@@ -63,7 +63,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "Fragment Foundries Inc",
   "license": "Apache-2.0",
   "files": [

@@ -2340,6 +2340,55 @@ export type ReconcileTxRuntimeMutation = {
         }>;
     };
 };
+export type UpdateLedgerEntryMutationVariables = Exact<{
+    entryIk: Scalars["SafeString"]["input"];
+    ledgerIk: Scalars["SafeString"]["input"];
+    update: UpdateLedgerEntryInput;
+}>;
+export type UpdateLedgerEntryMutation = {
+    __typename?: "Mutation";
+    updateLedgerEntry: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+    } | {
+        __typename: "UpdateLedgerEntryResult";
+        entry: {
+            __typename?: "LedgerEntry";
+            id: string;
+            ik: string;
+            posted: string;
+            created: string;
+            description?: string | null;
+            lines: {
+                __typename?: "LedgerLinesConnection";
+                nodes?: Array<{
+                    __typename?: "LedgerLine";
+                    id: string;
+                    amount: string;
+                    account: {
+                        __typename?: "LedgerAccount";
+                        path: string;
+                    };
+                }> | null;
+            };
+            groups: Array<{
+                __typename?: "LedgerEntryGroup";
+                key: string;
+                value: string;
+            }>;
+            tags: Array<{
+                __typename?: "LedgerEntryTag";
+                key: string;
+                value: string;
+            }>;
+        };
+    };
+};
 export type UpdateLedgerMutationVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     update: UpdateLedgerInput;
@@ -2773,6 +2822,7 @@ export declare const AddLedgerEntryDocument: import("graphql").DocumentNode;
 export declare const AddLedgerEntryRuntimeDocument: import("graphql").DocumentNode;
 export declare const ReconcileTxDocument: import("graphql").DocumentNode;
 export declare const ReconcileTxRuntimeDocument: import("graphql").DocumentNode;
+export declare const UpdateLedgerEntryDocument: import("graphql").DocumentNode;
 export declare const UpdateLedgerDocument: import("graphql").DocumentNode;
 export declare const CreateCustomLinkDocument: import("graphql").DocumentNode;
 export declare const SyncCustomAccountsDocument: import("graphql").DocumentNode;
@@ -2795,6 +2845,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     addLedgerEntryRuntime(variables: AddLedgerEntryRuntimeMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddLedgerEntryRuntimeMutation>;
     reconcileTx(variables: ReconcileTxMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ReconcileTxMutation>;
     reconcileTxRuntime(variables: ReconcileTxRuntimeMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ReconcileTxRuntimeMutation>;
+    updateLedgerEntry(variables: UpdateLedgerEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateLedgerEntryMutation>;
     updateLedger(variables: UpdateLedgerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<UpdateLedgerMutation>;
     createCustomLink(variables: CreateCustomLinkMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomLinkMutation>;
     syncCustomAccounts(variables: SyncCustomAccountsMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<SyncCustomAccountsMutation>;
