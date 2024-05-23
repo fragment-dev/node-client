@@ -15,7 +15,7 @@ export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
 };
 export type MakeEmpty<
   T extends { [key: string]: unknown },
-  K extends keyof T
+  K extends keyof T,
 > = { [_ in K]?: never };
 export type Incremental<T> =
   | T
@@ -1451,6 +1451,7 @@ export type LedgersConnection = {
 };
 
 export type LedgersFilterSet = {
+  hasSchema?: InputMaybe<Scalars["Boolean"]["input"]>;
   type?: InputMaybe<LedgerTypeFilter>;
 };
 
@@ -2284,8 +2285,10 @@ export type UpdateLedgerAccountResult = {
 };
 
 export type UpdateLedgerEntryInput = {
+  /** The list of Groups to add to this Ledger Entry. */
+  groups?: InputMaybe<Array<LedgerEntryGroupInput>>;
   /** The list of Tags to add and/or update on this Ledger Entry. */
-  tags: Array<LedgerEntryTagInput>;
+  tags?: InputMaybe<Array<LedgerEntryTagInput>>;
 };
 
 export type UpdateLedgerEntryResponse =
@@ -3516,24 +3519,24 @@ export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
   operationName: string,
   operationType?: string,
-  variables?: any
+  variables?: any,
 ) => Promise<T>;
 
 const defaultWrapper: SdkFunctionWrapper = (
   action,
   _operationName,
   _operationType,
-  _variables
+  _variables,
 ) => action();
 
 export function getSdk(
   client: GraphQLClient,
-  withWrapper: SdkFunctionWrapper = defaultWrapper
+  withWrapper: SdkFunctionWrapper = defaultWrapper,
 ) {
   return {
     storeSchema(
       variables: StoreSchemaMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<StoreSchemaMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
@@ -3543,60 +3546,60 @@ export function getSdk(
           }),
         "storeSchema",
         "mutation",
-        variables
+        variables,
       );
     },
     createLedger(
       variables: CreateLedgerMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<CreateLedgerMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<CreateLedgerMutation>(
             CreateLedgerDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "createLedger",
         "mutation",
-        variables
+        variables,
       );
     },
     addLedgerEntry(
       variables: AddLedgerEntryMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<AddLedgerEntryMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<AddLedgerEntryMutation>(
             AddLedgerEntryDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "addLedgerEntry",
         "mutation",
-        variables
+        variables,
       );
     },
     addLedgerEntryRuntime(
       variables: AddLedgerEntryRuntimeMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<AddLedgerEntryRuntimeMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<AddLedgerEntryRuntimeMutation>(
             AddLedgerEntryRuntimeDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "addLedgerEntryRuntime",
         "mutation",
-        variables
+        variables,
       );
     },
     reconcileTx(
       variables: ReconcileTxMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ReconcileTxMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
@@ -3606,92 +3609,92 @@ export function getSdk(
           }),
         "reconcileTx",
         "mutation",
-        variables
+        variables,
       );
     },
     reconcileTxRuntime(
       variables: ReconcileTxRuntimeMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ReconcileTxRuntimeMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<ReconcileTxRuntimeMutation>(
             ReconcileTxRuntimeDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "reconcileTxRuntime",
         "mutation",
-        variables
+        variables,
       );
     },
     updateLedger(
       variables: UpdateLedgerMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<UpdateLedgerMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<UpdateLedgerMutation>(
             UpdateLedgerDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "updateLedger",
         "mutation",
-        variables
+        variables,
       );
     },
     createCustomLink(
       variables: CreateCustomLinkMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<CreateCustomLinkMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<CreateCustomLinkMutation>(
             CreateCustomLinkDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "createCustomLink",
         "mutation",
-        variables
+        variables,
       );
     },
     syncCustomAccounts(
       variables: SyncCustomAccountsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<SyncCustomAccountsMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<SyncCustomAccountsMutation>(
             SyncCustomAccountsDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "syncCustomAccounts",
         "mutation",
-        variables
+        variables,
       );
     },
     syncCustomTxs(
       variables: SyncCustomTxsMutationVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<SyncCustomTxsMutation> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<SyncCustomTxsMutation>(
             SyncCustomTxsDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "syncCustomTxs",
         "mutation",
-        variables
+        variables,
       );
     },
     getLedger(
       variables: GetLedgerQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetLedgerQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
@@ -3701,108 +3704,108 @@ export function getSdk(
           }),
         "getLedger",
         "query",
-        variables
+        variables,
       );
     },
     getLedgerEntry(
       variables: GetLedgerEntryQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetLedgerEntryQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<GetLedgerEntryQuery>(
             GetLedgerEntryDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "getLedgerEntry",
         "query",
-        variables
+        variables,
       );
     },
     listLedgerAccounts(
       variables: ListLedgerAccountsQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ListLedgerAccountsQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<ListLedgerAccountsQuery>(
             ListLedgerAccountsDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "listLedgerAccounts",
         "query",
-        variables
+        variables,
       );
     },
     listLedgerAccountBalances(
       variables: ListLedgerAccountBalancesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ListLedgerAccountBalancesQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<ListLedgerAccountBalancesQuery>(
             ListLedgerAccountBalancesDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "listLedgerAccountBalances",
         "query",
-        variables
+        variables,
       );
     },
     listMultiCurrencyLedgerAccountBalances(
       variables: ListMultiCurrencyLedgerAccountBalancesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ListMultiCurrencyLedgerAccountBalancesQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<ListMultiCurrencyLedgerAccountBalancesQuery>(
             ListMultiCurrencyLedgerAccountBalancesDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "listMultiCurrencyLedgerAccountBalances",
         "query",
-        variables
+        variables,
       );
     },
     getLedgerAccountLines(
       variables: GetLedgerAccountLinesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetLedgerAccountLinesQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<GetLedgerAccountLinesQuery>(
             GetLedgerAccountLinesDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "getLedgerAccountLines",
         "query",
-        variables
+        variables,
       );
     },
     getLedgerAccountBalance(
       variables: GetLedgerAccountBalanceQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetLedgerAccountBalanceQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<GetLedgerAccountBalanceQuery>(
             GetLedgerAccountBalanceDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "getLedgerAccountBalance",
         "query",
-        variables
+        variables,
       );
     },
     getSchema(
       variables: GetSchemaQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetSchemaQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
@@ -3812,28 +3815,28 @@ export function getSdk(
           }),
         "getSchema",
         "query",
-        variables
+        variables,
       );
     },
     listLedgerEntries(
       variables: ListLedgerEntriesQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<ListLedgerEntriesQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
           client.request<ListLedgerEntriesQuery>(
             ListLedgerEntriesDocument,
             variables,
-            { ...requestHeaders, ...wrappedRequestHeaders }
+            { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "listLedgerEntries",
         "query",
-        variables
+        variables,
       );
     },
     getWorkspace(
       variables?: GetWorkspaceQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders
+      requestHeaders?: GraphQLClientRequestHeaders,
     ): Promise<GetWorkspaceQuery> {
       return withWrapper(
         (wrappedRequestHeaders) =>
@@ -3843,7 +3846,7 @@ export function getSdk(
           }),
         "getWorkspace",
         "query",
-        variables
+        variables,
       );
     },
   };
