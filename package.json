@@ -4,7 +4,7 @@
   "scripts": {
     "test": "vitest",
     "test:ci": "vitest run",
-    "gen-clients": "rm -rf ./generated && yarn --cwd src graphql-codegen-esm --config src/codegen.ts",
+    "gen-clients": "rm -rf ./generated/* && yarn node --loader=ts-node/esm src/codegen.ts",
     "build": "yarn gen-clients && yarn gen-version && rm -rf ./dist && yarn build:cjs && yarn build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json && ./fixup",
     "build:esm": "tsc -p tsconfig.esm.json && mv ./dist/esm/src/index.js ./dist/esm/src/index.mjs",
@@ -51,7 +51,7 @@
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "express": "^4.19.2",
-    "prettier": "^2.8.8",
+    "prettier": "3.2.5",
     "ts-node": "^10.9.2",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^3.17.1",
@@ -77,7 +77,9 @@
   "types": "./dist/cjs/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "types": ["./dist/esm/types/src/types.d.ts"]
+      "types": [
+        "./dist/esm/types/src/types.d.ts"
+      ]
     }
   },
   "exports": {

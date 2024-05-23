@@ -1366,6 +1366,7 @@ export type LedgersConnection = {
     pageInfo: PageInfo;
 };
 export type LedgersFilterSet = {
+    hasSchema?: InputMaybe<Scalars["Boolean"]["input"]>;
     type?: InputMaybe<LedgerTypeFilter>;
 };
 export type Link = {
@@ -2091,8 +2092,10 @@ export type UpdateLedgerAccountResult = {
     ledgerAccount: LedgerAccount;
 };
 export type UpdateLedgerEntryInput = {
+    /** The list of Groups to add to this Ledger Entry. */
+    groups?: InputMaybe<Array<LedgerEntryGroupInput>>;
     /** The list of Tags to add and/or update on this Ledger Entry. */
-    tags: Array<LedgerEntryTagInput>;
+    tags?: InputMaybe<Array<LedgerEntryTagInput>>;
 };
 export type UpdateLedgerEntryResponse = BadRequestError | InternalError | UpdateLedgerEntryResult;
 export type UpdateLedgerEntryResult = {
