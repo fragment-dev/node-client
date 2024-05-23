@@ -219,13 +219,13 @@ mutation reconcileTxRuntime(
 }
 
 mutation updateLedgerEntry(
-  $entryIk: SafeString!,
-  $ledgerIk: SafeString!,
-  $update: UpdateLedgerEntryInput!,
+  $entryIk: SafeString!
+  $ledgerIk: SafeString!
+  $update: UpdateLedgerEntryInput!
 ) {
   updateLedgerEntry(
-    ledgerEntry: { ik: $entryIk, ledger: { ik: $ledgerIk } },
-    update: $update,
+    ledgerEntry: { ik: $entryIk, ledger: { ik: $ledgerIk } }
+    update: $update
   ) {
     __typename
     ... on UpdateLedgerEntryResult {
@@ -236,7 +236,7 @@ mutation updateLedgerEntry(
         created
         description
         lines {
-          nodes{
+          nodes {
             id
             amount
             account {
@@ -563,7 +563,12 @@ query listLedgerEntries(
   $filter: LedgerEntriesFilterSet
 ) {
   ledger(ledger: { ik: $ledgerIk }) {
-    ledgerEntries(after: $after, first: $first, before: $before, filter: $filter) {
+    ledgerEntries(
+      after: $after
+      first: $first
+      before: $before
+      filter: $filter
+    ) {
       nodes {
         ik
         type
