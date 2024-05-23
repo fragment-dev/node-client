@@ -51,6 +51,6 @@ jobs:
 
       - name: Verify generated methods are up-to-date
         run: |
-          yarn gen-clients
+          yarn build
           git diff --exit-code
           exit $?
