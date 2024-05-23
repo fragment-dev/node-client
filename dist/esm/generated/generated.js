@@ -525,6 +525,50 @@ export const ReconcileTxRuntimeDocument = gql `
     }
   }
 `;
+export const UpdateLedgerEntryDocument = gql `
+  mutation updateLedgerEntry(
+    $entryIk: SafeString!
+    $ledgerIk: SafeString!
+    $update: UpdateLedgerEntryInput!
+  ) {
+    updateLedgerEntry(
+      ledgerEntry: { ik: $entryIk, ledger: { ik: $ledgerIk } }
+      update: $update
+    ) {
+      __typename
+      ... on UpdateLedgerEntryResult {
+        entry {
+          id
+          ik
+          posted
+          created
+          description
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+          groups {
+            key
+            value
+          }
+          tags {
+            key
+            value
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+      }
+    }
+  }
+`;
 export const UpdateLedgerDocument = gql `
   mutation updateLedger($ledgerIk: SafeString!, $update: UpdateLedgerInput!) {
     updateLedger(ledger: { ik: $ledgerIk }, update: $update) {
@@ -904,6 +948,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         reconcileTxRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(ReconcileTxRuntimeDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "reconcileTxRuntime", "mutation", variables);
+        },
+        updateLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(UpdateLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "updateLedgerEntry", "mutation", variables);
         },
         updateLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(UpdateLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "updateLedger", "mutation", variables);

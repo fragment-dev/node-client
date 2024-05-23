@@ -2513,6 +2513,49 @@ export type ReconcileTxRuntimeMutation = {
       };
 };
 
+export type UpdateLedgerEntryMutationVariables = Exact<{
+  entryIk: Scalars["SafeString"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+  update: UpdateLedgerEntryInput;
+}>;
+
+export type UpdateLedgerEntryMutation = {
+  __typename?: "Mutation";
+  updateLedgerEntry:
+    | { __typename: "BadRequestError"; code: string; message: string }
+    | { __typename: "InternalError"; code: string; message: string }
+    | {
+        __typename: "UpdateLedgerEntryResult";
+        entry: {
+          __typename?: "LedgerEntry";
+          id: string;
+          ik: string;
+          posted: string;
+          created: string;
+          description?: string | null;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes?: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }> | null;
+          };
+          groups: Array<{
+            __typename?: "LedgerEntryGroup";
+            key: string;
+            value: string;
+          }>;
+          tags: Array<{
+            __typename?: "LedgerEntryTag";
+            key: string;
+            value: string;
+          }>;
+        };
+      };
+};
+
 export type UpdateLedgerMutationVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
   update: UpdateLedgerInput;
@@ -3161,6 +3204,50 @@ export const ReconcileTxRuntimeDocument = gql`
     }
   }
 `;
+export const UpdateLedgerEntryDocument = gql`
+  mutation updateLedgerEntry(
+    $entryIk: SafeString!
+    $ledgerIk: SafeString!
+    $update: UpdateLedgerEntryInput!
+  ) {
+    updateLedgerEntry(
+      ledgerEntry: { ik: $entryIk, ledger: { ik: $ledgerIk } }
+      update: $update
+    ) {
+      __typename
+      ... on UpdateLedgerEntryResult {
+        entry {
+          id
+          ik
+          posted
+          created
+          description
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+          groups {
+            key
+            value
+          }
+          tags {
+            key
+            value
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+      }
+    }
+  }
+`;
 export const UpdateLedgerDocument = gql`
   mutation updateLedger($ledgerIk: SafeString!, $update: UpdateLedgerInput!) {
     updateLedger(ledger: { ik: $ledgerIk }, update: $update) {
@@ -3624,6 +3711,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "reconcileTxRuntime",
+        "mutation",
+        variables,
+      );
+    },
+    updateLedgerEntry(
+      variables: UpdateLedgerEntryMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<UpdateLedgerEntryMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<UpdateLedgerEntryMutation>(
+            UpdateLedgerEntryDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "updateLedgerEntry",
         "mutation",
         variables,
       );

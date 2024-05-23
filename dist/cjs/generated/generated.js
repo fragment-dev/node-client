@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /**
  * Used to configure the write-consistency of a Ledger Account's balance.
@@ -528,6 +528,50 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.UpdateLedgerEntryDocument = (0, graphql_tag_1.gql) `
+  mutation updateLedgerEntry(
+    $entryIk: SafeString!
+    $ledgerIk: SafeString!
+    $update: UpdateLedgerEntryInput!
+  ) {
+    updateLedgerEntry(
+      ledgerEntry: { ik: $entryIk, ledger: { ik: $ledgerIk } }
+      update: $update
+    ) {
+      __typename
+      ... on UpdateLedgerEntryResult {
+        entry {
+          id
+          ik
+          posted
+          created
+          description
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+          groups {
+            key
+            value
+          }
+          tags {
+            key
+            value
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+      }
+    }
+  }
+`;
 exports.UpdateLedgerDocument = (0, graphql_tag_1.gql) `
   mutation updateLedger($ledgerIk: SafeString!, $update: UpdateLedgerInput!) {
     updateLedger(ledger: { ik: $ledgerIk }, update: $update) {
@@ -901,6 +945,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         reconcileTxRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.ReconcileTxRuntimeDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reconcileTxRuntime", "mutation", variables);
+        },
+        updateLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.UpdateLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "updateLedgerEntry", "mutation", variables);
         },
         updateLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.UpdateLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "updateLedger", "mutation", variables);
