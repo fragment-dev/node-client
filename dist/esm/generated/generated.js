@@ -922,6 +922,55 @@ export const GetWorkspaceDocument = gql `
     }
   }
 `;
+export const ListLedgerEntryGroupBalancesDocument = gql `
+  query listLedgerEntryGroupBalances(
+    $ledgerIk: SafeString!
+    $groupKey: SafeString!
+    $groupValue: SafeString!
+    $consistencyMode: ReadBalanceConsistencyMode = use_account
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+    $filter: LedgerEntryGroupBalanceFilterSet
+  ) {
+    ledgerEntryGroup(
+      ledgerEntryGroup: {
+        ledger: { ik: $ledgerIk }
+        key: $groupKey
+        value: $groupValue
+      }
+    ) {
+      key
+      value
+      created
+      balances(
+        after: $after
+        before: $before
+        first: $first
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          account {
+            path
+          }
+          currency {
+            code
+            customCurrencyId
+          }
+          ownBalance(consistencyMode: $consistencyMode)
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1002,6 +1051,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
                 ...requestHeaders,
                 ...wrappedRequestHeaders,
             }), "getWorkspace", "query", variables);
+        },
+        listLedgerEntryGroupBalances(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntryGroupBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntryGroupBalances", "query", variables);
         },
     };
 }

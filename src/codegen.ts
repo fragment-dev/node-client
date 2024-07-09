@@ -9,7 +9,7 @@ const GENERATED_FILENAME = "generated/generated.ts";
 
 generate(
   {
-    schema: "https://api.fragment.dev/schema.graphql",
+    schema: "https://api.us-west-2.fragment.dev/schema.graphql",
     emitLegacyCommonJSImports: false,
     generates: {
       [GENERATED_FILENAME]: {
