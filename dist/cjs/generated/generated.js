@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /**
  * Used to configure the write-consistency of a Ledger Account's balance.
@@ -925,6 +925,55 @@ exports.GetWorkspaceDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.ListLedgerEntryGroupBalancesDocument = (0, graphql_tag_1.gql) `
+  query listLedgerEntryGroupBalances(
+    $ledgerIk: SafeString!
+    $groupKey: SafeString!
+    $groupValue: SafeString!
+    $consistencyMode: ReadBalanceConsistencyMode = use_account
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+    $filter: LedgerEntryGroupBalanceFilterSet
+  ) {
+    ledgerEntryGroup(
+      ledgerEntryGroup: {
+        ledger: { ik: $ledgerIk }
+        key: $groupKey
+        value: $groupValue
+      }
+    ) {
+      key
+      value
+      created
+      balances(
+        after: $after
+        before: $before
+        first: $first
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          account {
+            path
+          }
+          currency {
+            code
+            customCurrencyId
+          }
+          ownBalance(consistencyMode: $consistencyMode)
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -990,6 +1039,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         getWorkspace(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetWorkspaceDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getWorkspace", "query", variables);
+        },
+        listLedgerEntryGroupBalances(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerEntryGroupBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerEntryGroupBalances", "query", variables);
         },
     };
 }

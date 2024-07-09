@@ -56,7 +56,7 @@ if (!allowedInputExtensions.includes(path.extname(argv.input))) {
     throw new Error(`Input filename must have a .graphql, .gql, or .ts extension. You provided ${path.extname(argv.input) || "<none>"}`);
 }
 (0, cli_1.generate)({
-    schema: "https://api.fragment.dev/schema.graphql",
+    schema: "https://api.us-west-2.fragment.dev/schema.graphql",
     documents: argv.input,
     config: {
         scalars: {

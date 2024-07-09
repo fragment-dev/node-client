@@ -278,7 +278,7 @@ export type CurrencyAmount = {
 export type CurrencyAmountConnection = {
     __typename?: "CurrencyAmountConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<CurrencyAmount>>;
+    nodes: Array<CurrencyAmount>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -552,7 +552,7 @@ export type ExternalAccount = {
     /** FRAGMENT ID of External Account */
     id: Scalars["ID"]["output"];
     /** Ledger Accounts linked to this External Account. Ledger Accounts are paginated and sorted in reverse-chronological order by created date. */
-    ledgerAccounts?: Maybe<LedgerAccountsConnection>;
+    ledgerAccounts: LedgerAccountsConnection;
     /** The Link that this External Account belongs to. */
     link: CustomLink | IncreaseLink | StripeLink | UnitLink;
     /** FRAGMENT ID of this transaction's external link */
@@ -688,15 +688,15 @@ export type Ledger = {
     /** The IK passed into the [createLedger](/api-reference#mutations-createledger) mutation. This is treated as a unique identifier for this Ledger. */
     ik: Scalars["SafeString"]["output"];
     /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
-    ledgerAccounts?: Maybe<LedgerAccountsConnection>;
+    ledgerAccounts: LedgerAccountsConnection;
     /** Query Ledger Entries in a Ledger. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
-    ledgerEntries?: Maybe<LedgerEntriesConnection>;
+    ledgerEntries: LedgerEntriesConnection;
     /** Query a Ledger Entry Group for this Ledger given its key and value. */
     ledgerEntryGroup: LedgerEntryGroup;
     /** Query LedgerEntryGroups in Ledger. Ledger Entry Groups are paginated and returned in order lexigraphically key then inverse chronologically by created. */
-    ledgerEntryGroups?: Maybe<LedgerEntryGroupsConnection>;
+    ledgerEntryGroups: LedgerEntryGroupsConnection;
     /** Schema migrations affecting this Ledger. */
-    migrations?: Maybe<LedgerMigrationConnection>;
+    migrations: LedgerMigrationConnection;
     /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference#mutations-updateledger) mutation. */
     name: Scalars["String"]["output"];
     /** Schema key associated with this Ledger. */
@@ -798,7 +798,7 @@ export type LedgerAccount = {
     path: Scalars["String"]["output"];
     type: LedgerAccountTypes;
     /** A list of external account transactions that haven't been reconciled to this ledger account yet. Only populated for linked ledger accounts. Transactions are sorted in reverse chronological order by posted date. */
-    unreconciledTxs?: Maybe<TxsConnection>;
+    unreconciledTxs: TxsConnection;
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
 };
@@ -916,23 +916,25 @@ export type LedgerAccountConsistencyConfig = {
  */
 export type LedgerAccountConsistencyConfigInput = {
     /**
-     * If set to `strong`, then a Ledger Account's `lines` updates will be strongly consistent with
-     * the API response. This Ledger Account's balance will be updated and
-     * available for strongly consistent reads before you receive an API response.
+     * The consistency configuration for Ledger Entry Groups affecting this account.
      *
-     * Otherwise if unset or set to `eventual`, `lines` updates are applied
-     * asynchronously and may not be immediately reflected queries.
+     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     */
+    groups?: InputMaybe<Array<LedgerAccountGroupConsistencyConfigInput>>;
+    /**
+     * If set to `strong`, then a Ledger Account's `lines` updates will be strongly consistent with the API response.
+     * This Ledger Account's balance will be updated and available for strongly consistent reads before you receive an API response.
+     *
+     * Otherwise if unset or set to `eventual`, `lines` updates are applied asynchronously and may not be immediately reflected in queries.
      *
      * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
      */
     lines?: InputMaybe<LedgerLinesConsistencyMode>;
     /**
-     * If set to `strong`, then a Ledger Account's `ownBalance` updates will be strongly consistent with
-     * the API response. This Ledger Account's balance will be updated and
-     * available for strongly consistent reads before you receive an API response.
+     * If set to `strong`, then a Ledger Account's `ownBalance` updates will be strongly consistent with the API response.
+     * This Ledger Account's balance will be updated and available for strongly consistent reads before you receive an API response.
      *
-     * Otherwise if unset or set to `eventual`, `ownBalance` updates are applied
-     * asynchronously and may not be immediately reflected queries.
+     * Otherwise if unset or set to `eventual`, `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
      * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
      */
@@ -943,6 +945,20 @@ export type LedgerAccountFilter = {
     equalTo?: InputMaybe<LedgerAccountMatchInput>;
     /** Results can match any of specified Ledger Accounts */
     in?: InputMaybe<Array<LedgerAccountMatchInput>>;
+};
+/** The consistency configuration for a specific Ledger Entry Group in this account. */
+export type LedgerAccountGroupConsistencyConfigInput = {
+    /** The group key for this configuration. */
+    key: Scalars["String"]["input"];
+    /**
+     * If set to `strong`, then Ledger Entry Group `ownBalance`s updates for this account will be strongly consistent with the API response.
+     * This Ledger Account's Ledger Entry Group balances will be updated and available for strongly consistent reads before you receive an API response.
+     *
+     * Otherwise if unset or set to `eventual`, Ledger Entry Group `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
+     *
+     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     */
+    ownBalanceUpdates: BalanceUpdateConsistencyMode;
 };
 /**
  * Specify a Ledger Account by using `id` or `path`.
@@ -977,7 +993,7 @@ export declare enum LedgerAccountTypes {
 export type LedgerAccountsConnection = {
     __typename?: "LedgerAccountsConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<LedgerAccount>>;
+    nodes: Array<LedgerAccount>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -1005,7 +1021,7 @@ export type LedgerAccountsFilterSet = {
 export type LedgerEntriesConnection = {
     __typename?: "LedgerEntriesConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<LedgerEntry>>;
+    nodes: Array<LedgerEntry>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -1118,6 +1134,10 @@ export type LedgerEntryGroupBalance = {
     currency: Currency;
     /** The total balance change for this Ledger Account and currency. */
     ownBalance: Scalars["Int96"]["output"];
+};
+/** Represents the total effect of a Ledger Entry Group on a Ledger Account balance for a single currency. */
+export type LedgerEntryGroupBalanceOwnBalanceArgs = {
+    consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 };
 /** A set of balance changes for a specific Ledger Entry Group. */
 export type LedgerEntryGroupBalanceConnection = {
@@ -1285,7 +1305,7 @@ export type LedgerLineMatchInput = {
 export type LedgerLinesConnection = {
     __typename?: "LedgerLinesConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<LedgerLine>>;
+    nodes: Array<LedgerLine>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -1361,7 +1381,7 @@ export declare enum LedgerTypes {
 export type LedgersConnection = {
     __typename?: "LedgersConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<Ledger>>;
+    nodes: Array<Ledger>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -1384,7 +1404,6 @@ export type Link = {
 export type LinkMatchInput = {
     id: Scalars["ID"]["input"];
 };
-export type LinkResponse = BadRequestError | CustomLink | IncreaseLink | InternalError | NotFoundError | StripeLink;
 /** A paginated list of Links */
 export type LinksConnection = {
     __typename?: "LinksConnection";
@@ -1527,7 +1546,7 @@ export type Query = {
     /** Get LedgerLine by ID */
     ledgerLine?: Maybe<LedgerLine>;
     /** Query Ledgers in workspace. Ledgers are paginated and returned in reverse-chronological order by their created date. */
-    ledgers?: Maybe<LedgersConnection>;
+    ledgers: LedgersConnection;
     /** Get a Link by ID. Returns a BadRequestError if the Link is not found. */
     link?: Maybe<CustomLink | IncreaseLink | StripeLink | UnitLink>;
     /** Get all links in a workspace */
@@ -1535,7 +1554,7 @@ export type Query = {
     /** Get a Schema by key. */
     schema?: Maybe<Schema>;
     /** Retrieve all of the Schemas in the workspace. */
-    schemas?: Maybe<SchemaConnection>;
+    schemas: SchemaConnection;
     /** Get a Tx by ID */
     tx?: Maybe<Tx>;
     /** Get the current Workspace */
@@ -1655,7 +1674,7 @@ export type Schema = {
      */
     key: Scalars["SafeString"]["output"];
     /** The paginated list of ledgers the Schema has been applied to. */
-    ledgers?: Maybe<LedgersConnection>;
+    ledgers: LedgersConnection;
     /** The name of a Schema. It defaults to the `key` if not provided in your SchemaInput. */
     name: Scalars["String"]["output"];
     /** The metadata for a specific SchemaVersion. */
@@ -1921,7 +1940,7 @@ export type SchemaVersion = {
     __typename?: "SchemaVersion";
     created: Scalars["DateTime"]["output"];
     json: Scalars["JSON"]["output"];
-    migrations?: Maybe<LedgerMigrationConnection>;
+    migrations: LedgerMigrationConnection;
     /** The version of the schema. */
     version: Scalars["Int"]["output"];
 };
@@ -2015,13 +2034,13 @@ export type Tx = {
     externalId: Scalars["ID"]["output"];
     id: Scalars["ID"]["output"];
     /** Returns ledger entries that are linked to this transaction. You can link the same external account to multiple ledgers, so there could be multipe entries associated with one transaction - one for each linked ledger account this transaction has been reconciled with */
-    ledgerEntries?: Maybe<LedgerEntriesConnection>;
+    ledgerEntries: LedgerEntriesConnection;
     /** Same as ledgerEntries, but returns an array of IDs instead */
     ledgerEntryIds?: Maybe<Array<Scalars["ID"]["output"]>>;
     /** Same as ledgerLines, but returns an array of IDs instead */
     ledgerLineIds?: Maybe<Array<Scalars["ID"]["output"]>>;
     /** Returns ledger lines that are linked to this transaction. You can link the same external account to multiple ledgers, so there could be multipe lines associated with one transaction - one for each linked ledger account this transaction has been reconciled with */
-    ledgerLines?: Maybe<LedgerLinesConnection>;
+    ledgerLines: LedgerLinesConnection;
     /** This transaction's Link. */
     link: CustomLink | IncreaseLink | StripeLink | UnitLink;
     /** FRAGMENT ID of this transaction's Link */
@@ -2056,7 +2075,7 @@ export type TxTypeFilter = {
 export type TxsConnection = {
     __typename?: "TxsConnection";
     /** The current page of results */
-    nodes?: Maybe<Array<Tx>>;
+    nodes: Array<Tx>;
     /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
@@ -2366,7 +2385,7 @@ export type UpdateLedgerEntryMutation = {
             description?: string | null;
             lines: {
                 __typename?: "LedgerLinesConnection";
-                nodes?: Array<{
+                nodes: Array<{
                     __typename?: "LedgerLine";
                     id: string;
                     amount: string;
@@ -2374,7 +2393,7 @@ export type UpdateLedgerEntryMutation = {
                         __typename?: "LedgerAccount";
                         path: string;
                     };
-                }> | null;
+                }>;
             };
             groups: Array<{
                 __typename?: "LedgerEntryGroup";
@@ -2539,7 +2558,7 @@ export type GetLedgerEntryQuery = {
         description?: string | null;
         lines: {
             __typename?: "LedgerLinesConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerLine";
                 id: string;
                 amount: string;
@@ -2547,7 +2566,7 @@ export type GetLedgerEntryQuery = {
                     __typename?: "LedgerAccount";
                     path: string;
                 };
-            }> | null;
+            }>;
         };
     } | null;
 };
@@ -2565,16 +2584,16 @@ export type ListLedgerAccountsQuery = {
         ik: string;
         name: string;
         created: string;
-        ledgerAccounts?: {
+        ledgerAccounts: {
             __typename?: "LedgerAccountsConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerAccount";
                 id: string;
                 path: string;
                 name?: string | null;
                 type: LedgerAccountTypes;
                 created: string;
-            }> | null;
+            }>;
             pageInfo: {
                 __typename?: "PageInfo";
                 hasNextPage: boolean;
@@ -2582,7 +2601,7 @@ export type ListLedgerAccountsQuery = {
                 hasPreviousPage: boolean;
                 startCursor?: string | null;
             };
-        } | null;
+        };
     } | null;
 };
 export type ListLedgerAccountBalancesQueryVariables = Exact<{
@@ -2602,9 +2621,9 @@ export type ListLedgerAccountBalancesQuery = {
         ik: string;
         name: string;
         created: string;
-        ledgerAccounts?: {
+        ledgerAccounts: {
             __typename?: "LedgerAccountsConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerAccount";
                 id: string;
                 path: string;
@@ -2614,7 +2633,7 @@ export type ListLedgerAccountBalancesQuery = {
                 ownBalance: string;
                 childBalance: string;
                 balance: string;
-            }> | null;
+            }>;
             pageInfo: {
                 __typename?: "PageInfo";
                 hasNextPage: boolean;
@@ -2622,7 +2641,7 @@ export type ListLedgerAccountBalancesQuery = {
                 hasPreviousPage: boolean;
                 startCursor?: string | null;
             };
-        } | null;
+        };
     } | null;
 };
 export type ListMultiCurrencyLedgerAccountBalancesQueryVariables = Exact<{
@@ -2641,9 +2660,9 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
         ik: string;
         name: string;
         created: string;
-        ledgerAccounts?: {
+        ledgerAccounts: {
             __typename?: "LedgerAccountsConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerAccount";
                 id: string;
                 path: string;
@@ -2652,7 +2671,7 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
                 created: string;
                 ownBalances: {
                     __typename?: "CurrencyAmountConnection";
-                    nodes?: Array<{
+                    nodes: Array<{
                         __typename?: "CurrencyAmount";
                         amount: string;
                         currency: {
@@ -2660,11 +2679,11 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
                             code: CurrencyCode;
                             customCurrencyId?: string | null;
                         };
-                    }> | null;
+                    }>;
                 };
                 childBalances: {
                     __typename?: "CurrencyAmountConnection";
-                    nodes?: Array<{
+                    nodes: Array<{
                         __typename?: "CurrencyAmount";
                         amount: string;
                         currency: {
@@ -2672,11 +2691,11 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
                             code: CurrencyCode;
                             customCurrencyId?: string | null;
                         };
-                    }> | null;
+                    }>;
                 };
                 balances: {
                     __typename?: "CurrencyAmountConnection";
-                    nodes?: Array<{
+                    nodes: Array<{
                         __typename?: "CurrencyAmount";
                         amount: string;
                         currency: {
@@ -2684,9 +2703,9 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
                             code: CurrencyCode;
                             customCurrencyId?: string | null;
                         };
-                    }> | null;
+                    }>;
                 };
-            }> | null;
+            }>;
             pageInfo: {
                 __typename?: "PageInfo";
                 hasNextPage: boolean;
@@ -2694,7 +2713,7 @@ export type ListMultiCurrencyLedgerAccountBalancesQuery = {
                 hasPreviousPage: boolean;
                 startCursor?: string | null;
             };
-        } | null;
+        };
     } | null;
 };
 export type GetLedgerAccountLinesQueryVariables = Exact<{
@@ -2713,14 +2732,14 @@ export type GetLedgerAccountLinesQuery = {
         path: string;
         lines: {
             __typename?: "LedgerLinesConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerLine";
                 id: string;
                 posted?: string | null;
                 created?: string | null;
                 amount: string;
                 description?: string | null;
-            }> | null;
+            }>;
             pageInfo: {
                 __typename?: "PageInfo";
                 hasNextPage: boolean;
@@ -2776,25 +2795,25 @@ export type ListLedgerEntriesQuery = {
     __typename?: "Query";
     ledger?: {
         __typename?: "Ledger";
-        ledgerEntries?: {
+        ledgerEntries: {
             __typename?: "LedgerEntriesConnection";
-            nodes?: Array<{
+            nodes: Array<{
                 __typename?: "LedgerEntry";
                 ik: string;
                 type?: string | null;
                 posted: string;
                 lines: {
                     __typename?: "LedgerLinesConnection";
-                    nodes?: Array<{
+                    nodes: Array<{
                         __typename?: "LedgerLine";
                         amount: string;
                         account: {
                             __typename?: "LedgerAccount";
                             path: string;
                         };
-                    }> | null;
+                    }>;
                 };
-            }> | null;
+            }>;
             pageInfo: {
                 __typename?: "PageInfo";
                 hasNextPage: boolean;
@@ -2802,7 +2821,7 @@ export type ListLedgerEntriesQuery = {
                 hasPreviousPage: boolean;
                 startCursor?: string | null;
             };
-        } | null;
+        };
     } | null;
 };
 export type GetWorkspaceQueryVariables = Exact<{
@@ -2815,6 +2834,49 @@ export type GetWorkspaceQuery = {
         id: string;
         name: string;
     };
+};
+export type ListLedgerEntryGroupBalancesQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    groupKey: Scalars["SafeString"]["input"];
+    groupValue: Scalars["SafeString"]["input"];
+    consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+    filter?: InputMaybe<LedgerEntryGroupBalanceFilterSet>;
+}>;
+export type ListLedgerEntryGroupBalancesQuery = {
+    __typename?: "Query";
+    ledgerEntryGroup?: {
+        __typename?: "LedgerEntryGroup";
+        key: string;
+        value: string;
+        created?: string | null;
+        balances: {
+            __typename?: "LedgerEntryGroupBalanceConnection";
+            nodes: Array<{
+                __typename?: "LedgerEntryGroupBalance";
+                ownBalance: string;
+                account: {
+                    __typename?: "LedgerAccount";
+                    path: string;
+                };
+                currency: {
+                    __typename?: "Currency";
+                    code: CurrencyCode;
+                    customCurrencyId?: string | null;
+                };
+            }>;
+            pageInfo: {
+                __typename?: "PageInfo";
+                hasNextPage: boolean;
+                endCursor?: string | null;
+                hasPreviousPage: boolean;
+                startCursor?: string | null;
+            };
+        };
+    } | null;
 };
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
@@ -2837,6 +2899,7 @@ export declare const GetLedgerAccountBalanceDocument: import("graphql").Document
 export declare const GetSchemaDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const GetWorkspaceDocument: import("graphql").DocumentNode;
+export declare const ListLedgerEntryGroupBalancesDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -2860,6 +2923,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     getSchema(variables: GetSchemaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetSchemaQuery>;
     listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
     getWorkspace(variables?: GetWorkspaceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetWorkspaceQuery>;
+    listLedgerEntryGroupBalances(variables: ListLedgerEntryGroupBalancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntryGroupBalancesQuery>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};
