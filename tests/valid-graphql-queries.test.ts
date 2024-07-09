@@ -7,7 +7,7 @@ import { UrlLoader } from "@graphql-tools/url-loader";
 import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader";
 
 test("Valid GraphQL queries", async () => {
-  const schema = await loadSchema("https://api.fragment.dev/schema.graphql", {
+  const schema = await loadSchema("https://api.us-west-2.fragment.dev/schema.graphql", {
     loaders: [new UrlLoader()],
   });
 
