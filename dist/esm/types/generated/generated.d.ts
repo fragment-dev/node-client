@@ -1103,6 +1103,8 @@ export type LedgerEntryGroup = {
     balances: LedgerEntryGroupBalanceConnection;
     /** ISO-8601 timestamp this LedgerEntryGroup was created in Fragment. */
     created?: Maybe<Scalars["DateTime"]["output"]>;
+    /** URL to the Fragment Dashboard for this Ledger Entry Group. */
+    dashboardUrl: Scalars["String"]["output"];
     /** The key of this Ledger Entry Group. */
     key: Scalars["SafeString"]["output"];
     ledgerEntries: LedgerEntriesConnection;
