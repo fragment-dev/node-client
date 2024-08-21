@@ -316,6 +316,7 @@ export const StoreSchemaDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -343,6 +344,7 @@ export const CreateLedgerDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -389,6 +391,7 @@ export const AddLedgerEntryDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -435,6 +438,7 @@ export const AddLedgerEntryRuntimeDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -478,6 +482,7 @@ export const ReconcileTxDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -521,6 +526,7 @@ export const ReconcileTxRuntimeDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -583,6 +589,7 @@ export const UpdateLedgerDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -602,6 +609,7 @@ export const CreateCustomLinkDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -624,6 +632,7 @@ export const SyncCustomAccountsDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -647,6 +656,7 @@ export const SyncCustomTxsDocument = gql `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }

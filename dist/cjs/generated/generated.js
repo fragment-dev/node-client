@@ -319,6 +319,7 @@ exports.StoreSchemaDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -346,6 +347,7 @@ exports.CreateLedgerDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -392,6 +394,7 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -438,6 +441,7 @@ exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -481,6 +485,7 @@ exports.ReconcileTxDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -524,6 +529,7 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -586,6 +592,7 @@ exports.UpdateLedgerDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -605,6 +612,7 @@ exports.CreateCustomLinkDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -627,6 +635,7 @@ exports.SyncCustomAccountsDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }
@@ -650,6 +659,7 @@ exports.SyncCustomTxsDocument = (0, graphql_tag_1.gql) `
       ... on Error {
         code
         message
+        retryable
       }
     }
   }

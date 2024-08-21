@@ -175,7 +175,7 @@ export type CreateCustomLinkResult = {
     __typename?: "CreateCustomLinkResult";
     isIkReplay: Scalars["Boolean"]["output"];
     /** The custom link that was created. Represents an instance of an external system. */
-    link: CustomLink | IncreaseLink | StripeLink | UnitLink;
+    link: CustomLink;
 };
 export type CreateLedgerAccountInput = {
     /** The consistency configuration for this Ledger Account. This defines how updates to this Ledger Account's balance are handled. */
@@ -1103,6 +1103,8 @@ export type LedgerEntryGroup = {
     balances: LedgerEntryGroupBalanceConnection;
     /** ISO-8601 timestamp this LedgerEntryGroup was created in Fragment. */
     created?: Maybe<Scalars["DateTime"]["output"]>;
+    /** URL to the Fragment Dashboard for this Ledger Entry Group. */
+    dashboardUrl: Scalars["String"]["output"];
     /** The key of this Ledger Entry Group. */
     key: Scalars["SafeString"]["output"];
     ledgerEntries: LedgerEntriesConnection;
@@ -1314,9 +1316,13 @@ export declare enum LedgerLinesConsistencyMode {
     Strong = "strong"
 }
 export type LedgerLinesFilterSet = {
+    /** Filter by the created timestamp of the Ledger Line. This is the wall-clock time when the Ledger Line was created. */
+    created?: InputMaybe<DateTimeFilter>;
+    /** Filter by the posted date of the Ledger Line. This is identical to using `posted`, but only supports day-level granularity. */
     date?: InputMaybe<DateFilter>;
     /** Use this to filter Ledger Lines by key. Ledger Line keys are defined in Schemas. */
     key?: InputMaybe<StringFilter>;
+    /** Filter by the posted timestamp of the Ledger Line. */
     posted?: InputMaybe<DateTimeFilter>;
     type?: InputMaybe<TxTypeFilter>;
 };
@@ -2148,10 +2154,12 @@ export type StoreSchemaMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "StoreSchemaResult";
         schema: {
@@ -2177,6 +2185,7 @@ export type CreateLedgerMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "CreateLedgerResult";
         isIkReplay: boolean;
@@ -2195,6 +2204,7 @@ export type CreateLedgerMutation = {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     };
 };
 export type AddLedgerEntryMutationVariables = Exact<{
@@ -2232,10 +2242,12 @@ export type AddLedgerEntryMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     };
 };
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
@@ -2273,10 +2285,12 @@ export type AddLedgerEntryRuntimeMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     };
 };
 export type ReconcileTxMutationVariables = Exact<{
@@ -2292,10 +2306,12 @@ export type ReconcileTxMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "ReconcileTxResult";
         entry: {
@@ -2332,10 +2348,12 @@ export type ReconcileTxRuntimeMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "ReconcileTxResult";
         entry: {
@@ -2418,10 +2436,12 @@ export type UpdateLedgerMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "UpdateLedgerResult";
         ledger: {
@@ -2442,6 +2462,7 @@ export type CreateCustomLinkMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "CreateCustomLinkResult";
         isIkReplay: boolean;
@@ -2450,26 +2471,12 @@ export type CreateCustomLinkMutation = {
             id: string;
             name: string;
             created: string;
-        } | {
-            __typename?: "IncreaseLink";
-            id: string;
-            name: string;
-            created: string;
-        } | {
-            __typename?: "StripeLink";
-            id: string;
-            name: string;
-            created: string;
-        } | {
-            __typename?: "UnitLink";
-            id: string;
-            name: string;
-            created: string;
         };
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     };
 };
 export type SyncCustomAccountsMutationVariables = Exact<{
@@ -2482,10 +2489,12 @@ export type SyncCustomAccountsMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "SyncCustomAccountsResult";
         accounts: Array<{
@@ -2511,10 +2520,12 @@ export type SyncCustomTxsMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "SyncCustomTxsResult";
         txs: Array<{
