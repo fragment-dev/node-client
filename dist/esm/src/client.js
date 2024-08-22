@@ -1,9 +1,19 @@
+import retry from "async-retry";
 import { ClientError, GraphQLClient } from "graphql-request";
 import { getSdk as getDefaultSdk, } from "../generated/generated.js";
 import { version } from "../generated/version.js";
 import { getToken } from "./getToken.js";
 import { BadRequestError, FragmentError, InternalError } from "./errors.js";
-const createRequestWrapper = (tokenCache, params) => async (request, operationName, operationType) => {
+import { DEFAULT_RETRY_CONFIG } from "./retryConfig.js";
+const getRetryableField = (error) => {
+    if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
+        if (typeof error.retryable === "boolean") {
+            return error.retryable;
+        }
+    }
+    return false;
+};
+const createRequestWrapper = (tokenCache, params, retryConfig) => async (request, operationName, operationType) => {
     const { clientId, clientSecret, scope, authUrl } = params;
     const updateToken = async () => {
         const { access_token, expiry_time } = await getToken({
@@ -31,65 +41,84 @@ const createRequestWrapper = (tokenCache, params) => async (request, operationNa
         Authorization: `Bearer ${tokenCache.token.access_token}`,
         ["X-Fragment-Client"]: `node-client@${version}`,
     };
-    if (operationType === "mutation") {
-        const data = await request(requestHeaders);
-        const dataKeys = Object.keys(data);
-        if (dataKeys.length > 1) {
-            throw new FragmentError({
-                message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
-            });
-        }
-        const [graphQlOperationName] = dataKeys;
-        const typeName = data[graphQlOperationName].__typename;
-        const { code, message } = data[graphQlOperationName];
-        switch (typeName) {
-            case "InternalError":
-                throw new InternalError({
-                    cause: data[graphQlOperationName],
-                    message,
-                });
-            case "BadRequestError":
-                throw new BadRequestError({
-                    code: code,
-                    cause: data[graphQlOperationName],
-                    message,
-                });
-            default:
-                if (typeName.endsWith("Error")) {
-                    throw new FragmentError({
-                        message: `Encountered unsupported error type: ${typeName}`,
-                        cause: data[graphQlOperationName],
-                    });
-                }
-                break;
-        }
-        return data;
-    }
-    if (operationType === "query") {
-        try {
+    return retry(async (bail) => {
+        if (operationType === "mutation") {
             const data = await request(requestHeaders);
+            const dataKeys = Object.keys(data);
+            if (dataKeys.length > 1) {
+                bail(new FragmentError({
+                    message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
+                }));
+            }
+            const [graphQlOperationName] = dataKeys;
+            const typeName = data[graphQlOperationName]
+                .__typename;
+            const { code, message } = data[graphQlOperationName];
+            const retryable = getRetryableField(data[graphQlOperationName]);
+            switch (typeName) {
+                case "InternalError": {
+                    const err = new InternalError({
+                        cause: data[graphQlOperationName],
+                        message,
+                    });
+                    if (!retryable) {
+                        bail(err);
+                    }
+                    else {
+                        throw err;
+                    }
+                }
+                case "BadRequestError": {
+                    const err = new BadRequestError({
+                        code: code,
+                        cause: data[graphQlOperationName],
+                        message,
+                    });
+                    if (!retryable) {
+                        bail(err);
+                    }
+                    else {
+                        throw err;
+                    }
+                }
+                default:
+                    if (typeName.endsWith("Error")) {
+                        bail(new FragmentError({
+                            message: `Encountered unsupported error type: ${typeName}`,
+                            cause: data[graphQlOperationName],
+                        }));
+                    }
+                    break;
+            }
             return data;
         }
-        catch (error) {
-            if (error instanceof ClientError) {
-                throw new FragmentError({
-                    cause: error,
-                });
+        if (operationType === "query") {
+            try {
+                const data = await request(requestHeaders);
+                return data;
             }
-            else {
-                throw error;
+            catch (error) {
+                if (error instanceof ClientError) {
+                    bail(new FragmentError({
+                        cause: error,
+                    }));
+                }
+                else {
+                    bail(error);
+                }
             }
         }
-    }
-    throw new FragmentError({
-        message: `Unknown operation type: ${operationType}`,
-    });
+        bail(new FragmentError({
+            message: `Unknown operation type: ${operationType}`,
+        }));
+        return {};
+    }, retryConfig);
 };
-export const createFragmentClient = ({ params, getSdk, }) => {
+export const createFragmentClient = ({ params, getSdk, retryConfig = DEFAULT_RETRY_CONFIG, }) => {
     const { apiUrl } = params;
     const graphql = new GraphQLClient(apiUrl);
     const tokenCache = {};
-    const requestWrapper = createRequestWrapper(tokenCache, params);
+    const requestWrapper = createRequestWrapper(tokenCache, params, retryConfig);
     if (getSdk) {
         return {
             ...getDefaultSdk(graphql, requestWrapper),

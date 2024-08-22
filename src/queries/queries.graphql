@@ -14,6 +14,7 @@ mutation storeSchema($schema: SchemaInput!) {
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -40,6 +41,7 @@ mutation createLedger(
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -85,6 +87,7 @@ mutation addLedgerEntry(
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -130,6 +133,7 @@ mutation addLedgerEntryRuntime(
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -172,6 +176,7 @@ mutation reconcileTx(
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -214,6 +219,7 @@ mutation reconcileTxRuntime(
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -274,6 +280,7 @@ mutation updateLedger($ledgerIk: SafeString!, $update: UpdateLedgerInput!) {
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -291,6 +298,7 @@ mutation createCustomLink($name: String!, $ik: SafeString!) {
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -312,6 +320,7 @@ mutation syncCustomAccounts($linkId: ID!, $accounts: [CustomAccountInput!]!) {
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
@@ -334,6 +343,7 @@ mutation syncCustomTxs($linkId: ID!, $txs: [CustomTxInput!]!) {
     ... on Error {
       code
       message
+      retryable
     }
   }
 }
