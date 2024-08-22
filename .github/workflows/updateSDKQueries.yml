@@ -6,11 +6,17 @@ jobs:
   updateQueries:
     runs-on: ubuntu-latest
     steps:
+      - uses: tibdex/github-app-token@v1
+        id: generate-token
+        with:
+          app_id: ${{ secrets.PR_APP_ID }}
+          private_key: ${{ secrets.PR_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           path: graphql-queries
           repository: fragment-dev/graphql-queries
-          ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          token: {{ steps.generate-token.outputs.token }}
 
       - uses: actions/checkout@v4
         name: Checkout node-client
@@ -20,12 +26,6 @@ jobs:
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-
-      - uses: tibdex/github-app-token@v1
-        id: generate-token
-        with:
-          app_id: ${{ secrets.PR_APP_ID }}
-          private_key: ${{ secrets.PR_APP_PRIVATE_KEY }}
 
       - uses: actions/cache@v4
         id: yarn-cache
