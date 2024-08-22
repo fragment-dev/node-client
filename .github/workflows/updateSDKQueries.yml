@@ -11,6 +11,12 @@ jobs:
           repository: fragment-dev/graphql-queries
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Run ls
+        run: ls -lah
+
+      - uses: actions/checkout@v4
+        name: Checkout node-client
+
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
