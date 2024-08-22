@@ -4,5 +4,6 @@ exports.DEFAULT_RETRY_CONFIG = void 0;
 exports.DEFAULT_RETRY_CONFIG = {
     retries: 5,
     factor: 2,
-    minTimeout: 500,
+    minTimeout: 10,
+    maxTimeout: 3000,
 };

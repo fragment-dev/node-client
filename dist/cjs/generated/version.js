@@ -5,4 +5,4 @@ exports.version = void 0;
 /**
  * A string representing the current version of the package.
  */
-exports.version = '1.0.5';
+exports.version = '1.0.6';
