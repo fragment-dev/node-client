@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaAgainDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /**
  * Used to configure the write-consistency of a Ledger Account's balance.
@@ -304,6 +304,28 @@ var UnitEnv;
 })(UnitEnv || (exports.UnitEnv = UnitEnv = {}));
 exports.StoreSchemaDocument = (0, graphql_tag_1.gql) `
   mutation storeSchema($schema: SchemaInput!) {
+    storeSchema(schema: $schema) {
+      __typename
+      ... on StoreSchemaResult {
+        schema {
+          key
+          name
+          version {
+            created
+            version
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.StoreSchemaAgainDocument = (0, graphql_tag_1.gql) `
+  mutation storeSchemaAgain($schema: SchemaInput!) {
     storeSchema(schema: $schema) {
       __typename
       ... on StoreSchemaResult {
@@ -989,6 +1011,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
     return {
         storeSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.StoreSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "storeSchema", "mutation", variables);
+        },
+        storeSchemaAgain(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.StoreSchemaAgainDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "storeSchemaAgain", "mutation", variables);
         },
         createLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createLedger", "mutation", variables);

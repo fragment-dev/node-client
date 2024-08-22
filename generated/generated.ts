@@ -2380,6 +2380,40 @@ export type StoreSchemaMutation = {
       };
 };
 
+export type StoreSchemaAgainMutationVariables = Exact<{
+  schema: SchemaInput;
+}>;
+
+export type StoreSchemaAgainMutation = {
+  __typename?: "Mutation";
+  storeSchema:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "StoreSchemaResult";
+        schema: {
+          __typename?: "Schema";
+          key: string;
+          name: string;
+          version: {
+            __typename?: "SchemaVersion";
+            created: string;
+            version: number;
+          };
+        };
+      };
+};
+
 export type CreateLedgerMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   ledger: CreateLedgerInput;
@@ -3143,6 +3177,28 @@ export const StoreSchemaDocument = gql`
     }
   }
 `;
+export const StoreSchemaAgainDocument = gql`
+  mutation storeSchemaAgain($schema: SchemaInput!) {
+    storeSchema(schema: $schema) {
+      __typename
+      ... on StoreSchemaResult {
+        schema {
+          key
+          name
+          version {
+            created
+            version
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const CreateLedgerDocument = gql`
   mutation createLedger(
     $ik: SafeString!
@@ -3834,6 +3890,22 @@ export function getSdk(
             ...wrappedRequestHeaders,
           }),
         "storeSchema",
+        "mutation",
+        variables,
+      );
+    },
+    storeSchemaAgain(
+      variables: StoreSchemaAgainMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<StoreSchemaAgainMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<StoreSchemaAgainMutation>(
+            StoreSchemaAgainDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "storeSchemaAgain",
         "mutation",
         variables,
       );

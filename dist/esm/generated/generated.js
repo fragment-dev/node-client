@@ -321,6 +321,28 @@ export const StoreSchemaDocument = gql `
     }
   }
 `;
+export const StoreSchemaAgainDocument = gql `
+  mutation storeSchemaAgain($schema: SchemaInput!) {
+    storeSchema(schema: $schema) {
+      __typename
+      ... on StoreSchemaResult {
+        schema {
+          key
+          name
+          version {
+            created
+            version
+          }
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const CreateLedgerDocument = gql `
   mutation createLedger(
     $ik: SafeString!
@@ -989,6 +1011,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
                 ...requestHeaders,
                 ...wrappedRequestHeaders,
             }), "storeSchema", "mutation", variables);
+        },
+        storeSchemaAgain(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(StoreSchemaAgainDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "storeSchemaAgain", "mutation", variables);
         },
         createLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreateLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createLedger", "mutation", variables);

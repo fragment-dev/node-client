@@ -19,6 +19,27 @@ mutation storeSchema($schema: SchemaInput!) {
   }
 }
 
+mutation storeSchemaAgain($schema: SchemaInput!) {
+  storeSchema(schema: $schema) {
+    __typename
+    ... on StoreSchemaResult {
+      schema {
+        key
+        name
+        version {
+          created
+          version
+        }
+      }
+    }
+    ... on Error {
+      code
+      message
+      retryable
+    }
+  }
+}
+
 mutation createLedger(
   $ik: SafeString!
   $ledger: CreateLedgerInput!
