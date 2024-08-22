@@ -53,9 +53,9 @@ jobs:
         run: yarn build
 
       - name: Create Pull Request
-        working-directory: ./node-client
         uses: peter-evans/create-pull-request@v4
         with:
+          path: ./node-client
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: 'Update Node SDK queries'
           title: 'Update Node SDK queries'
