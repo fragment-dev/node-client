@@ -2174,6 +2174,35 @@ export type StoreSchemaMutation = {
         };
     };
 };
+export type StoreSchemaAgainMutationVariables = Exact<{
+    schema: SchemaInput;
+}>;
+export type StoreSchemaAgainMutation = {
+    __typename?: "Mutation";
+    storeSchema: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "StoreSchemaResult";
+        schema: {
+            __typename?: "Schema";
+            key: string;
+            name: string;
+            version: {
+                __typename?: "SchemaVersion";
+                created: string;
+                version: number;
+            };
+        };
+    };
+};
 export type CreateLedgerMutationVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     ledger: CreateLedgerInput;
@@ -2890,6 +2919,7 @@ export type ListLedgerEntryGroupBalancesQuery = {
     } | null;
 };
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
+export declare const StoreSchemaAgainDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
 export declare const AddLedgerEntryDocument: import("graphql").DocumentNode;
 export declare const AddLedgerEntryRuntimeDocument: import("graphql").DocumentNode;
@@ -2914,6 +2944,7 @@ export declare const ListLedgerEntryGroupBalancesDocument: import("graphql").Doc
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
+    storeSchemaAgain(variables: StoreSchemaAgainMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaAgainMutation>;
     createLedger(variables: CreateLedgerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateLedgerMutation>;
     addLedgerEntry(variables: AddLedgerEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddLedgerEntryMutation>;
     addLedgerEntryRuntime(variables: AddLedgerEntryRuntimeMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddLedgerEntryRuntimeMutation>;
