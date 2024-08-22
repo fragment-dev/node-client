@@ -7,7 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        token: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
