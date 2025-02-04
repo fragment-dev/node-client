@@ -1,16 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
-/**
- * Used to configure the write-consistency of a Ledger Account's balance.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
-    /** Eventually consistent balance updates. */
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
-    /** Strongly consistent balance updates. */
     BalanceUpdateConsistencyMode["Strong"] = "strong";
 })(BalanceUpdateConsistencyMode || (exports.BalanceUpdateConsistencyMode = BalanceUpdateConsistencyMode = {}));
 var CurrencyCode;
@@ -209,6 +204,12 @@ var ExternalTxSource;
 (function (ExternalTxSource) {
     ExternalTxSource["Increase"] = "increase";
 })(ExternalTxSource || (exports.ExternalTxSource = ExternalTxSource = {}));
+var Granularity;
+(function (Granularity) {
+    Granularity["Daily"] = "daily";
+    Granularity["Hourly"] = "hourly";
+    Granularity["Monthly"] = "monthly";
+})(Granularity || (exports.Granularity = Granularity = {}));
 var IncreaseEnv;
 (function (IncreaseEnv) {
     IncreaseEnv["Production"] = "production";
@@ -254,17 +255,10 @@ var LedgerTypes;
 (function (LedgerTypes) {
     LedgerTypes["Double"] = "double";
 })(LedgerTypes || (exports.LedgerTypes = LedgerTypes = {}));
-/**
- * The consistency configuration of a Ledger Account's balance queries.
- * If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
-    /**
-     * Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field.
-     * Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum.
-     */
+    /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
     ReadBalanceConsistencyMode["Eventual"] = "eventual";
     /** Balance queries will read strongly consistent balances. This is only allowed if the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig` is `strong`. */
     ReadBalanceConsistencyMode["Strong"] = "strong";
@@ -278,7 +272,7 @@ var SceneEventType;
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {
