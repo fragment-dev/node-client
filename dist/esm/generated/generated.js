@@ -1,13 +1,8 @@
 import { gql } from "graphql-tag";
-/**
- * Used to configure the write-consistency of a Ledger Account's balance.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
-    /** Eventually consistent balance updates. */
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
-    /** Strongly consistent balance updates. */
     BalanceUpdateConsistencyMode["Strong"] = "strong";
 })(BalanceUpdateConsistencyMode || (BalanceUpdateConsistencyMode = {}));
 export var CurrencyCode;
@@ -206,6 +201,12 @@ export var ExternalTxSource;
 (function (ExternalTxSource) {
     ExternalTxSource["Increase"] = "increase";
 })(ExternalTxSource || (ExternalTxSource = {}));
+export var Granularity;
+(function (Granularity) {
+    Granularity["Daily"] = "daily";
+    Granularity["Hourly"] = "hourly";
+    Granularity["Monthly"] = "monthly";
+})(Granularity || (Granularity = {}));
 export var IncreaseEnv;
 (function (IncreaseEnv) {
     IncreaseEnv["Production"] = "production";
@@ -251,17 +252,10 @@ export var LedgerTypes;
 (function (LedgerTypes) {
     LedgerTypes["Double"] = "double";
 })(LedgerTypes || (LedgerTypes = {}));
-/**
- * The consistency configuration of a Ledger Account's balance queries.
- * If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
-    /**
-     * Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field.
-     * Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum.
-     */
+    /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
     ReadBalanceConsistencyMode["Eventual"] = "eventual";
     /** Balance queries will read strongly consistent balances. This is only allowed if the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig` is `strong`. */
     ReadBalanceConsistencyMode["Strong"] = "strong";
@@ -275,7 +269,7 @@ export var SceneEventType;
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {

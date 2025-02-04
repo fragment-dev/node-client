@@ -88,6 +88,11 @@ export type Scalars = {
         input: string;
         output: string;
     };
+    /** A mapping of parameter keys to values. */
+    Parameters: {
+        input: string;
+        output: string;
+    };
     /** A specific year ("2021"), quarter ("2021-Q1"), month ("2021-02"), day ("2021-02-03") or hour ("2021-02-03T04") */
     Period: {
         input: string;
@@ -124,14 +129,29 @@ export type BadRequestError = Error & {
     /** Whether or not the operation is retryable */
     retryable: Scalars["Boolean"]["output"];
 };
-/**
- * Used to configure the write-consistency of a Ledger Account's balance.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** A single amount and the timestamp requested */
+export type BalanceChangeDuring = {
+    __typename?: "BalanceChangeDuring";
+    /** The balance or balance change */
+    amount: CurrencyAmount;
+    /** The period of the requested balance change */
+    period: Scalars["Period"]["output"];
+};
+/** A paginated list of amounts and their periods */
+export type BalanceChangeDuringConnection = {
+    __typename?: "BalanceChangeDuringConnection";
+    /** The granularity of the return data */
+    granularity: Granularity;
+    /** The current page of results */
+    nodes: Array<BalanceChangeDuring>;
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
+    pageInfo: PageInfo;
+    /** The time period across which the balance changes are requested */
+    period: Scalars["Period"]["output"];
+};
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum BalanceUpdateConsistencyMode {
-    /** Eventually consistent balance updates. */
     Eventual = "eventual",
-    /** Strongly consistent balance updates. */
     Strong = "strong"
 }
 /** The input for your Chart of Accounts in a Schema. */
@@ -142,7 +162,7 @@ export type ChartOfAccountsInput = {
      * The default consistency configuration for all Ledger Accounts in this Schema.
      * If a Ledger Account does not specify its own consistency configuration, it will use the default values provided here.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     defaultConsistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /**
@@ -157,7 +177,7 @@ export type ChartOfAccountsInput = {
 export type CreateCustomCurrencyInput = {
     /** The currency code for custom currencies. It can be up to 5 characters long. This is used for display purposes. */
     customCode: Scalars["String"]["input"];
-    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference#mutations-createcustomcurrency) mutation. */
+    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
     customCurrencyId: Scalars["SafeString"]["input"];
     /** A human readable name for the currency (e.g. United States Dollar). This is used for display purposes. */
     name: Scalars["String"]["input"];
@@ -207,7 +227,7 @@ export type CreateLedgerAccountResult = {
 export type CreateLedgerAccountsInput = {
     /** Ledger Accounts to create as children of this Ledger Account. */
     childLedgerAccounts?: InputMaybe<Array<CreateLedgerAccountsInput>>;
-    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs#configure-consistency). */
+    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
     consistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /** The currency of this Ledger Account. If this is not set, the workspace level default is used. */
     currency?: InputMaybe<CurrencyMatchInput>;
@@ -215,7 +235,7 @@ export type CreateLedgerAccountsInput = {
     currencyMode?: InputMaybe<CurrencyMode>;
     /** The idempotency key for creating this Ledger Account. */
     ik: Scalars["SafeString"]["input"];
-    /** The External Account to link to this Ledger Account. This can only be specified on leaf Ledger Accounts. See [Reconcile transactions](https://fragment.dev/docs#reconcile-transactions). */
+    /** The External Account to link to this Ledger Account. This can only be specified on leaf Ledger Accounts. See [Reconcile payments](https://fragment.dev/docs/reconcile-payments). */
     linkedAccount?: InputMaybe<ExternalAccountMatchInput>;
     /** The name of the Ledger Account. */
     name: Scalars["String"]["input"];
@@ -255,11 +275,11 @@ export type CreateLedgerResult = {
 };
 export type Currency = {
     __typename?: "Currency";
-    /** The currency code. This is an [enum type](https://fragment.dev/api-reference#types-scalars-and-enums-currencycode) . */
+    /** The currency code. This is an [enum type](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode) . */
     code: CurrencyCode;
     /** The currency code for custom currencies. This is only set if 'currency' is set to CUSTOM. It can be up to 32 characters long. */
     customCode?: Maybe<Scalars["String"]["output"]>;
-    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference#mutations-createcustomcurrency) mutation. */
+    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
     customCurrencyId?: Maybe<Scalars["SafeString"]["output"]>;
     /** A human readable name for the currency (e.g. United States Dollar). This is used for display purposes. */
     name: Scalars["String"]["output"];
@@ -279,7 +299,7 @@ export type CurrencyAmountConnection = {
     __typename?: "CurrencyAmountConnection";
     /** The current page of results */
     nodes: Array<CurrencyAmount>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export declare enum CurrencyCode {
@@ -462,13 +482,13 @@ export declare enum CurrencyCode {
 export type CurrencyFilter = {
     /** Must match the value provided */
     equalTo?: InputMaybe<CurrencyMatchInput>;
-    /** Must match one of the values provided */
+    /** Must match one of the values provided. Limited to 100 items maximum. */
     in?: InputMaybe<Array<CurrencyMatchInput>>;
 };
 export type CurrencyMatchInput = {
-    /** The currency code. This is an [enum type](https://fragment.dev/api-reference#types-scalars-and-enums-currencycode). */
+    /** The currency code. This is an [enum type](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode). */
     code: CurrencyCode;
-    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference#mutations-createcustomcurrency) mutation. */
+    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
     customCurrencyId?: InputMaybe<Scalars["SafeString"]["input"]>;
 };
 /** Defines the currency handling of a LedgerAccount, which can either be restricted to a single currency or allow multiple currencies. */
@@ -491,7 +511,7 @@ export type CustomCurrenciesConnection = {
     __typename?: "CustomCurrenciesConnection";
     /** The current page of results */
     nodes: Array<Currency>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export type CustomLink = Link & {
@@ -519,6 +539,7 @@ export type CustomTxInput = {
 };
 export type DateFilter = {
     equalTo?: InputMaybe<Scalars["Date"]["input"]>;
+    /** Must match one of the values provided. Limited to 100 items maximum. */
     in?: InputMaybe<Array<Scalars["Date"]["input"]>>;
 };
 /** Filters a timestamp field between two moments in time */
@@ -527,6 +548,27 @@ export type DateTimeFilter = {
     after?: InputMaybe<Scalars["DateTime"]["input"]>;
     /** The timestamp value must be before this moment. Specified in ISO 8601 format e.g "1968-01-01T16:45:00Z" */
     before?: InputMaybe<Scalars["DateTime"]["input"]>;
+};
+export type DeleteCustomTxsResponse = BadRequestError | DeleteCustomTxsResult | InternalError;
+export type DeleteCustomTxsResult = {
+    __typename?: "DeleteCustomTxsResult";
+    /** List of Txs deleted in this operation */
+    txs: Array<DeletedCustomTx>;
+};
+export type DeleteLedgerResponse = BadRequestError | DeleteLedgerResult | InternalError;
+export type DeleteLedgerResult = {
+    __typename?: "DeleteLedgerResult";
+    success: Scalars["Boolean"]["output"];
+};
+export type DeleteSchemaResponse = BadRequestError | DeleteSchemaResult | InternalError;
+export type DeleteSchemaResult = {
+    __typename?: "DeleteSchemaResult";
+    success: Scalars["Boolean"]["output"];
+};
+export type DeletedCustomTx = {
+    __typename?: "DeletedCustomTx";
+    /** A deleted Tx */
+    tx: Tx;
 };
 export type EntryGroupMatchInput = {
     key: Scalars["SafeString"]["input"];
@@ -576,10 +618,10 @@ export type ExternalAccountTxsArgs = {
 export type ExternalAccountFilter = {
     /** Ledger Account must linked to the the specified external account */
     equalTo?: InputMaybe<ExternalAccountMatchInput>;
-    /** Ledger Account can be linked to any of the specified external accounts */
+    /** Ledger Account can be linked to any of the specified external accounts. Limited to 100 items maximum. */
     in?: InputMaybe<Array<ExternalAccountMatchInput>>;
 };
-/** Specify an External Account by using `id`, or  `linkId` and `externalId`. */
+/** Specify an External Account by using `id`, or `linkId` and `externalId`. */
 export type ExternalAccountMatchInput = {
     /** The external system's ID of the External Account. If this is specified, `linkId` is required. `id` is optional, but will be validated if provided. */
     externalId?: InputMaybe<Scalars["ID"]["input"]>;
@@ -593,7 +635,7 @@ export type ExternalAccountsConnection = {
     __typename?: "ExternalAccountsConnection";
     /** The current page of results */
     nodes: Array<ExternalAccount>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export declare enum ExternalTransferType {
@@ -606,12 +648,37 @@ export declare enum ExternalTransferType {
 export declare enum ExternalTxSource {
     Increase = "increase"
 }
+export declare enum Granularity {
+    Daily = "daily",
+    Hourly = "hourly",
+    Monthly = "monthly"
+}
 /** A filter to query balances of a specific subset of accounts */
 export type GroupBalanceAccountFilter = {
     /** A filter that must match the account ID */
     id?: InputMaybe<StringFilter>;
     /** A filter that must match the account path. Wildcards ('*') may be used only for template variables, and will only match a single variable each. */
     path?: InputMaybe<StringMatchFilter>;
+};
+/** A single amount and the timestamp requested */
+export type HistoricalBalance = {
+    __typename?: "HistoricalBalance";
+    /** The balance or balance change */
+    amount: CurrencyAmount;
+    /** The timestamp of the requested balance */
+    at: Scalars["LastMoment"]["output"];
+};
+/** A paginated list of amounts and their periods */
+export type HistoricalBalanceConnection = {
+    __typename?: "HistoricalBalanceConnection";
+    /** The granularity of the return data */
+    granularity: Granularity;
+    /** The current page of results */
+    nodes: Array<HistoricalBalance>;
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
+    pageInfo: PageInfo;
+    /** The time period across which the balance is requested */
+    period: Scalars["Period"]["output"];
 };
 export type IkReplay = {
     __typename?: "IkReplay";
@@ -685,7 +752,7 @@ export type Ledger = {
     /** URL to the Fragment Dashboard for this Ledger. */
     dashboardUrl: Scalars["String"]["output"];
     id: Scalars["ID"]["output"];
-    /** The IK passed into the [createLedger](/api-reference#mutations-createledger) mutation. This is treated as a unique identifier for this Ledger. */
+    /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a unique identifier for this Ledger. */
     ik: Scalars["SafeString"]["output"];
     /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
     ledgerAccounts: LedgerAccountsConnection;
@@ -697,7 +764,7 @@ export type Ledger = {
     ledgerEntryGroups: LedgerEntryGroupsConnection;
     /** Schema migrations affecting this Ledger. */
     migrations: LedgerMigrationConnection;
-    /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference#mutations-updateledger) mutation. */
+    /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference/api-mutations#updateledger) mutation. */
     name: Scalars["String"]["output"];
     /** Schema key associated with this Ledger. */
     schema?: Maybe<Schema>;
@@ -742,16 +809,36 @@ export type LedgerAccount = {
     balanceChange: Scalars["Int96"]["output"];
     /** How much did the this ledger account's balances change during the specified period. This query will include all child accounts of all currencies. */
     balanceChanges: CurrencyAmountConnection;
+    /**
+     * How much did the ledger account's balances change over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance changes for each day in the month.
+     */
+    balanceChangesDuring: BalanceChangeDuringConnection;
     /** Total of all lines in this ledger account and child ledger accounts in all currencies */
     balances: CurrencyAmountConnection;
+    /**
+     * The ledger account's balances over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance for each day in the month.
+     */
+    balancesDuring: HistoricalBalanceConnection;
     /** Total of all lines in child ledger accounts of the same currency as this ledger account */
     childBalance: Scalars["Int96"]["output"];
     /** How much did the this ledger account's childBalance change during the specified period. This query will only include child accounts which are in the same currency as this one. See childBalanceChanges to include children of different currencies. */
     childBalanceChange: Scalars["Int96"]["output"];
     /** How much did the this ledger account's child accounts' balances change during the specified period. This query will include all child accounts of all currencies. */
     childBalanceChanges: CurrencyAmountConnection;
+    /**
+     * How much did the ledger account's childBalances change over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance changes for each day in the month.
+     */
+    childBalanceChangesDuring: BalanceChangeDuringConnection;
     /** Total of all lines in child ledger accounts of this ledger in all currencies */
     childBalances: CurrencyAmountConnection;
+    /**
+     * The ledger account's childBalances over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance for each day in the month.
+     */
+    childBalancesDuring: HistoricalBalanceConnection;
     /** The child Ledger Accounts of this Ledger Accountw */
     childLedgerAccounts: LedgerAccountsConnection;
     /** The consistency configuration for this Ledger Account. This defines how updates to this Ledger Account's ownBalance are handled. */
@@ -784,8 +871,18 @@ export type LedgerAccount = {
     ownBalanceChange: Scalars["Int96"]["output"];
     /** How much did the this ledger account's ownBalance change during the specified period. This is the total of all lines in this ledger account, excluding all child ledger accounts */
     ownBalanceChanges: CurrencyAmountConnection;
+    /**
+     * How much did the ledger account's ownBalances change over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance changes for each day in the month.
+     */
+    ownBalanceChangesDuring: BalanceChangeDuringConnection;
     /** Total of all lines across all currencies in this ledger account, excluding all child ledger accounts */
     ownBalances: CurrencyAmountConnection;
+    /**
+     * The ledger account's ownBalances over a time period with a specified granularity.
+     * For example, if the period is 1969-07 and the granularity is daily, the query will return the balance for each day in the month.
+     */
+    ownBalancesDuring: HistoricalBalanceConnection;
     /** The parent ledger account of this ledger account */
     parentLedgerAccount?: Maybe<LedgerAccount>;
     /** ID of the parent ledger account of this ledger account */
@@ -817,8 +914,20 @@ export type LedgerAccountBalanceChangesArgs = {
     period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
+export type LedgerAccountBalanceChangesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
+};
+/** A ledger account is a container for money */
 export type LedgerAccountBalancesArgs = {
     at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+};
+/** A ledger account is a container for money */
+export type LedgerAccountBalancesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalanceArgs = {
@@ -835,8 +944,20 @@ export type LedgerAccountChildBalanceChangesArgs = {
     period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
+export type LedgerAccountChildBalanceChangesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
+};
+/** A ledger account is a container for money */
 export type LedgerAccountChildBalancesArgs = {
     at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+};
+/** A ledger account is a container for money */
+export type LedgerAccountChildBalancesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountChildLedgerAccountsArgs = {
@@ -869,9 +990,21 @@ export type LedgerAccountOwnBalanceChangesArgs = {
     period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
+export type LedgerAccountOwnBalanceChangesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
+};
+/** A ledger account is a container for money */
 export type LedgerAccountOwnBalancesArgs = {
     at?: InputMaybe<Scalars["LastMoment"]["input"]>;
     consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+};
+/** A ledger account is a container for money */
+export type LedgerAccountOwnBalancesDuringArgs = {
+    currency?: InputMaybe<CurrencyMatchInput>;
+    granularity: Granularity;
+    period: Scalars["Period"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountUnreconciledTxsArgs = {
@@ -883,17 +1016,17 @@ export type LedgerAccountUnreconciledTxsArgs = {
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountCondition = {
     __typename?: "LedgerAccountCondition";
-    /** A condition that the `ownBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs#read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the `ownBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs/read-balances) for more on the different types of Ledger Account balances. */
     ownBalance?: Maybe<Int96Condition>;
 };
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountConditionInput = {
-    /** A condition that the ownBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs#read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the ownBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/read-balances) for more on the different types of Ledger Account balances. */
     ownBalance: Int96ConditionInput;
 };
 /**
  * The consistency configuration of a Ledger Account's balance updates.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type LedgerAccountConsistencyConfig = {
     __typename?: "LedgerAccountConsistencyConfig";
@@ -906,19 +1039,19 @@ export type LedgerAccountConsistencyConfig = {
      * Otherwise if not set or set to `eventual`, `ownBalance` updates are applied
      * asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates: BalanceUpdateConsistencyMode;
 };
 /**
  * The payload configuring the consistency for this Ledger Account.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type LedgerAccountConsistencyConfigInput = {
     /**
      * The consistency configuration for Ledger Entry Groups affecting this account.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     groups?: InputMaybe<Array<LedgerAccountGroupConsistencyConfigInput>>;
     /**
@@ -927,7 +1060,7 @@ export type LedgerAccountConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, `lines` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     lines?: InputMaybe<LedgerLinesConsistencyMode>;
     /**
@@ -936,7 +1069,7 @@ export type LedgerAccountConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
 };
@@ -956,7 +1089,7 @@ export type LedgerAccountGroupConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, Ledger Entry Group `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates: BalanceUpdateConsistencyMode;
 };
@@ -966,13 +1099,12 @@ export type LedgerAccountGroupConsistencyConfigInput = {
  * When specifying a Ledger Account by `path`, you must provide `ledger`.
  */
 export type LedgerAccountMatchInput = {
-    /** The FRAGMENT ID of the ledger account */
+    /** The FRAGMENT ID of the Ledger Account */
     id?: InputMaybe<Scalars["ID"]["input"]>;
     /** The Ledger to which this Ledger Account belongs. This is required if you are specifying the Ledger Account by `path`. */
     ledger?: InputMaybe<LedgerMatchInput>;
     /**
-     * The unique path of the ledger account.
-     *
+     * The unique path of the Ledger Account.
      * This is a slash-delimited string containing the keys of an account and all its direct ancestors.
      */
     path?: InputMaybe<Scalars["String"]["input"]>;
@@ -994,7 +1126,7 @@ export type LedgerAccountsConnection = {
     __typename?: "LedgerAccountsConnection";
     /** The current page of results */
     nodes: Array<LedgerAccount>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export type LedgerAccountsFilterSet = {
@@ -1022,7 +1154,7 @@ export type LedgerEntriesConnection = {
     __typename?: "LedgerEntriesConnection";
     /** The current page of results */
     nodes: Array<LedgerEntry>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export type LedgerEntriesFilterSet = {
@@ -1059,6 +1191,8 @@ export type LedgerEntry = {
     ledgerId: Scalars["ID"]["output"];
     /** Lines posted in this Ledger Entry. */
     lines: LedgerLinesConnection;
+    /** The parameters used to post this Ledger Entry. */
+    parameters?: Maybe<Scalars["Parameters"]["output"]>;
     /** ISO-8601 timestamp this LedgerEntry posted to its Ledger. */
     posted: Scalars["DateTime"]["output"];
     /** The set of tags attached to this Ledger Entry. */
@@ -1094,7 +1228,7 @@ export type LedgerEntryConditionInput = {
 export type LedgerEntryFilter = {
     /** Result must be the specified Ledger Entry. */
     equalTo?: InputMaybe<LedgerEntryMatchInput>;
-    /** Result can be any of the specified Ledger Entries. */
+    /** Result can be any of the specified Ledger Entries. Limited to 100 items maximum. */
     in?: InputMaybe<Array<LedgerEntryMatchInput>>;
 };
 /** A group of Ledger Entries */
@@ -1107,7 +1241,11 @@ export type LedgerEntryGroup = {
     dashboardUrl: Scalars["String"]["output"];
     /** The key of this Ledger Entry Group. */
     key: Scalars["SafeString"]["output"];
+    /** The Ledger that this Ledger Entry Group is within. */
+    ledger: Ledger;
     ledgerEntries: LedgerEntriesConnection;
+    /** The ID of the Ledger this Ledger Entry Group is within. */
+    ledgerId: Scalars["ID"]["output"];
     /** The value associated with Ledger Entry Group. */
     value: Scalars["SafeString"]["output"];
 };
@@ -1176,10 +1314,12 @@ export type LedgerEntryGroupsConnection = {
     pageInfo: PageInfo;
 };
 export type LedgerEntryGroupsFilterSet = {
-    /** Use to filter ledger groups by their created timestamp */
+    /** Use to filter Ledger Entry Groups by their created timestamp */
     created?: InputMaybe<DateTimeFilter>;
-    /** Use to filter ledger groups by their type */
+    /** Use to filter Ledger Entry Groups by their key */
     key?: InputMaybe<StringFilter>;
+    /** Use to filter Ledger Entry Groups by their value */
+    value?: InputMaybe<StringFilter>;
 };
 /** Ledger Entries are limited to 30 Ledger Lines. */
 export type LedgerEntryInput = {
@@ -1201,21 +1341,16 @@ export type LedgerEntryInput = {
     tags?: InputMaybe<Array<LedgerEntryTagInput>>;
     /** The type of the Ledger Entry. Must be defined in the Schema linked to the Ledger specified below. */
     type?: InputMaybe<Scalars["String"]["input"]>;
+    /** Experimental: This field is reserved for an upcoming feature and is not yet supported. */
+    version?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** Specify a Ledger Entry by using `id`. */
 export type LedgerEntryMatchInput = {
     /** The FRAGMENT ID of the Ledger Entry */
     id?: InputMaybe<Scalars["ID"]["input"]>;
-    /**
-     * The IK provided to the `addLedgerEntry` mutation or the `ik` field
-     * returned from a `reconcileTx` mutation. This is required if you have not
-     * provided `id`.
-     */
+    /** The IK provided to the `addLedgerEntry` mutation or the `ik` field returned from a `reconcileTx` mutation. This is required if you have not provided `id`. */
     ik?: InputMaybe<Scalars["SafeString"]["input"]>;
-    /**
-     * The FRAGMENT ID of the Ledger to which this Ledger Entry belongs. This
-     * is required if you have not provided `id`.
-     */
+    /** The FRAGMENT ID of the Ledger to which this Ledger Entry belongs. This is required if you have not provided `id`. */
     ledger?: InputMaybe<LedgerMatchInput>;
 };
 /** A tag attached to a Ledger Entry. */
@@ -1257,9 +1392,9 @@ export type LedgerLine = {
     key?: Maybe<Scalars["String"]["output"]>;
     ledger: Ledger;
     /** LedgerEntry that contains this line */
-    ledgerEntry?: Maybe<LedgerEntry>;
+    ledgerEntry: LedgerEntry;
     /** ID of the LedgerEntry that contains this line */
-    ledgerEntryId?: Maybe<Scalars["ID"]["output"]>;
+    ledgerEntryId: Scalars["ID"]["output"];
     /** Ledger that contains this line */
     ledgerId: Scalars["ID"]["output"];
     /** ID in the external system of destination or source bank account for an internal bank transfer. Only for internal bank transfers - see otherTxId */
@@ -1293,7 +1428,7 @@ export type LedgerLineInput = {
     currency?: InputMaybe<CurrencyMatchInput>;
     /** If not specified the description from the parent LedgerEntryInput will be used */
     description?: InputMaybe<Scalars["String"]["input"]>;
-    /** Optional identifier for Ledger Line. You can filter lines by key using [LedgerLinesFilterSet](https://fragment.dev/api-reference#types-filter-types-ledgerlinesfilterset). */
+    /** Optional identifier for Ledger Line. You can filter lines by key using [LedgerLinesFilterSet](https://fragment.dev/api-reference/api-types#filter-types-ledgerlinesfilterset). */
     key?: InputMaybe<Scalars["String"]["input"]>;
     /** Required for reconcileTx to specify the transaction being reconciled, you can specify either the FRAGMENT ID or external ID of the transaction */
     tx?: InputMaybe<TxMatchInput>;
@@ -1308,7 +1443,7 @@ export type LedgerLinesConnection = {
     __typename?: "LedgerLinesConnection";
     /** The current page of results */
     nodes: Array<LedgerLine>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export declare enum LedgerLinesConsistencyMode {
@@ -1328,9 +1463,9 @@ export type LedgerLinesFilterSet = {
 };
 /** Specify a Ledger by using `id` or `ik`. */
 export type LedgerMatchInput = {
-    /** The FRAGMENT ID of the ledger */
+    /** The FRAGMENT ID of the Ledger */
     id?: InputMaybe<Scalars["ID"]["input"]>;
-    /** The IK passed into the [createLedger](/api-reference#mutations-createledger) mutation. This is treated as a second unique identifier for this ledger. */
+    /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a second unique identifier for this Ledger. */
     ik?: InputMaybe<Scalars["SafeString"]["input"]>;
 };
 /**
@@ -1378,6 +1513,7 @@ export declare enum LedgerMigrationStatus {
 }
 export type LedgerTypeFilter = {
     equalTo?: InputMaybe<LedgerTypes>;
+    /** Must match one of the values provided. Limited to 100 items maximum. */
     in?: InputMaybe<Array<LedgerTypes>>;
 };
 export declare enum LedgerTypes {
@@ -1388,7 +1524,7 @@ export type LedgersConnection = {
     __typename?: "LedgersConnection";
     /** The current page of results */
     nodes: Array<Ledger>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export type LedgersFilterSet = {
@@ -1415,34 +1551,44 @@ export type LinksConnection = {
     __typename?: "LinksConnection";
     /** The current page of results */
     nodes: Array<CustomLink | IncreaseLink | StripeLink | UnitLink>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type Mutation = {
     __typename?: "Mutation";
     _empty?: Maybe<Scalars["String"]["output"]>;
-    /** Adds a Ledger Entry to a Ledger. This Ledger Entry cannot be into a Linked Ledger Account. For that, use [reconcileTx](https://fragment.dev/api-reference#mutations-reconciletx) */
+    /** Adds a Ledger Entry to a Ledger. This Ledger Entry cannot be into a Linked Ledger Account. For that, use [reconcileTx](https://fragment.dev/api-reference/api-mutations#reconciletx) */
     addLedgerEntry: AddLedgerEntryResponse;
     /** Creates a custom currency.  */
     createCustomCurrency: CreateCustomCurrencyResponse;
-    /** Custom Links let you integrate external systems that don't have native support. See [Custom Links](https://fragment.dev/docs#reconcile-transactions-link-any-system) */
+    /** Custom Links let you integrate external systems that don't have native support. See [Custom Links](https://fragment.dev/docs/sync-payments#custom-link) */
     createCustomLink: CreateCustomLinkResponse;
     /** Creates a Ledger.  */
     createLedger: CreateLedgerResponse;
     createLedgerAccount: CreateLedgerAccountResponse;
     /** This API call is used to create Ledger Accounts. It is only used if you are not using a Schema. Unlike other mutations that take a single IK, 'createLedgerAccount' accepts an IK for each of the ledger accounts in the request payload. This is so you can recover in the case of a partial failure.  One API call can create up to 200 Ledger Accounts, up to 10 levels deep. */
     createLedgerAccounts: CreateLedgerAccountsResponse;
-    /** This mutation is used to [reconcile](https://fragment.dev/docs#reconcile-transactions) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
+    /** Delete Txs on a Custom Link. Once deleted, a Tx will not show up in listing queries, but can be resolved by if you lookup by its Fragment ID. */
+    deleteCustomTxs: DeleteCustomTxsResponse;
+    /**
+     * Delete a Ledger.
+     *
+     * After using the deleteLedger mutation you can re-use the ik in a new ledger after a 30 second wait.
+     */
+    deleteLedger: DeleteLedgerResponse;
+    /** Delete a Schema */
+    deleteSchema: DeleteSchemaResponse;
+    /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
     reconcileTx: ReconcileTxResponse;
     /**
      * Stores a Schema in your workspace. If no Schema with the same key exists in your worksapce, a new Schema is created.
      * Else, the Schema is updated, and every Ledger associated with it is migrated to the latest version.
      */
     storeSchema: StoreSchemaResponse;
-    /** Once you've created a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system), create accounts under it using this mutation. Each Custom Account is an immutable, single-entry view of all the transactions in the external account. You can sync up to 100 Custom Accounts in one API call. */
+    /** Once you've created a [Custom Link](https://fragment.dev/docs/sync-payments#custom-link), create accounts under it using this mutation. Each Custom Account is an immutable, single-entry view of all the transactions in the external account. You can sync up to 100 Custom Accounts in one API call. */
     syncCustomAccounts: SyncCustomAccountsResponse;
-    /** You can create transactions under a Custom Account in a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system) using this mutation. Once you've imported transactions, you can use the reconcileTx mutation to add them to a Ledger via the Linked Ledger Account. You can sync up to 100 Custom Transactions in one API call. */
+    /** You can create transactions under a Custom Account in a [Custom Link](https://fragment.dev/docs/sync-payments#custom-link) using this mutation. Once you've imported transactions, you can use the reconcileTx mutation to add them to a Ledger via the Linked Ledger Account. You can sync up to 100 Custom Transactions in one API call. */
     syncCustomTxs: SyncCustomTxsResponse;
     /** Updates a Ledger. Currently, you can change only the Ledger 'name'. */
     updateLedger: UpdateLedgerResponse;
@@ -1451,66 +1597,78 @@ export type Mutation = {
     /** Update a ledger entry */
     updateLedgerEntry: UpdateLedgerEntryResponse;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationAddLedgerEntryArgs = {
     entry: LedgerEntryInput;
     ik: Scalars["SafeString"]["input"];
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreateCustomCurrencyArgs = {
     customCurrency: CreateCustomCurrencyInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreateCustomLinkArgs = {
     ik: Scalars["SafeString"]["input"];
     name: Scalars["String"]["input"];
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreateLedgerArgs = {
     ik: Scalars["SafeString"]["input"];
     ledger: CreateLedgerInput;
     schema?: InputMaybe<SchemaMatchInput>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreateLedgerAccountArgs = {
     ik: Scalars["SafeString"]["input"];
     ledger: LedgerMatchInput;
     ledgerAccount: CreateLedgerAccountInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreateLedgerAccountsArgs = {
     ledger: LedgerMatchInput;
     ledgerAccounts: Array<CreateLedgerAccountsInput>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationDeleteCustomTxsArgs = {
+    txs: Array<Scalars["ID"]["input"]>;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationDeleteLedgerArgs = {
+    ledger: LedgerMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationDeleteSchemaArgs = {
+    schema: SchemaMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationReconcileTxArgs = {
     entry: LedgerEntryInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationStoreSchemaArgs = {
     schema: SchemaInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationSyncCustomAccountsArgs = {
     accounts: Array<CustomAccountInput>;
     link: LinkMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationSyncCustomTxsArgs = {
     link: LinkMatchInput;
     txs: Array<CustomTxInput>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationUpdateLedgerArgs = {
     ledger: LedgerMatchInput;
     update: UpdateLedgerInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationUpdateLedgerAccountArgs = {
     ledgerAccount: LedgerAccountMatchInput;
     update: UpdateLedgerAccountInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#mutations) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationUpdateLedgerEntryArgs = {
     ledgerEntry: LedgerEntryMatchInput;
     update: UpdateLedgerEntryInput;
@@ -1525,7 +1683,7 @@ export type NotFoundError = Error & {
     /** Whether or not the operation is retryable */
     retryable: Scalars["Boolean"]["output"];
 };
-/** An object containing [pagination](https://fragment.dev/docs#query-data-basics-pagination) details. */
+/** An object containing [pagination](https://fragment.dev/docs/query-data#basics-pagination) details. */
 export type PageInfo = {
     __typename?: "PageInfo";
     endCursor?: Maybe<Scalars["String"]["output"]>;
@@ -1533,7 +1691,7 @@ export type PageInfo = {
     hasPreviousPage: Scalars["Boolean"]["output"];
     startCursor?: Maybe<Scalars["String"]["output"]>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type Query = {
     __typename?: "Query";
     _empty?: Maybe<Scalars["String"]["output"]>;
@@ -1566,38 +1724,38 @@ export type Query = {
     /** Get the current Workspace */
     workspace: Workspace;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryCustomCurrenciesArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     before?: InputMaybe<Scalars["String"]["input"]>;
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryExternalAccountArgs = {
     externalAccount: ExternalAccountMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerArgs = {
     ledger: LedgerMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerAccountArgs = {
     ledgerAccount: LedgerAccountMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerEntryArgs = {
     ledgerEntry: LedgerEntryMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerEntryGroupArgs = {
     ledgerEntryGroup: LedgerEntryGroupMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerLineArgs = {
     ledgerLine: LedgerLineMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgersArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     before?: InputMaybe<Scalars["String"]["input"]>;
@@ -1605,35 +1763,28 @@ export type QueryLedgersArgs = {
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLinkArgs = {
     link: LinkMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QuerySchemaArgs = {
     schema: SchemaMatchInput;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QuerySchemasArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     before?: InputMaybe<Scalars["String"]["input"]>;
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
-/** View the API guide [here](https://fragment.dev/api-reference#queries) */
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryTxArgs = {
     tx: TxMatchInput;
 };
-/**
- * The consistency configuration of a Ledger Account's balance queries.
- * If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances.
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
- */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum ReadBalanceConsistencyMode {
-    /**
-     * Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field.
-     * Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum.
-     */
+    /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
     Eventual = "eventual",
     /** Balance queries will read strongly consistent balances. This is only allowed if the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig` is `strong`. */
     Strong = "strong",
@@ -1722,20 +1873,20 @@ export type SchemaConnection = {
 /**
  * The consistency configuration for entities created within Ledgers created by this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type SchemaConsistencyConfigInput = {
     /**
      * The consistency mode for the Ledger Entries list query within Ledgers created by this Schema.
      *
-     * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     entries?: InputMaybe<SchemaConsistencyMode>;
 };
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs#configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export declare enum SchemaConsistencyMode {
     /** Eventually consistent entity updates */
@@ -1744,13 +1895,13 @@ export declare enum SchemaConsistencyMode {
     Strong = "strong"
 }
 /**
- * Matches a Currency. Can be a built-in [CurrencyCode](https://fragment.dev/api-reference#types-scalars-and-enums-currencycode), custom Currency, or a parameterized string.
+ * Matches a Currency. Can be a built-in [CurrencyCode](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode), custom Currency, or a parameterized string.
  * If you supply a parameterized string, you must pass in a valid CurrencyCode as a parameter when posting a Ledger Entry.
  */
 export type SchemaCurrencyMatchInput = {
-    /** The currency code. This must either be a [CurrencyCode](https://fragment.dev/api-reference#types-scalars-and-enums-currencycode) or a parameterized string that resolves to a CurrencyCode . */
+    /** The currency code. This must either be a [CurrencyCode](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode) or a parameterized string that resolves to a CurrencyCode . */
     code: Scalars["ParameterizedString"]["input"];
-    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference#mutations-createcustomcurrency) mutation. */
+    /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
     customCurrencyId?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
 };
 export type SchemaExternalAccountMatchInput = {
@@ -1787,13 +1938,13 @@ export type SchemaInt96ConditionInput = {
 };
 /**
  * Models a Ledger Account in a Schema.
- * Upon successfully storing a [Schema](https://fragment.dev/api-reference#types-core-types-schema), a [LedgerAccount](https://fragment.dev/api-reference#types-core-types-ledgeraccount) will be created for
+ * Upon successfully storing a [Schema](https://fragment.dev/api-reference/api-types#core-types-schema), a [LedgerAccount](https://fragment.dev/api-reference/api-types#core-types-ledgeraccount) will be created for
  * each corresponding non-templated `SchemaLedgerAccountInput` in your Chart of Accounts.
  */
 export type SchemaLedgerAccountInput = {
     /** Ledger Accounts to create as children of this Ledger Account. Ledger Accounts may be nested up to a maximum depth of 10. */
     children?: InputMaybe<Array<SchemaLedgerAccountInput>>;
-    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs#configure-consistency). */
+    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
     consistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /**
      * The currency of this Ledger Account. If this is not set, and `currencyMode` is
@@ -1866,7 +2017,7 @@ export type SchemaLedgerEntryInput = {
     groups?: InputMaybe<Array<SchemaLedgerEntryGroupInput>>;
     /**
      * The Ledger Lines in the Ledger Entry.
-     * If provided, when posting a Typed Entry, a [LedgerEntry](https://fragment.dev/api-reference#types-core-types-ledgerline) will be posted containing [LedgerLines](https://fragment.dev/api-reference#types-core-types-ledgerline) corresponding
+     * If provided, when posting a Typed Entry, a [LedgerEntry](https://fragment.dev/api-reference/api-types#core-types-ledgerline) will be posted containing [LedgerLines](https://fragment.dev/api-reference/api-types#core-types-ledgerline) corresponding
      * to the values you provide here. If your lines contain parameters, you must supply values for those parameters that balance out the Ledger Entry. If not provided, lines will be required when posting a Typed Entry.
      */
     lines?: InputMaybe<Array<SchemaLedgerLineInput>>;
@@ -1876,9 +2027,11 @@ export type SchemaLedgerEntryInput = {
     tags?: InputMaybe<Array<SchemaLedgerEntryTagInput>>;
     /**
      * The type of this Ledger Entry. This is a stable, unique identifier for this entry. Uniqueness is enforced at the Schema level.
-     * You can filter on this field when querying for Ledger Entries. See the docs on [LedgerEntryFilterSet](https://fragment.dev/api-reference#types-filter-types-ledgerentriesfilterset)
+     * You can filter on this field when querying for Ledger Entries. See the docs on [LedgerEntryFilterSet](https://fragment.dev/api-reference/api-types#filter-types-ledgerentriesfilterset)
      */
     type: Scalars["SafeString"]["input"];
+    /** Experimental: This field is not yet supported. */
+    version?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** A tag associated with a Ledger Entry type. */
 export type SchemaLedgerEntryTagInput = {
@@ -1910,7 +2063,7 @@ export type SchemaLedgerLineInput = {
      * This field is required if the Ledger Account being posted to is a Linked Ledger Account. Otherwise, this field is disallowed.
      * It supports parameters in its attributes via handlebars syntax.
      *
-     * See the docs on [reconciliation and Linked Ledger Accounts](https://fragment.dev/docs#reconcile-transactions).
+     * See the docs on [reconciling payments](https://fragment.dev/docs/reconcile-payments).
      */
     tx?: InputMaybe<SchemaTxMatchInput>;
 };
@@ -1921,10 +2074,7 @@ export type SchemaMatchInput = {
      * `key` is unique to a Workspace.
      */
     key: Scalars["SafeString"]["input"];
-    /**
-     * Optional parameter to specify version of requested Schema. If not provided, it defaults to 0,
-     * representing the latest available version for the provided Schema key.
-     */
+    /** Optional parameter to specify version of requested Schema. If not provided, it defaults to 0, representing the latest available version for the provided Schema key. */
     version?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /**
@@ -1958,7 +2108,7 @@ export type SchemaVersionConnection = {
     /** Pagination info for this list. */
     pageInfo: PageInfo;
 };
-/** Returned by the [storeSchema](https://fragment.dev/api-reference#mutations-storeschema) mutation. */
+/** Returned by the [storeSchema](https://fragment.dev/api-reference/api-mutations#storeschema) mutation. */
 export type StoreSchemaResponse = BadRequestError | InternalError | StoreSchemaResult;
 /** `StoreSchemaResult` represents a successful execution of `storeSchema`. */
 export type StoreSchemaResult = {
@@ -1968,12 +2118,15 @@ export type StoreSchemaResult = {
 };
 export type StringFilter = {
     equalTo?: InputMaybe<Scalars["String"]["input"]>;
+    /** Must match one of the values provided. Limited to 100 items maximum. */
     in?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 export type StringMatchFilter = {
+    /** Must contain the provided pattern somewhere within the string. For example, 'contains: hat' will match 'hat', 'chat', and 'hate'. */
+    contains?: InputMaybe<Scalars["String"]["input"]>;
     /** Must exactly equal the provided value */
     equalTo?: InputMaybe<Scalars["String"]["input"]>;
-    /** Must exactly equal one of the provided values */
+    /** Must exactly equal one of the provided values. Limited to 100 items maximum. */
     in?: InputMaybe<Array<Scalars["String"]["input"]>>;
     /** Must match the provided pattern. Wildcards ("*") will match any substring */
     matches?: InputMaybe<Scalars["String"]["input"]>;
@@ -2010,7 +2163,11 @@ export type SyncCustomTxsResult = {
 };
 /** Filters a result set based on the tags it contains. */
 export type TagFilter = {
+    /** Matches tag values based on the existence of the provided string within the tag value. The key is matched exactly. */
+    contains?: InputMaybe<TagMatchInput>;
+    /** Matches tags based on the exact value provided. The key and value are both matched exactly. */
     equalTo?: InputMaybe<TagMatchInput>;
+    /** Matches tags based on a list of possible tag matches. The key and value are both matched exactly. Limited to 100 items maximum. */
     in?: InputMaybe<Array<TagMatchInput>>;
 };
 /** Specifies a single tag that an entity is expected to have. You must specify both the key and the value. */
@@ -2030,7 +2187,9 @@ export type Tx = {
     currency?: Maybe<Currency>;
     /** Date this Tx posted to the external account */
     date: Scalars["Date"]["output"];
-    /** Description at the external account (can be overridden within the Fragment Dashboard) */
+    /** ISO-8601 timestamp when this Tx was deleted */
+    deletedAt?: Maybe<Scalars["DateTime"]["output"]>;
+    /** Description at the external account */
     description: Scalars["String"]["output"];
     /** The External Account that this transaction belongs to. */
     externalAccount: ExternalAccount;
@@ -2038,8 +2197,11 @@ export type Tx = {
     externalAccountId: Scalars["ID"]["output"];
     /** ID of this transaction in the external system */
     externalId: Scalars["ID"]["output"];
+    /** FRAGMENT ID of this Tx. If you delete a Tx via deleteCustomTxs, it will not show up in listing queries, but can be resolved by if you lookup by its Fragment ID. If you resync a Tx with the same externalId, its Fragment ID will be different than the previous Tx. */
     id: Scalars["ID"]["output"];
-    /** Returns ledger entries that are linked to this transaction. You can link the same external account to multiple ledgers, so there could be multipe entries associated with one transaction - one for each linked ledger account this transaction has been reconciled with */
+    /** Whether this Tx has been deleted via deleteCustomTxs */
+    isDeleted: Scalars["Boolean"]["output"];
+    /** Returns ledger entries that are linked to this transaction. You can link the same external account to multiple ledgers, so there could be multiple entries associated with one transaction - one for each linked ledger account this transaction has been reconciled with */
     ledgerEntries: LedgerEntriesConnection;
     /** Same as ledgerEntries, but returns an array of IDs instead */
     ledgerEntryIds?: Maybe<Array<Scalars["ID"]["output"]>>;
@@ -2051,8 +2213,10 @@ export type Tx = {
     link: CustomLink | IncreaseLink | StripeLink | UnitLink;
     /** FRAGMENT ID of this transaction's Link */
     linkId: Scalars["ID"]["output"];
-    /** ISO-8601 timestamp this Tx posted to the external account */
+    /** ISO-8601 timestamp when this Tx posted to the external account */
     posted: Scalars["DateTime"]["output"];
+    /** When a Tx is deleted and a new Tx is synced with the same externalId, its sequence will be higher than the previous Tx. You can use this to distinguish different instances of Txs that have the same externalId. */
+    sequence: Scalars["Int"]["output"];
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
 };
@@ -2075,6 +2239,7 @@ export declare enum TxType {
 }
 export type TxTypeFilter = {
     equalTo?: InputMaybe<TxType>;
+    /** Must match one of the values provided. Limited to 100 items maximum. */
     in?: InputMaybe<Array<TxType>>;
 };
 /** A paginated list of Txs */
@@ -2082,7 +2247,7 @@ export type TxsConnection = {
     __typename?: "TxsConnection";
     /** The current page of results */
     nodes: Array<Tx>;
-    /** The [pagination info](https://fragment.dev/api-reference#types-connection-types-pageinfo) for this list */
+    /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
 };
 export declare enum UnitEnv {
