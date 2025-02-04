@@ -58,6 +58,11 @@ export type Scalars = {
         input: string;
         output: string;
     };
+    /** The first moment of a specific year, month or day or hour e.g. 1969 or 1969-1 or 1969-1-1 or 1969-1-1T00. All of the previous examples are equivalent to `1969-1-1T00:00:00.000`. */
+    FirstMoment: {
+        input: string;
+        output: string;
+    };
     /** A string representing integers up to 9,223,372,036,854,775,807 (i.e. 2^63-1) */
     Int64: {
         input: string;
@@ -140,14 +145,16 @@ export type BalanceChangeDuring = {
 /** A paginated list of amounts and their periods */
 export type BalanceChangeDuringConnection = {
     __typename?: "BalanceChangeDuringConnection";
+    /** The end time of the period across which the balance changes are requested */
+    endTime: Scalars["LastMoment"]["output"];
     /** The granularity of the return data */
     granularity: Granularity;
     /** The current page of results */
     nodes: Array<BalanceChangeDuring>;
     /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
-    /** The time period across which the balance changes are requested */
-    period: Scalars["Period"]["output"];
+    /** The start time of the period across which the balance changes are requested */
+    startTime: Scalars["FirstMoment"]["output"];
 };
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum BalanceUpdateConsistencyMode {
@@ -671,14 +678,16 @@ export type HistoricalBalance = {
 /** A paginated list of amounts and their periods */
 export type HistoricalBalanceConnection = {
     __typename?: "HistoricalBalanceConnection";
+    /** The end time of the period across which the balance changes are requested */
+    endTime: Scalars["LastMoment"]["output"];
     /** The granularity of the return data */
     granularity: Granularity;
     /** The current page of results */
     nodes: Array<HistoricalBalance>;
     /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
-    /** The time period across which the balance is requested */
-    period: Scalars["Period"]["output"];
+    /** The start time of the period across which the balance changes are requested */
+    startTime: Scalars["FirstMoment"]["output"];
 };
 export type IkReplay = {
     __typename?: "IkReplay";
@@ -916,8 +925,9 @@ export type LedgerAccountBalanceChangesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountBalanceChangesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountBalancesArgs = {
@@ -926,8 +936,9 @@ export type LedgerAccountBalancesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountBalancesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalanceArgs = {
@@ -946,8 +957,9 @@ export type LedgerAccountChildBalanceChangesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalanceChangesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalancesArgs = {
@@ -956,8 +968,9 @@ export type LedgerAccountChildBalancesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalancesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountChildLedgerAccountsArgs = {
@@ -992,8 +1005,9 @@ export type LedgerAccountOwnBalanceChangesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountOwnBalanceChangesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountOwnBalancesArgs = {
@@ -1003,8 +1017,9 @@ export type LedgerAccountOwnBalancesArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountOwnBalancesDuringArgs = {
     currency?: InputMaybe<CurrencyMatchInput>;
+    duration: Scalars["Int"]["input"];
     granularity: Granularity;
-    period: Scalars["Period"]["input"];
+    startTime: Scalars["FirstMoment"]["input"];
 };
 /** A ledger account is a container for money */
 export type LedgerAccountUnreconciledTxsArgs = {
