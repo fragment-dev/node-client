@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.AddLedgerEntryDocument = exports.CreateLedgerDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -318,6 +318,21 @@ exports.StoreSchemaDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.DeleteSchemaDocument = (0, graphql_tag_1.gql) `
+  mutation deleteSchema($schema: SchemaMatchInput!) {
+    deleteSchema(schema: $schema) {
+      __typename
+      ... on DeleteSchemaResult {
+        success
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 exports.CreateLedgerDocument = (0, graphql_tag_1.gql) `
   mutation createLedger(
     $ik: SafeString!
@@ -337,6 +352,21 @@ exports.CreateLedgerDocument = (0, graphql_tag_1.gql) `
           }
         }
         isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.DeleteLedgerDocument = (0, graphql_tag_1.gql) `
+  mutation deleteLedger($ledger: LedgerMatchInput!) {
+    deleteLedger(ledger: $ledger) {
+      __typename
+      ... on DeleteLedgerResult {
+        success
       }
       ... on Error {
         code
@@ -393,12 +423,63 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.ReverseLedgerEntryDocument = (0, graphql_tag_1.gql) `
+  mutation reverseLedgerEntry($id: ID!) {
+    reverseLedgerEntry(id: $id) {
+      ... on ReverseLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
     $ledgerIk: SafeString!
     $posted: DateTime
+    $parameters: JSON!
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -412,6 +493,7 @@ exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -489,6 +571,7 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
     $ledgerIk: SafeString!
     $type: String!
     $lines: [LedgerLineInput!]!
+    $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -499,6 +582,7 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -648,6 +732,32 @@ exports.SyncCustomTxsDocument = (0, graphql_tag_1.gql) `
           amount
           description
           posted
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.DeleteCustomTxsDocument = (0, graphql_tag_1.gql) `
+  mutation deleteCustomTxs($txs: [ID!]!) {
+    deleteCustomTxs(txs: $txs) {
+      __typename
+      ... on DeleteCustomTxsResult {
+        txs {
+          tx {
+            linkId
+            id
+            externalId
+            externalAccountId
+            amount
+            description
+            posted
+            deletedAt
+          }
         }
       }
       ... on Error {
@@ -984,11 +1094,20 @@ function getSdk(client, withWrapper = defaultWrapper) {
         storeSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.StoreSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "storeSchema", "mutation", variables);
         },
+        deleteSchema(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteSchema", "mutation", variables);
+        },
         createLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createLedger", "mutation", variables);
         },
+        deleteLedger(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteLedger", "mutation", variables);
+        },
         addLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntry", "mutation", variables);
+        },
+        reverseLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.ReverseLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reverseLedgerEntry", "mutation", variables);
         },
         addLedgerEntryRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryRuntimeDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntryRuntime", "mutation", variables);
@@ -1013,6 +1132,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         syncCustomTxs(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.SyncCustomTxsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "syncCustomTxs", "mutation", variables);
+        },
+        deleteCustomTxs(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteCustomTxsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteCustomTxs", "mutation", variables);
         },
         getLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedger", "query", variables);
