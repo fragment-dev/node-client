@@ -693,6 +693,20 @@ export type GroupBalanceAccountFilter = {
   path?: InputMaybe<StringMatchFilter>;
 };
 
+/** Filter for finding entries by group membership */
+export type GroupFilter = {
+  /** Find entries that are members of a group with all of these group keys */
+  keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
+  /** Find entries that do not match this predicate */
+  not?: InputMaybe<GroupNotFilter>;
+};
+
+/** Filter for finding entries that do not match this predicate */
+export type GroupNotFilter = {
+  /** Find entries that are not members of all of these groups. This is an AND filter. */
+  keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
+};
+
 /** A single amount and the timestamp requested */
 export type HistoricalBalance = {
   __typename?: "HistoricalBalance";
@@ -1248,9 +1262,17 @@ export type LedgerEntriesConnection = {
 
 export type LedgerEntriesFilterSet = {
   date?: InputMaybe<DateFilter>;
+  /** Use this to filter Ledger Entries by groups. The response will include entries that contain or do not contain specific groups. */
+  group?: InputMaybe<GroupFilter>;
+  /** Use this to filter Ledger Entries that were posted using `reverseLedgerEntry`. */
+  isReversal?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Use this to filter Ledger Entries that have been reversed. */
+  isReversed?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Use to filter Ledger Entries by their IDs or IKs. */
   ledgerEntry?: InputMaybe<LedgerEntryFilter>;
   posted?: InputMaybe<DateTimeFilter>;
+  /** Use this filter to show hidden Ledger Entries. */
+  showHidden?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Use this to filter Ledger Entries by tags. The response will include entries that contain tags matching the filter. */
   tag?: InputMaybe<TagFilter>;
   /** Use this to filter Ledger Entries by type. Ledger Entry types are defined in Schemas. */
@@ -1271,10 +1293,25 @@ export type LedgerEntry = {
   description?: Maybe<Scalars["String"]["output"]>;
   /** The Ledger Entry Groups this Ledger Entry is in. */
   groups: Array<LedgerEntryGroup>;
+  /**
+   * Indicates whether this Ledger Entry is hidden when listing Ledger Entries.
+   * Reversed and Reversal Ledger Entries are hidden by default because taken together they have no impact on a Ledger's balances.
+   */
+  hidden: Scalars["Boolean"]["output"];
   /** The ID of this LedgerEntry. */
   id: Scalars["ID"]["output"];
   /** The idempotency key used to post this ledger entry */
   ik: Scalars["String"]["output"];
+  /**
+   * Indicates whether this Ledger Entry is a reversal of another Ledger Entry.
+   * If so, reverses will point to that Ledger Entry.
+   */
+  isReversal: Scalars["Boolean"]["output"];
+  /**
+   * Indicates whether this Ledger Entry has been reversed by another Ledger Entry.
+   * If so, reversedBy will point to that Ledger Entry.
+   */
+  isReversed: Scalars["Boolean"]["output"];
   /** The Ledger that this Ledger Entry is posted to. */
   ledger: Ledger;
   /** The ID of the Ledger this Ledger Entry is posted to. */
@@ -1285,6 +1322,16 @@ export type LedgerEntry = {
   parameters?: Maybe<Scalars["Parameters"]["output"]>;
   /** ISO-8601 timestamp this LedgerEntry posted to its Ledger. */
   posted: Scalars["DateTime"]["output"];
+  /** The reversal history of this Ledger Entry. Each entry in this connection shares the same IK. */
+  reversalHistory: LedgerEntriesConnection;
+  /** The position of this Ledger Entry in its reversalHistory. This is a one-indexed value, so the initial entry will have reversalPosition 1. */
+  reversalPosition: Scalars["Int"]["output"];
+  /** ISO-8601 timestamp of when this Ledger Entry was reversed. */
+  reversedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** The Ledger Entry that reversed this Ledger Entry. */
+  reversedBy?: Maybe<LedgerEntry>;
+  /** The Ledger Entry that was reversed by this Ledger Entry. */
+  reverses?: Maybe<LedgerEntry>;
   /** The set of tags attached to this Ledger Entry. */
   tags: Array<LedgerEntryTag>;
   /** The type of the Ledger Entry. */
@@ -1497,7 +1544,22 @@ export type LedgerLine = {
   externalTransferType?: Maybe<ExternalTransferType>;
   /** ID in the external system of the transaction linked to this LedgerLine */
   externalTxId?: Maybe<Scalars["String"]["output"]>;
+  /**
+   * Indicates whether this Ledger Line is hidden when listing Ledger Lines.
+   * Reversed and Reversal Ledger Lines are hidden by default because taken together they have no impact on a Ledger Account's balance
+   */
+  hidden: Scalars["Boolean"]["output"];
   id: Scalars["ID"]["output"];
+  /**
+   * Indicates whether this Ledger Line is a reversal of another Ledger Line.
+   * If so, reverses will point to that Ledger Line.
+   */
+  isReversal: Scalars["Boolean"]["output"];
+  /**
+   * Indicates whether this Ledger Line has been reversed by another Ledger Line.
+   * If so, reversedBy will point to that Ledger Line.
+   */
+  isReversed: Scalars["Boolean"]["output"];
   key?: Maybe<Scalars["String"]["output"]>;
   ledger: Ledger;
   /** LedgerEntry that contains this line */
@@ -1516,6 +1578,12 @@ export type LedgerLine = {
   otherTxId?: Maybe<Scalars["String"]["output"]>;
   /** ISO-8601 timestamp this LedgerLine posted to its LedgerAccount */
   posted?: Maybe<Scalars["DateTime"]["output"]>;
+  /** ISO-8601 timestamp of when this Ledger Line was reversed. */
+  reversedAt?: Maybe<Scalars["DateTime"]["output"]>;
+  /** The Ledger Line that reverses the balance changes of this Ledger Line. */
+  reversedBy?: Maybe<LedgerLine>;
+  /** The Ledger Line whose balance changes are reversed by this Ledger Line. */
+  reverses?: Maybe<LedgerLine>;
   /** The transaction linked to this LedgerLine */
   tx?: Maybe<Tx>;
   /** Fragment ID of the transaction linked to this LedgerLine */
@@ -1570,10 +1638,16 @@ export type LedgerLinesFilterSet = {
   created?: InputMaybe<DateTimeFilter>;
   /** Filter by the posted date of the Ledger Line. This is identical to using `posted`, but only supports day-level granularity. */
   date?: InputMaybe<DateFilter>;
+  /** Use this to filter Ledger Lines that were posted to this Ledger Account, using `reverseLedgerEntry`. */
+  isReversal?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Use this to filter Ledger Lines that have been reversed. */
+  isReversed?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Use this to filter Ledger Lines by key. Ledger Line keys are defined in Schemas. */
   key?: InputMaybe<StringFilter>;
   /** Filter by the posted timestamp of the Ledger Line. */
   posted?: InputMaybe<DateTimeFilter>;
+  /** Use this filter to find hidden Ledger Lines. */
+  showHidden?: InputMaybe<Scalars["Boolean"]["input"]>;
   type?: InputMaybe<TxTypeFilter>;
 };
 
@@ -1708,6 +1782,8 @@ export type Mutation = {
   deleteSchema: DeleteSchemaResponse;
   /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
   reconcileTx: ReconcileTxResponse;
+  /** *EXPERIMENTAL* Reverses a ledger entry */
+  reverseLedgerEntry: ReverseLedgerEntryResponse;
   /**
    * Stores a Schema in your workspace. If no Schema with the same key exists in your worksapce, a new Schema is created.
    * Else, the Schema is updated, and every Ledger associated with it is migrated to the latest version.
@@ -1783,6 +1859,11 @@ export type MutationReconcileTxArgs = {
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationReverseLedgerEntryArgs = {
+  id: Scalars["ID"]["input"];
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationStoreSchemaArgs = {
   schema: SchemaInput;
 };
@@ -1853,6 +1934,8 @@ export type Query = {
   ledgerEntry?: Maybe<LedgerEntry>;
   /** Query a Ledger Entry Group given its Ledger, key, and value. */
   ledgerEntryGroup?: Maybe<LedgerEntryGroup>;
+  /** Get the reversal history of a Ledger Entry. */
+  ledgerEntryHistory: LedgerEntriesConnection;
   /** Get LedgerLine by ID */
   ledgerLine?: Maybe<LedgerLine>;
   /** Query Ledgers in workspace. Ledgers are paginated and returned in reverse-chronological order by their created date. */
@@ -1902,6 +1985,11 @@ export type QueryLedgerEntryArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerEntryGroupArgs = {
   ledgerEntryGroup: LedgerEntryGroupMatchInput;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryLedgerEntryHistoryArgs = {
+  ledgerEntry: LedgerEntryMatchInput;
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
@@ -1964,6 +2052,21 @@ export type ReconcileTxResult = {
   isIkReplay: Scalars["Boolean"]["output"];
   /** The ledger lines that were created in that entry */
   lines: Array<LedgerLine>;
+};
+
+export type ReverseLedgerEntryResponse =
+  | BadRequestError
+  | InternalError
+  | ReverseLedgerEntryResult;
+
+export type ReverseLedgerEntryResult = {
+  __typename?: "ReverseLedgerEntryResult";
+  /** Whether the reversal was an IK replay */
+  isIkReplay: Scalars["Boolean"]["output"];
+  /** The Ledger Entry that was reversed */
+  reversedLedgerEntry: LedgerEntry;
+  /** The reversal Ledger Entry that was created */
+  reversingLedgerEntry: LedgerEntry;
 };
 
 /** A simulated Ledger Entry posted as a part of a Scene. */
@@ -2318,6 +2421,10 @@ export type StringFilter = {
   equalTo?: InputMaybe<Scalars["String"]["input"]>;
   /** Must match one of the values provided. Limited to 100 items maximum. */
   in?: InputMaybe<Array<Scalars["String"]["input"]>>;
+  /** Must not equal this string value */
+  notEqualTo?: InputMaybe<Scalars["String"]["input"]>;
+  /** Must not match any of the values provided. Limited to 100 items maximum. */
+  notIn?: InputMaybe<Array<Scalars["String"]["input"]>>;
 };
 
 export type StringMatchFilter = {
@@ -2584,6 +2691,28 @@ export type StoreSchemaMutation = {
       };
 };
 
+export type DeleteSchemaMutationVariables = Exact<{
+  schema: SchemaMatchInput;
+}>;
+
+export type DeleteSchemaMutation = {
+  __typename?: "Mutation";
+  deleteSchema:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | { __typename: "DeleteSchemaResult"; success: boolean }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      };
+};
+
 export type CreateLedgerMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   ledger: CreateLedgerInput;
@@ -2611,6 +2740,28 @@ export type CreateLedgerMutation = {
           schema?: { __typename?: "Schema"; key: string } | null;
         };
       }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      };
+};
+
+export type DeleteLedgerMutationVariables = Exact<{
+  ledger: LedgerMatchInput;
+}>;
+
+export type DeleteLedgerMutation = {
+  __typename?: "Mutation";
+  deleteLedger:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | { __typename: "DeleteLedgerResult"; success: boolean }
     | {
         __typename: "InternalError";
         code: string;
@@ -2664,11 +2815,75 @@ export type AddLedgerEntryMutation = {
       };
 };
 
+export type ReverseLedgerEntryMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type ReverseLedgerEntryMutation = {
+  __typename?: "Mutation";
+  reverseLedgerEntry:
+    | {
+        __typename?: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename?: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename?: "ReverseLedgerEntryResult";
+        isIkReplay: boolean;
+        reversingLedgerEntry: {
+          __typename?: "LedgerEntry";
+          ik: string;
+          id: string;
+          created: string;
+          posted: string;
+          type?: string | null;
+          description?: string | null;
+          hidden: boolean;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }>;
+          };
+        };
+        reversedLedgerEntry: {
+          __typename?: "LedgerEntry";
+          ik: string;
+          id: string;
+          created: string;
+          posted: string;
+          type?: string | null;
+          description?: string | null;
+          hidden: boolean;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }>;
+          };
+        };
+      };
+};
+
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
   ledgerIk: Scalars["SafeString"]["input"];
   posted?: InputMaybe<Scalars["DateTime"]["input"]>;
+  parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   lines: Array<LedgerLineInput> | LedgerLineInput;
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
   groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2757,6 +2972,7 @@ export type ReconcileTxRuntimeMutationVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
   lines: Array<LedgerLineInput> | LedgerLineInput;
+  parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
   groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
 }>;
@@ -2966,6 +3182,44 @@ export type SyncCustomTxsMutation = {
           description: string;
           posted: string;
         }>;
+      };
+};
+
+export type DeleteCustomTxsMutationVariables = Exact<{
+  txs: Array<Scalars["ID"]["input"]> | Scalars["ID"]["input"];
+}>;
+
+export type DeleteCustomTxsMutation = {
+  __typename?: "Mutation";
+  deleteCustomTxs:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "DeleteCustomTxsResult";
+        txs: Array<{
+          __typename?: "DeletedCustomTx";
+          tx: {
+            __typename?: "Tx";
+            linkId: string;
+            id: string;
+            externalId: string;
+            externalAccountId: string;
+            amount: string;
+            description: string;
+            posted: string;
+            deletedAt?: string | null;
+          };
+        }>;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
       };
 };
 
@@ -3347,6 +3601,21 @@ export const StoreSchemaDocument = gql`
     }
   }
 `;
+export const DeleteSchemaDocument = gql`
+  mutation deleteSchema($schema: SchemaMatchInput!) {
+    deleteSchema(schema: $schema) {
+      __typename
+      ... on DeleteSchemaResult {
+        success
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const CreateLedgerDocument = gql`
   mutation createLedger(
     $ik: SafeString!
@@ -3366,6 +3635,21 @@ export const CreateLedgerDocument = gql`
           }
         }
         isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const DeleteLedgerDocument = gql`
+  mutation deleteLedger($ledger: LedgerMatchInput!) {
+    deleteLedger(ledger: $ledger) {
+      __typename
+      ... on DeleteLedgerResult {
+        success
       }
       ... on Error {
         code
@@ -3422,12 +3706,63 @@ export const AddLedgerEntryDocument = gql`
     }
   }
 `;
+export const ReverseLedgerEntryDocument = gql`
+  mutation reverseLedgerEntry($id: ID!) {
+    reverseLedgerEntry(id: $id) {
+      ... on ReverseLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const AddLedgerEntryRuntimeDocument = gql`
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
     $ledgerIk: SafeString!
     $posted: DateTime
+    $parameters: JSON
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -3441,6 +3776,7 @@ export const AddLedgerEntryRuntimeDocument = gql`
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -3518,6 +3854,7 @@ export const ReconcileTxRuntimeDocument = gql`
     $ledgerIk: SafeString!
     $type: String!
     $lines: [LedgerLineInput!]!
+    $parameters: JSON
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -3528,6 +3865,7 @@ export const ReconcileTxRuntimeDocument = gql`
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -3677,6 +4015,32 @@ export const SyncCustomTxsDocument = gql`
           amount
           description
           posted
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const DeleteCustomTxsDocument = gql`
+  mutation deleteCustomTxs($txs: [ID!]!) {
+    deleteCustomTxs(txs: $txs) {
+      __typename
+      ... on DeleteCustomTxsResult {
+        txs {
+          tx {
+            linkId
+            id
+            externalId
+            externalAccountId
+            amount
+            description
+            posted
+            deletedAt
+          }
         }
       }
       ... on Error {
@@ -4042,6 +4406,22 @@ export function getSdk(
         variables,
       );
     },
+    deleteSchema(
+      variables: DeleteSchemaMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<DeleteSchemaMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<DeleteSchemaMutation>(
+            DeleteSchemaDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "deleteSchema",
+        "mutation",
+        variables,
+      );
+    },
     createLedger(
       variables: CreateLedgerMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders,
@@ -4058,6 +4438,22 @@ export function getSdk(
         variables,
       );
     },
+    deleteLedger(
+      variables: DeleteLedgerMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<DeleteLedgerMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<DeleteLedgerMutation>(
+            DeleteLedgerDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "deleteLedger",
+        "mutation",
+        variables,
+      );
+    },
     addLedgerEntry(
       variables: AddLedgerEntryMutationVariables,
       requestHeaders?: GraphQLClientRequestHeaders,
@@ -4070,6 +4466,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "addLedgerEntry",
+        "mutation",
+        variables,
+      );
+    },
+    reverseLedgerEntry(
+      variables: ReverseLedgerEntryMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<ReverseLedgerEntryMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<ReverseLedgerEntryMutation>(
+            ReverseLedgerEntryDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "reverseLedgerEntry",
         "mutation",
         variables,
       );
@@ -4197,6 +4609,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "syncCustomTxs",
+        "mutation",
+        variables,
+      );
+    },
+    deleteCustomTxs(
+      variables: DeleteCustomTxsMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<DeleteCustomTxsMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<DeleteCustomTxsMutation>(
+            DeleteCustomTxsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "deleteCustomTxs",
         "mutation",
         variables,
       );

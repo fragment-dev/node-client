@@ -19,6 +19,23 @@ mutation storeSchema($schema: SchemaInput!) {
   }
 }
 
+mutation deleteSchema(
+  $schema: SchemaMatchInput!
+) {
+  deleteSchema(schema: $schema) {
+    __typename
+    ... on DeleteSchemaResult {
+      success
+    }
+    ... on Error {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+
 mutation createLedger(
   $ik: SafeString!
   $ledger: CreateLedgerInput!
@@ -37,6 +54,22 @@ mutation createLedger(
         }
       }
       isIkReplay
+    }
+    ... on Error {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation deleteLedger(
+  $ledger: LedgerMatchInput!
+) {
+  deleteLedger(ledger: $ledger) {
+    __typename
+    ... on DeleteLedgerResult {
+      success
     }
     ... on Error {
       code
@@ -92,11 +125,63 @@ mutation addLedgerEntry(
   }
 }
 
+mutation reverseLedgerEntry(
+  $id: ID!
+) {
+  reverseLedgerEntry(id: $id) {
+    ... on ReverseLedgerEntryResult {
+      reversingLedgerEntry {
+        ik
+        id
+        created
+        posted
+        type
+        description
+        hidden
+        lines {
+          nodes {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      reversedLedgerEntry {
+        ik
+        id
+        created
+        posted
+        type
+        description
+        hidden
+        lines {
+          nodes {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      isIkReplay
+    }
+    ... on Error {
+      code
+      message
+      retryable
+    }
+  }
+}
+
 mutation addLedgerEntryRuntime(
   $ik: SafeString!
   $type: String!
   $ledgerIk: SafeString!
   $posted: DateTime
+  $parameters: JSON
   $lines: [LedgerLineInput!]!
   $tags: [LedgerEntryTagInput!]
   $groups: [LedgerEntryGroupInput!]
@@ -110,6 +195,7 @@ mutation addLedgerEntryRuntime(
       lines: $lines
       tags: $tags
       groups: $groups
+      parameters: $parameters
     }
   ) {
     __typename
@@ -185,6 +271,7 @@ mutation reconcileTxRuntime(
   $ledgerIk: SafeString!
   $type: String!
   $lines: [LedgerLineInput!]!
+  $parameters: JSON
   $tags: [LedgerEntryTagInput!]
   $groups: [LedgerEntryGroupInput!]
 ) {
@@ -195,6 +282,7 @@ mutation reconcileTxRuntime(
       lines: $lines
       tags: $tags
       groups: $groups
+      parameters: $parameters
     }
   ) {
     __typename
@@ -338,6 +426,31 @@ mutation syncCustomTxs($linkId: ID!, $txs: [CustomTxInput!]!) {
         amount
         description
         posted
+      }
+    }
+    ... on Error {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation deleteCustomTxs($txs: [ID!]!) {
+  deleteCustomTxs(txs: $txs) {
+    __typename
+    ... on DeleteCustomTxsResult {
+      txs {
+        tx {
+          linkId
+          id
+          externalId
+          externalAccountId
+          amount
+          description
+          posted
+          deletedAt
+        }
       }
     }
     ... on Error {
