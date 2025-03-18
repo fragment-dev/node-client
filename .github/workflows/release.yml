@@ -1,14 +1,14 @@
 name: Create Release
 on:
   workflow_dispatch:
-inputs:
-  type:
-    type: choice
-    description: Release Type
-    options:
-    - patch
-    - minor
-    - major
+    inputs:
+      type:
+        type: choice
+        description: Release Type
+        options:
+        - patch
+        - minor
+        - major
 
 jobs:
   createRelease:
