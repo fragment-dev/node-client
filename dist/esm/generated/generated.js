@@ -315,6 +315,21 @@ export const StoreSchemaDocument = gql `
     }
   }
 `;
+export const DeleteSchemaDocument = gql `
+  mutation deleteSchema($schema: SchemaMatchInput!) {
+    deleteSchema(schema: $schema) {
+      __typename
+      ... on DeleteSchemaResult {
+        success
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const CreateLedgerDocument = gql `
   mutation createLedger(
     $ik: SafeString!
@@ -334,6 +349,21 @@ export const CreateLedgerDocument = gql `
           }
         }
         isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const DeleteLedgerDocument = gql `
+  mutation deleteLedger($ledger: LedgerMatchInput!) {
+    deleteLedger(ledger: $ledger) {
+      __typename
+      ... on DeleteLedgerResult {
+        success
       }
       ... on Error {
         code
@@ -390,12 +420,63 @@ export const AddLedgerEntryDocument = gql `
     }
   }
 `;
+export const ReverseLedgerEntryDocument = gql `
+  mutation reverseLedgerEntry($id: ID!) {
+    reverseLedgerEntry(id: $id) {
+      ... on ReverseLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const AddLedgerEntryRuntimeDocument = gql `
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
     $ledgerIk: SafeString!
     $posted: DateTime
+    $parameters: JSON
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -409,6 +490,7 @@ export const AddLedgerEntryRuntimeDocument = gql `
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -486,6 +568,7 @@ export const ReconcileTxRuntimeDocument = gql `
     $ledgerIk: SafeString!
     $type: String!
     $lines: [LedgerLineInput!]!
+    $parameters: JSON
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -496,6 +579,7 @@ export const ReconcileTxRuntimeDocument = gql `
         lines: $lines
         tags: $tags
         groups: $groups
+        parameters: $parameters
       }
     ) {
       __typename
@@ -645,6 +729,32 @@ export const SyncCustomTxsDocument = gql `
           amount
           description
           posted
+        }
+      }
+      ... on Error {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const DeleteCustomTxsDocument = gql `
+  mutation deleteCustomTxs($txs: [ID!]!) {
+    deleteCustomTxs(txs: $txs) {
+      __typename
+      ... on DeleteCustomTxsResult {
+        txs {
+          tx {
+            linkId
+            id
+            externalId
+            externalAccountId
+            amount
+            description
+            posted
+            deletedAt
+          }
         }
       }
       ... on Error {
@@ -984,11 +1094,20 @@ export function getSdk(client, withWrapper = defaultWrapper) {
                 ...wrappedRequestHeaders,
             }), "storeSchema", "mutation", variables);
         },
+        deleteSchema(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(DeleteSchemaDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteSchema", "mutation", variables);
+        },
         createLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreateLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createLedger", "mutation", variables);
         },
+        deleteLedger(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(DeleteLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteLedger", "mutation", variables);
+        },
         addLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntry", "mutation", variables);
+        },
+        reverseLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ReverseLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "reverseLedgerEntry", "mutation", variables);
         },
         addLedgerEntryRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryRuntimeDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntryRuntime", "mutation", variables);
@@ -1016,6 +1135,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         syncCustomTxs(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomTxs", "mutation", variables);
+        },
+        deleteCustomTxs(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(DeleteCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteCustomTxs", "mutation", variables);
         },
         getLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerDocument, variables, {
