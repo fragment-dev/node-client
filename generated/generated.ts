@@ -1782,7 +1782,7 @@ export type Mutation = {
   deleteSchema: DeleteSchemaResponse;
   /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
   reconcileTx: ReconcileTxResponse;
-  /** *EXPERIMENTAL* Reverses a ledger entry */
+  /** Reverses a Ledger Entry */
   reverseLedgerEntry: ReverseLedgerEntryResponse;
   /**
    * Stores a Schema in your workspace. If no Schema with the same key exists in your worksapce, a new Schema is created.
