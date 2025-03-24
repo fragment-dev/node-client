@@ -43,7 +43,7 @@ jobs:
           command: yarn
 
       - name: Bump version
-        run: gh auth status && npm version ${{ inputs.type }}
+        run: gh auth status && gh auth setup-git && npm version ${{ inputs.type }}
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
