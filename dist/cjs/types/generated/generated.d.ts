@@ -821,6 +821,13 @@ export type LedgerLedgerEntryGroupsArgs = {
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
+/** Ledgers are databases designed for managing money */
+export type LedgerMigrationsArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+};
 /** A ledger account is a container for money */
 export type LedgerAccount = {
     __typename?: "LedgerAccount";
@@ -1259,6 +1266,8 @@ export type LedgerEntry = {
     tags: Array<LedgerEntryTag>;
     /** The type of the Ledger Entry. */
     type?: Maybe<Scalars["SafeString"]["output"]>;
+    /** Experimental: The version of the Ledger Entry type used when it was posted. */
+    typeVersion?: Maybe<Scalars["Int"]["output"]>;
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
 };
@@ -1402,7 +1411,7 @@ export type LedgerEntryInput = {
     /** The type of the Ledger Entry. Must be defined in the Schema linked to the Ledger specified below. */
     type?: InputMaybe<Scalars["String"]["input"]>;
     /** Experimental: This field is reserved for an upcoming feature and is not yet supported. */
-    version?: InputMaybe<Scalars["Int"]["input"]>;
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** Specify a Ledger Entry by using `id`. */
 export type LedgerEntryMatchInput = {
@@ -2140,7 +2149,7 @@ export type SchemaLedgerEntryInput = {
      */
     type: Scalars["SafeString"]["input"];
     /** Experimental: This field is not yet supported. */
-    version?: InputMaybe<Scalars["Int"]["input"]>;
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** A tag associated with a Ledger Entry type. */
 export type SchemaLedgerEntryTagInput = {
@@ -2529,6 +2538,7 @@ export type AddLedgerEntryMutationVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     posted?: InputMaybe<Scalars["DateTime"]["input"]>;
     parameters: Scalars["JSON"]["input"];
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
@@ -2635,9 +2645,9 @@ export type ReverseLedgerEntryMutation = {
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     ledgerIk: Scalars["SafeString"]["input"];
     posted?: InputMaybe<Scalars["DateTime"]["input"]>;
-    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     lines: Array<LedgerLineInput> | LedgerLineInput;
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2679,6 +2689,7 @@ export type AddLedgerEntryRuntimeMutation = {
 export type ReconcileTxMutationVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     parameters: Scalars["JSON"]["input"];
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2721,8 +2732,8 @@ export type ReconcileTxMutation = {
 export type ReconcileTxRuntimeMutationVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     lines: Array<LedgerLineInput> | LedgerLineInput;
-    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
 }>;
@@ -2772,10 +2783,12 @@ export type UpdateLedgerEntryMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "UpdateLedgerEntryResult";
         entry: {
@@ -3306,6 +3319,36 @@ export type ListLedgerEntryGroupBalancesQuery = {
         };
     } | null;
 };
+export type CreateCustomCurrencyMutationVariables = Exact<{
+    id: Scalars["SafeString"]["input"];
+    name: Scalars["String"]["input"];
+    precision: Scalars["Int"]["input"];
+    customCode: Scalars["String"]["input"];
+}>;
+export type CreateCustomCurrencyMutation = {
+    __typename?: "Mutation";
+    createCustomCurrency: {
+        __typename?: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename?: "CreateCustomCurrencyResult";
+        customCurrency: {
+            __typename?: "Currency";
+            code: CurrencyCode;
+            customCurrencyId?: string | null;
+            precision: number;
+            name: string;
+            customCode?: string | null;
+        };
+    } | {
+        __typename?: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    };
+};
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const DeleteSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
@@ -3332,6 +3375,7 @@ export declare const GetSchemaDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const GetWorkspaceDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntryGroupBalancesDocument: import("graphql").DocumentNode;
+export declare const CreateCustomCurrencyDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -3360,6 +3404,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
     getWorkspace(variables?: GetWorkspaceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetWorkspaceQuery>;
     listLedgerEntryGroupBalances(variables: ListLedgerEntryGroupBalancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntryGroupBalancesQuery>;
+    createCustomCurrency(variables: CreateCustomCurrencyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomCurrencyMutation>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};

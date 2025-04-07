@@ -863,6 +863,14 @@ export type LedgerLedgerEntryGroupsArgs = {
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
+/** Ledgers are databases designed for managing money */
+export type LedgerMigrationsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
 /** A ledger account is a container for money */
 export type LedgerAccount = {
   __typename?: "LedgerAccount";
@@ -1336,6 +1344,8 @@ export type LedgerEntry = {
   tags: Array<LedgerEntryTag>;
   /** The type of the Ledger Entry. */
   type?: Maybe<Scalars["SafeString"]["output"]>;
+  /** Experimental: The version of the Ledger Entry type used when it was posted. */
+  typeVersion?: Maybe<Scalars["Int"]["output"]>;
   /** @deprecated Callers should not need to query or store this value. */
   workspaceId: Scalars["ID"]["output"];
 };
@@ -1494,7 +1504,7 @@ export type LedgerEntryInput = {
   /** The type of the Ledger Entry. Must be defined in the Schema linked to the Ledger specified below. */
   type?: InputMaybe<Scalars["String"]["input"]>;
   /** Experimental: This field is reserved for an upcoming feature and is not yet supported. */
-  version?: InputMaybe<Scalars["Int"]["input"]>;
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** Specify a Ledger Entry by using `id`. */
@@ -2320,7 +2330,7 @@ export type SchemaLedgerEntryInput = {
    */
   type: Scalars["SafeString"]["input"];
   /** Experimental: This field is not yet supported. */
-  version?: InputMaybe<Scalars["Int"]["input"]>;
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** A tag associated with a Ledger Entry type. */
@@ -2774,6 +2784,7 @@ export type AddLedgerEntryMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   ledgerIk: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
   posted?: InputMaybe<Scalars["DateTime"]["input"]>;
   parameters: Scalars["JSON"]["input"];
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
@@ -2881,9 +2892,9 @@ export type ReverseLedgerEntryMutation = {
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
   ledgerIk: Scalars["SafeString"]["input"];
   posted?: InputMaybe<Scalars["DateTime"]["input"]>;
-  parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   lines: Array<LedgerLineInput> | LedgerLineInput;
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
   groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2927,6 +2938,7 @@ export type AddLedgerEntryRuntimeMutation = {
 export type ReconcileTxMutationVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
   parameters: Scalars["JSON"]["input"];
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
   groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2971,8 +2983,8 @@ export type ReconcileTxMutation = {
 export type ReconcileTxRuntimeMutationVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
   lines: Array<LedgerLineInput> | LedgerLineInput;
-  parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
   groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
 }>;
@@ -3022,8 +3034,18 @@ export type UpdateLedgerEntryMutationVariables = Exact<{
 export type UpdateLedgerEntryMutation = {
   __typename?: "Mutation";
   updateLedgerEntry:
-    | { __typename: "BadRequestError"; code: string; message: string }
-    | { __typename: "InternalError"; code: string; message: string }
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
     | {
         __typename: "UpdateLedgerEntryResult";
         entry: {
@@ -3579,6 +3601,41 @@ export type ListLedgerEntryGroupBalancesQuery = {
   } | null;
 };
 
+export type CreateCustomCurrencyMutationVariables = Exact<{
+  id: Scalars["SafeString"]["input"];
+  name: Scalars["String"]["input"];
+  precision: Scalars["Int"]["input"];
+  customCode: Scalars["String"]["input"];
+}>;
+
+export type CreateCustomCurrencyMutation = {
+  __typename?: "Mutation";
+  createCustomCurrency:
+    | {
+        __typename?: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename?: "CreateCustomCurrencyResult";
+        customCurrency: {
+          __typename?: "Currency";
+          code: CurrencyCode;
+          customCurrencyId?: string | null;
+          precision: number;
+          name: string;
+          customCode?: string | null;
+        };
+      }
+    | {
+        __typename?: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      };
+};
+
 export const StoreSchemaDocument = gql`
   mutation storeSchema($schema: SchemaInput!) {
     storeSchema(schema: $schema) {
@@ -3593,7 +3650,12 @@ export const StoreSchemaDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3608,7 +3670,12 @@ export const DeleteSchemaDocument = gql`
       ... on DeleteSchemaResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3636,7 +3703,12 @@ export const CreateLedgerDocument = gql`
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3651,7 +3723,12 @@ export const DeleteLedgerDocument = gql`
       ... on DeleteLedgerResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3664,6 +3741,7 @@ export const AddLedgerEntryDocument = gql`
     $ik: SafeString!
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $posted: DateTime
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
@@ -3674,6 +3752,7 @@ export const AddLedgerEntryDocument = gql`
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         posted: $posted
         parameters: $parameters
         tags: $tags
@@ -3698,7 +3777,12 @@ export const AddLedgerEntryDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3748,7 +3832,12 @@ export const ReverseLedgerEntryDocument = gql`
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3760,9 +3849,9 @@ export const AddLedgerEntryRuntimeDocument = gql`
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
+    $typeVersion: Int
     $ledgerIk: SafeString!
     $posted: DateTime
-    $parameters: JSON
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -3771,12 +3860,12 @@ export const AddLedgerEntryRuntimeDocument = gql`
       ik: $ik
       entry: {
         type: $type
+        typeVersion: $typeVersion
         ledger: { ik: $ledgerIk }
         posted: $posted
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -3797,7 +3886,12 @@ export const AddLedgerEntryRuntimeDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3809,6 +3903,7 @@ export const ReconcileTxDocument = gql`
   mutation reconcileTx(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -3817,6 +3912,7 @@ export const ReconcileTxDocument = gql`
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         parameters: $parameters
         tags: $tags
         groups: $groups
@@ -3841,7 +3937,12 @@ export const ReconcileTxDocument = gql`
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3853,8 +3954,8 @@ export const ReconcileTxRuntimeDocument = gql`
   mutation reconcileTxRuntime(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $lines: [LedgerLineInput!]!
-    $parameters: JSON
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -3862,10 +3963,10 @@ export const ReconcileTxRuntimeDocument = gql`
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -3887,7 +3988,12 @@ export const ReconcileTxRuntimeDocument = gql`
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3932,9 +4038,15 @@ export const UpdateLedgerEntryDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
         code
         message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
       }
     }
   }
@@ -3950,7 +4062,12 @@ export const UpdateLedgerDocument = gql`
           name
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3970,7 +4087,12 @@ export const CreateCustomLinkDocument = gql`
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -3993,7 +4115,12 @@ export const SyncCustomAccountsDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -4017,7 +4144,12 @@ export const SyncCustomTxsDocument = gql`
           posted
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -4043,7 +4175,12 @@ export const DeleteCustomTxsDocument = gql`
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -4367,6 +4504,43 @@ export const ListLedgerEntryGroupBalancesDocument = gql`
           hasPreviousPage
           startCursor
         }
+      }
+    }
+  }
+`;
+export const CreateCustomCurrencyDocument = gql`
+  mutation createCustomCurrency(
+    $id: SafeString!
+    $name: String!
+    $precision: Int!
+    $customCode: String!
+  ) {
+    createCustomCurrency(
+      customCurrency: {
+        customCurrencyId: $id
+        name: $name
+        precision: $precision
+        customCode: $customCode
+      }
+    ) {
+      ... on CreateCustomCurrencyResult {
+        customCurrency {
+          code
+          customCurrencyId
+          precision
+          name
+          customCode
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
       }
     }
   }
@@ -4799,6 +4973,22 @@ export function getSdk(
           ),
         "listLedgerEntryGroupBalances",
         "query",
+        variables,
+      );
+    },
+    createCustomCurrency(
+      variables: CreateCustomCurrencyMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<CreateCustomCurrencyMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<CreateCustomCurrencyMutation>(
+            CreateCustomCurrencyDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "createCustomCurrency",
+        "mutation",
         variables,
       );
     },
