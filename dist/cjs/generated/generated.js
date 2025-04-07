@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -310,7 +310,12 @@ exports.StoreSchemaDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -325,7 +330,12 @@ exports.DeleteSchemaDocument = (0, graphql_tag_1.gql) `
       ... on DeleteSchemaResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -353,7 +363,12 @@ exports.CreateLedgerDocument = (0, graphql_tag_1.gql) `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -368,7 +383,12 @@ exports.DeleteLedgerDocument = (0, graphql_tag_1.gql) `
       ... on DeleteLedgerResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -381,6 +401,7 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
     $ik: SafeString!
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $posted: DateTime
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
@@ -391,6 +412,7 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         posted: $posted
         parameters: $parameters
         tags: $tags
@@ -415,7 +437,12 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -465,7 +492,12 @@ exports.ReverseLedgerEntryDocument = (0, graphql_tag_1.gql) `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -477,9 +509,9 @@ exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
+    $typeVersion: Int
     $ledgerIk: SafeString!
     $posted: DateTime
-    $parameters: JSON
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -488,12 +520,12 @@ exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
       ik: $ik
       entry: {
         type: $type
+        typeVersion: $typeVersion
         ledger: { ik: $ledgerIk }
         posted: $posted
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -514,7 +546,12 @@ exports.AddLedgerEntryRuntimeDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -526,6 +563,7 @@ exports.ReconcileTxDocument = (0, graphql_tag_1.gql) `
   mutation reconcileTx(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -534,6 +572,7 @@ exports.ReconcileTxDocument = (0, graphql_tag_1.gql) `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         parameters: $parameters
         tags: $tags
         groups: $groups
@@ -558,7 +597,12 @@ exports.ReconcileTxDocument = (0, graphql_tag_1.gql) `
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -570,8 +614,8 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
   mutation reconcileTxRuntime(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $lines: [LedgerLineInput!]!
-    $parameters: JSON
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -579,10 +623,10 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -604,7 +648,12 @@ exports.ReconcileTxRuntimeDocument = (0, graphql_tag_1.gql) `
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -649,9 +698,15 @@ exports.UpdateLedgerEntryDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
         code
         message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
       }
     }
   }
@@ -667,7 +722,12 @@ exports.UpdateLedgerDocument = (0, graphql_tag_1.gql) `
           name
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -687,7 +747,12 @@ exports.CreateCustomLinkDocument = (0, graphql_tag_1.gql) `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -710,7 +775,12 @@ exports.SyncCustomAccountsDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -734,7 +804,12 @@ exports.SyncCustomTxsDocument = (0, graphql_tag_1.gql) `
           posted
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -760,7 +835,12 @@ exports.DeleteCustomTxsDocument = (0, graphql_tag_1.gql) `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -1088,6 +1168,43 @@ exports.ListLedgerEntryGroupBalancesDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.CreateCustomCurrencyDocument = (0, graphql_tag_1.gql) `
+  mutation createCustomCurrency(
+    $id: SafeString!
+    $name: String!
+    $precision: Int!
+    $customCode: String!
+  ) {
+    createCustomCurrency(
+      customCurrency: {
+        customCurrencyId: $id
+        name: $name
+        precision: $precision
+        customCode: $customCode
+      }
+    ) {
+      ... on CreateCustomCurrencyResult {
+        customCurrency {
+          code
+          customCurrencyId
+          precision
+          name
+          customCode
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1168,6 +1285,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         listLedgerEntryGroupBalances(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerEntryGroupBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerEntryGroupBalances", "query", variables);
+        },
+        createCustomCurrency(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateCustomCurrencyDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createCustomCurrency", "mutation", variables);
         },
     };
 }
