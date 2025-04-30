@@ -1285,6 +1285,8 @@ export type LedgerEntriesFilterSet = {
   tag?: InputMaybe<TagFilter>;
   /** Use this to filter Ledger Entries by type. Ledger Entry types are defined in Schemas. */
   type?: InputMaybe<StringFilter>;
+  /** Use this to filter Ledger Entries by their type version. */
+  typeVersion?: InputMaybe<StringFilter>;
 };
 
 export type LedgerEntry = {
@@ -2085,6 +2087,8 @@ export type SceneEntryInput = {
   parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   /** The type of the simulated Ledger Entry. Must match one of the types provided in schema.ledgerEntries.types. */
   type: Scalars["SafeString"]["input"];
+  /** The version of the Ledger Entry type. */
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 export type SceneEventInput = {
