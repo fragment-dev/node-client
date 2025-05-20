@@ -2502,6 +2502,18 @@ export type TagFilter = {
   equalTo?: InputMaybe<TagMatchInput>;
   /** Matches tags based on a list of possible tag matches. The key and value are both matched exactly. Limited to 100 items maximum. */
   in?: InputMaybe<Array<TagMatchInput>>;
+  /** Matches tags where the key exactly equals the provided value. */
+  keyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+  /** Matches tags where the key matches any of the provided values. Limited to 100 items maximum. */
+  keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
+  /** Matches tags that do not equal the provided value. The key and value are both matched exactly. */
+  notEqualTo?: InputMaybe<TagMatchInput>;
+  /** Matches tags that do not match any of the provided values. The key and value are both matched exactly. Limited to 100 items maximum. */
+  notIn?: InputMaybe<Array<TagMatchInput>>;
+  /** Matches tags where the key does not equal the provided value. */
+  notKeyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+  /** Matches tags where the key does not match any of the provided values. Limited to 100 items maximum. */
+  notKeyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
 };
 
 /** Specifies a single tag that an entity is expected to have. You must specify both the key and the value. */
