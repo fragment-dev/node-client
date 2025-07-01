@@ -15,6 +15,7 @@
     "start-docs": "node scripts/hostDocs.js",
     "gen-docs": "yarn typedoc --plugin typedoc-plugin-markdown --entryPointStrategy expand ./src --exclude ./src/bin.ts --exclude ./src/getToken.ts --entryPointStrategy expand ./generated/generated.ts",
     "prepack": "yarn build",
+    "postversion": "yarn gen-version",
     "fragment-node-client-codegen": "node --loader ts-node/esm --no-warnings=ExperimentalWarning src/bin.ts",
     "prepublishOnly": "yarn build"
   },
