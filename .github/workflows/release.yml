@@ -51,6 +51,7 @@ jobs:
           git config --global user.email "228685+fragment-pr-bot[bot]@users.noreply.github.com"
           echo "Creating NPM release ${{ inputs.type }}"
           npm version ${{ inputs.type }}
+          yarn build
           echo "version=$(npm pkg get version | tr -d '\"')"
           echo "version=$(npm pkg get version | tr -d '\"')" >> $GITHUB_OUTPUT
         env:
