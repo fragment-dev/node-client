@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -501,6 +501,82 @@ exports.ReverseLedgerEntryDocument = (0, graphql_tag_1.gql) `
           posted
           type
           description
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.MigrateLedgerEntryDocument = (0, graphql_tag_1.gql) `
+  mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
+    migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      ... on MigrateLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        newLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
           hidden
           lines {
             nodes {
@@ -1247,6 +1323,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         reverseLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.ReverseLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reverseLedgerEntry", "mutation", variables);
+        },
+        migrateLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.MigrateLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "migrateLedgerEntry", "mutation", variables);
         },
         addLedgerEntryRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryRuntimeDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntryRuntime", "mutation", variables);
