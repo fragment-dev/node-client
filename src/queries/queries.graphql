@@ -11,7 +11,12 @@ mutation storeSchema($schema: SchemaInput!) {
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -27,14 +32,18 @@ mutation deleteSchema(
     ... on DeleteSchemaResult {
       success
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
     }
   }
 }
-
 
 mutation createLedger(
   $ik: SafeString!
@@ -55,7 +64,12 @@ mutation createLedger(
       }
       isIkReplay
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -71,7 +85,12 @@ mutation deleteLedger(
     ... on DeleteLedgerResult {
       success
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -83,6 +102,7 @@ mutation addLedgerEntry(
   $ik: SafeString!
   $ledgerIk: SafeString!
   $type: String!
+  $typeVersion: Int
   $posted: DateTime
   $parameters: JSON!
   $tags: [LedgerEntryTagInput!]
@@ -93,6 +113,7 @@ mutation addLedgerEntry(
     entry: {
       ledger: { ik: $ledgerIk }
       type: $type
+      typeVersion: $typeVersion
       posted: $posted
       parameters: $parameters
       tags: $tags
@@ -117,13 +138,19 @@ mutation addLedgerEntry(
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
     }
   }
 }
+
 
 mutation reverseLedgerEntry(
   $id: ID!
@@ -168,7 +195,12 @@ mutation reverseLedgerEntry(
       }
       isIkReplay
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -179,9 +211,9 @@ mutation reverseLedgerEntry(
 mutation addLedgerEntryRuntime(
   $ik: SafeString!
   $type: String!
+  $typeVersion: Int
   $ledgerIk: SafeString!
   $posted: DateTime
-  $parameters: JSON
   $lines: [LedgerLineInput!]!
   $tags: [LedgerEntryTagInput!]
   $groups: [LedgerEntryGroupInput!]
@@ -190,12 +222,12 @@ mutation addLedgerEntryRuntime(
     ik: $ik
     entry: {
       type: $type
+      typeVersion: $typeVersion
       ledger: { ik: $ledgerIk }
       posted: $posted
       lines: $lines
       tags: $tags
       groups: $groups
-      parameters: $parameters
     }
   ) {
     __typename
@@ -216,7 +248,12 @@ mutation addLedgerEntryRuntime(
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -227,6 +264,7 @@ mutation addLedgerEntryRuntime(
 mutation reconcileTx(
   $ledgerIk: SafeString!
   $type: String!
+  $typeVersion: Int
   $parameters: JSON!
   $tags: [LedgerEntryTagInput!]
   $groups: [LedgerEntryGroupInput!]
@@ -235,6 +273,7 @@ mutation reconcileTx(
     entry: {
       ledger: { ik: $ledgerIk }
       type: $type
+      typeVersion: $typeVersion
       parameters: $parameters
       tags: $tags
       groups: $groups
@@ -259,7 +298,12 @@ mutation reconcileTx(
         externalTxId
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -270,8 +314,8 @@ mutation reconcileTx(
 mutation reconcileTxRuntime(
   $ledgerIk: SafeString!
   $type: String!
+  $typeVersion: Int
   $lines: [LedgerLineInput!]!
-  $parameters: JSON
   $tags: [LedgerEntryTagInput!]
   $groups: [LedgerEntryGroupInput!]
 ) {
@@ -279,10 +323,10 @@ mutation reconcileTxRuntime(
     entry: {
       ledger: { ik: $ledgerIk }
       type: $type
+      typeVersion: $typeVersion
       lines: $lines
       tags: $tags
       groups: $groups
-      parameters: $parameters
     }
   ) {
     __typename
@@ -304,7 +348,12 @@ mutation reconcileTxRuntime(
         externalTxId
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -348,9 +397,15 @@ mutation updateLedgerEntry(
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
       code
       message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
     }
   }
 }
@@ -365,7 +420,12 @@ mutation updateLedger($ledgerIk: SafeString!, $update: UpdateLedgerInput!) {
         name
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -383,7 +443,12 @@ mutation createCustomLink($name: String!, $ik: SafeString!) {
       }
       isIkReplay
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -405,7 +470,12 @@ mutation syncCustomAccounts($linkId: ID!, $accounts: [CustomAccountInput!]!) {
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -428,7 +498,12 @@ mutation syncCustomTxs($linkId: ID!, $txs: [CustomTxInput!]!) {
         posted
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -453,7 +528,12 @@ mutation deleteCustomTxs($txs: [ID!]!) {
         }
       }
     }
-    ... on Error {
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
       code
       message
       retryable
@@ -764,6 +844,42 @@ query listLedgerEntryGroupBalances(
         hasPreviousPage
         startCursor
       }
+    }
+  }
+}
+
+mutation createCustomCurrency(
+  $id: SafeString!,
+  $name: String!,
+  $precision: Int!,
+  $customCode: String!,
+) {
+  createCustomCurrency(
+    customCurrency: {
+      customCurrencyId: $id,
+      name: $name,
+      precision: $precision,
+      customCode: $customCode,
+    }
+  ) {
+    ... on CreateCustomCurrencyResult {
+      customCurrency {
+        code
+        customCurrencyId
+        precision
+        name
+        customCode
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
     }
   }
 }

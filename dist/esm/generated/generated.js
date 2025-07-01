@@ -307,7 +307,12 @@ export const StoreSchemaDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -322,7 +327,12 @@ export const DeleteSchemaDocument = gql `
       ... on DeleteSchemaResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -350,7 +360,12 @@ export const CreateLedgerDocument = gql `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -365,7 +380,12 @@ export const DeleteLedgerDocument = gql `
       ... on DeleteLedgerResult {
         success
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -378,6 +398,7 @@ export const AddLedgerEntryDocument = gql `
     $ik: SafeString!
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $posted: DateTime
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
@@ -388,6 +409,7 @@ export const AddLedgerEntryDocument = gql `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         posted: $posted
         parameters: $parameters
         tags: $tags
@@ -412,7 +434,12 @@ export const AddLedgerEntryDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -462,7 +489,12 @@ export const ReverseLedgerEntryDocument = gql `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -474,9 +506,9 @@ export const AddLedgerEntryRuntimeDocument = gql `
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
     $type: String!
+    $typeVersion: Int
     $ledgerIk: SafeString!
     $posted: DateTime
-    $parameters: JSON
     $lines: [LedgerLineInput!]!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -485,12 +517,12 @@ export const AddLedgerEntryRuntimeDocument = gql `
       ik: $ik
       entry: {
         type: $type
+        typeVersion: $typeVersion
         ledger: { ik: $ledgerIk }
         posted: $posted
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -511,7 +543,12 @@ export const AddLedgerEntryRuntimeDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -523,6 +560,7 @@ export const ReconcileTxDocument = gql `
   mutation reconcileTx(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $parameters: JSON!
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
@@ -531,6 +569,7 @@ export const ReconcileTxDocument = gql `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         parameters: $parameters
         tags: $tags
         groups: $groups
@@ -555,7 +594,12 @@ export const ReconcileTxDocument = gql `
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -567,8 +611,8 @@ export const ReconcileTxRuntimeDocument = gql `
   mutation reconcileTxRuntime(
     $ledgerIk: SafeString!
     $type: String!
+    $typeVersion: Int
     $lines: [LedgerLineInput!]!
-    $parameters: JSON
     $tags: [LedgerEntryTagInput!]
     $groups: [LedgerEntryGroupInput!]
   ) {
@@ -576,10 +620,10 @@ export const ReconcileTxRuntimeDocument = gql `
       entry: {
         ledger: { ik: $ledgerIk }
         type: $type
+        typeVersion: $typeVersion
         lines: $lines
         tags: $tags
         groups: $groups
-        parameters: $parameters
       }
     ) {
       __typename
@@ -601,7 +645,12 @@ export const ReconcileTxRuntimeDocument = gql `
           externalTxId
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -646,9 +695,15 @@ export const UpdateLedgerEntryDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
         code
         message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
       }
     }
   }
@@ -664,7 +719,12 @@ export const UpdateLedgerDocument = gql `
           name
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -684,7 +744,12 @@ export const CreateCustomLinkDocument = gql `
         }
         isIkReplay
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -707,7 +772,12 @@ export const SyncCustomAccountsDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -731,7 +801,12 @@ export const SyncCustomTxsDocument = gql `
           posted
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -757,7 +832,12 @@ export const DeleteCustomTxsDocument = gql `
           }
         }
       }
-      ... on Error {
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
         code
         message
         retryable
@@ -1085,6 +1165,43 @@ export const ListLedgerEntryGroupBalancesDocument = gql `
     }
   }
 `;
+export const CreateCustomCurrencyDocument = gql `
+  mutation createCustomCurrency(
+    $id: SafeString!
+    $name: String!
+    $precision: Int!
+    $customCode: String!
+  ) {
+    createCustomCurrency(
+      customCurrency: {
+        customCurrencyId: $id
+        name: $name
+        precision: $precision
+        customCode: $customCode
+      }
+    ) {
+      ... on CreateCustomCurrencyResult {
+        customCurrency {
+          code
+          customCurrencyId
+          precision
+          name
+          customCode
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1180,6 +1297,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         listLedgerEntryGroupBalances(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntryGroupBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntryGroupBalances", "query", variables);
+        },
+        createCustomCurrency(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomCurrencyDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomCurrency", "mutation", variables);
         },
     };
 }

@@ -821,6 +821,13 @@ export type LedgerLedgerEntryGroupsArgs = {
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
+/** Ledgers are databases designed for managing money */
+export type LedgerMigrationsArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+};
 /** A ledger account is a container for money */
 export type LedgerAccount = {
     __typename?: "LedgerAccount";
@@ -1201,6 +1208,8 @@ export type LedgerEntriesFilterSet = {
     tag?: InputMaybe<TagFilter>;
     /** Use this to filter Ledger Entries by type. Ledger Entry types are defined in Schemas. */
     type?: InputMaybe<StringFilter>;
+    /** Use this to filter Ledger Entries by their type version. */
+    typeVersion?: InputMaybe<StringFilter>;
 };
 export type LedgerEntry = {
     __typename?: "LedgerEntry";
@@ -1259,6 +1268,8 @@ export type LedgerEntry = {
     tags: Array<LedgerEntryTag>;
     /** The type of the Ledger Entry. */
     type?: Maybe<Scalars["SafeString"]["output"]>;
+    /** Experimental: The version of the Ledger Entry type used when it was posted. */
+    typeVersion?: Maybe<Scalars["Int"]["output"]>;
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
 };
@@ -1402,7 +1413,7 @@ export type LedgerEntryInput = {
     /** The type of the Ledger Entry. Must be defined in the Schema linked to the Ledger specified below. */
     type?: InputMaybe<Scalars["String"]["input"]>;
     /** Experimental: This field is reserved for an upcoming feature and is not yet supported. */
-    version?: InputMaybe<Scalars["Int"]["input"]>;
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** Specify a Ledger Entry by using `id`. */
 export type LedgerEntryMatchInput = {
@@ -1668,7 +1679,7 @@ export type Mutation = {
     deleteSchema: DeleteSchemaResponse;
     /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
     reconcileTx: ReconcileTxResponse;
-    /** *EXPERIMENTAL* Reverses a ledger entry */
+    /** Reverses a Ledger Entry */
     reverseLedgerEntry: ReverseLedgerEntryResponse;
     /**
      * Stores a Schema in your workspace. If no Schema with the same key exists in your worksapce, a new Schema is created.
@@ -1916,6 +1927,8 @@ export type SceneEntryInput = {
     parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     /** The type of the simulated Ledger Entry. Must match one of the types provided in schema.ledgerEntries.types. */
     type: Scalars["SafeString"]["input"];
+    /** The version of the Ledger Entry type. */
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 export type SceneEventInput = {
     /** The simulated Ledger Entry. */
@@ -2140,7 +2153,7 @@ export type SchemaLedgerEntryInput = {
      */
     type: Scalars["SafeString"]["input"];
     /** Experimental: This field is not yet supported. */
-    version?: InputMaybe<Scalars["Int"]["input"]>;
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** A tag associated with a Ledger Entry type. */
 export type SchemaLedgerEntryTagInput = {
@@ -2282,6 +2295,18 @@ export type TagFilter = {
     equalTo?: InputMaybe<TagMatchInput>;
     /** Matches tags based on a list of possible tag matches. The key and value are both matched exactly. Limited to 100 items maximum. */
     in?: InputMaybe<Array<TagMatchInput>>;
+    /** Matches tags where the key exactly equals the provided value. */
+    keyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+    /** Matches tags where the key matches any of the provided values. Limited to 100 items maximum. */
+    keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
+    /** Matches tags that do not equal the provided value. The key and value are both matched exactly. */
+    notEqualTo?: InputMaybe<TagMatchInput>;
+    /** Matches tags that do not match any of the provided values. The key and value are both matched exactly. Limited to 100 items maximum. */
+    notIn?: InputMaybe<Array<TagMatchInput>>;
+    /** Matches tags where the key does not equal the provided value. */
+    notKeyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+    /** Matches tags where the key does not match any of the provided values. Limited to 100 items maximum. */
+    notKeyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
 };
 /** Specifies a single tag that an entity is expected to have. You must specify both the key and the value. */
 export type TagMatchInput = {
@@ -2529,6 +2554,7 @@ export type AddLedgerEntryMutationVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     posted?: InputMaybe<Scalars["DateTime"]["input"]>;
     parameters: Scalars["JSON"]["input"];
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
@@ -2635,9 +2661,9 @@ export type ReverseLedgerEntryMutation = {
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     ledgerIk: Scalars["SafeString"]["input"];
     posted?: InputMaybe<Scalars["DateTime"]["input"]>;
-    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     lines: Array<LedgerLineInput> | LedgerLineInput;
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2679,6 +2705,7 @@ export type AddLedgerEntryRuntimeMutation = {
 export type ReconcileTxMutationVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     parameters: Scalars["JSON"]["input"];
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
@@ -2721,8 +2748,8 @@ export type ReconcileTxMutation = {
 export type ReconcileTxRuntimeMutationVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     type: Scalars["String"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
     lines: Array<LedgerLineInput> | LedgerLineInput;
-    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     tags?: InputMaybe<Array<LedgerEntryTagInput> | LedgerEntryTagInput>;
     groups?: InputMaybe<Array<LedgerEntryGroupInput> | LedgerEntryGroupInput>;
 }>;
@@ -2772,10 +2799,12 @@ export type UpdateLedgerEntryMutation = {
         __typename: "BadRequestError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
         message: string;
+        retryable: boolean;
     } | {
         __typename: "UpdateLedgerEntryResult";
         entry: {
@@ -3306,6 +3335,36 @@ export type ListLedgerEntryGroupBalancesQuery = {
         };
     } | null;
 };
+export type CreateCustomCurrencyMutationVariables = Exact<{
+    id: Scalars["SafeString"]["input"];
+    name: Scalars["String"]["input"];
+    precision: Scalars["Int"]["input"];
+    customCode: Scalars["String"]["input"];
+}>;
+export type CreateCustomCurrencyMutation = {
+    __typename?: "Mutation";
+    createCustomCurrency: {
+        __typename?: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename?: "CreateCustomCurrencyResult";
+        customCurrency: {
+            __typename?: "Currency";
+            code: CurrencyCode;
+            customCurrencyId?: string | null;
+            precision: number;
+            name: string;
+            customCode?: string | null;
+        };
+    } | {
+        __typename?: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    };
+};
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const DeleteSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
@@ -3332,6 +3391,7 @@ export declare const GetSchemaDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const GetWorkspaceDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntryGroupBalancesDocument: import("graphql").DocumentNode;
+export declare const CreateCustomCurrencyDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -3360,6 +3420,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
     getWorkspace(variables?: GetWorkspaceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetWorkspaceQuery>;
     listLedgerEntryGroupBalances(variables: ListLedgerEntryGroupBalancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntryGroupBalancesQuery>;
+    createCustomCurrency(variables: CreateCustomCurrencyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomCurrencyMutation>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};
