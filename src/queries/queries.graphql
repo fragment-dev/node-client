@@ -151,7 +151,6 @@ mutation addLedgerEntry(
   }
 }
 
-
 mutation reverseLedgerEntry(
   $id: ID!
 ) {
@@ -182,6 +181,87 @@ mutation reverseLedgerEntry(
         posted
         type
         description
+        hidden
+        lines {
+          nodes {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation migrateLedgerEntry(
+  $id: ID!
+  $newLedgerEntry: LedgerEntryInput!
+) {
+  migrateLedgerEntry(input: {
+    id: $id
+    newLedgerEntry: $newLedgerEntry
+  }) {
+    ... on MigrateLedgerEntryResult {
+      reversingLedgerEntry {
+        ik
+        id
+        created
+        posted
+        type
+        description
+        reversedAt
+        hidden
+        lines {
+          nodes {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      reversedLedgerEntry {
+        ik
+        id
+        created
+        posted
+        type
+        description
+        reversedAt
+        hidden
+        lines {
+          nodes {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      newLedgerEntry {
+        ik
+        id
+        created
+        posted
+        type
+        description
+        reversedAt
         hidden
         lines {
           nodes {

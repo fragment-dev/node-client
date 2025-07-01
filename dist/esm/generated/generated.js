@@ -524,6 +524,82 @@ export const ReverseLedgerEntryDocument = gql `
     }
   }
 `;
+export const MigrateLedgerEntryDocument = gql `
+  mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
+    migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      ... on MigrateLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        newLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const AddLedgerEntryRuntimeDocument = gql `
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
@@ -1247,6 +1323,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         reverseLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(ReverseLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "reverseLedgerEntry", "mutation", variables);
+        },
+        migrateLedgerEntry(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(MigrateLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "migrateLedgerEntry", "mutation", variables);
         },
         addLedgerEntryRuntime(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryRuntimeDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntryRuntime", "mutation", variables);

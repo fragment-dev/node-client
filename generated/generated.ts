@@ -1905,9 +1905,11 @@ export type Mutation = {
   /** Delete a Schema */
   deleteSchema: DeleteSchemaResponse;
   /**
-   * @deprecated EXPERIMENTAL: This mutation is experimental. You should not rely on this interface.
-   * Returns a BadRequestError as of now.
-   * @deprecated NOT IMPLEMENTED: This mutation is not yet implemented and will always throw an error.
+   * Migrate an existing Ledger Entry to a new type and typeVersion.
+   *
+   * Migrating a Ledger Entry will do the following:
+   *   1. Reverse the existing Ledger Entry
+   *   2. Post a new Ledger Entry with the new type, typeVersion, and parameters provided
    */
   migrateLedgerEntry: MigrateLedgerEntryResponse;
   /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
@@ -3044,6 +3046,92 @@ export type ReverseLedgerEntryMutation = {
       };
 };
 
+export type MigrateLedgerEntryMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+  newLedgerEntry: LedgerEntryInput;
+}>;
+
+export type MigrateLedgerEntryMutation = {
+  __typename?: "Mutation";
+  migrateLedgerEntry:
+    | {
+        __typename?: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename?: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename?: "MigrateLedgerEntryResult";
+        isIkReplay: boolean;
+        reversingLedgerEntry: {
+          __typename?: "LedgerEntry";
+          ik: string;
+          id: string;
+          created: string;
+          posted: string;
+          type?: string | null;
+          description?: string | null;
+          reversedAt?: string | null;
+          hidden: boolean;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }>;
+          };
+        };
+        reversedLedgerEntry: {
+          __typename?: "LedgerEntry";
+          ik: string;
+          id: string;
+          created: string;
+          posted: string;
+          type?: string | null;
+          description?: string | null;
+          reversedAt?: string | null;
+          hidden: boolean;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }>;
+          };
+        };
+        newLedgerEntry: {
+          __typename?: "LedgerEntry";
+          ik: string;
+          id: string;
+          created: string;
+          posted: string;
+          type?: string | null;
+          description?: string | null;
+          reversedAt?: string | null;
+          hidden: boolean;
+          lines: {
+            __typename?: "LedgerLinesConnection";
+            nodes: Array<{
+              __typename?: "LedgerLine";
+              id: string;
+              amount: string;
+              account: { __typename?: "LedgerAccount"; path: string };
+            }>;
+          };
+        };
+      };
+};
+
 export type AddLedgerEntryRuntimeMutationVariables = Exact<{
   ik: Scalars["SafeString"]["input"];
   type: Scalars["String"]["input"];
@@ -4000,6 +4088,82 @@ export const ReverseLedgerEntryDocument = gql`
     }
   }
 `;
+export const MigrateLedgerEntryDocument = gql`
+  mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
+    migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      ... on MigrateLedgerEntryResult {
+        reversingLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        reversedLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        newLedgerEntry {
+          ik
+          id
+          created
+          posted
+          type
+          description
+          reversedAt
+          hidden
+          lines {
+            nodes {
+              id
+              amount
+              account {
+                path
+              }
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const AddLedgerEntryRuntimeDocument = gql`
   mutation addLedgerEntryRuntime(
     $ik: SafeString!
@@ -4811,6 +4975,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "reverseLedgerEntry",
+        "mutation",
+        variables,
+      );
+    },
+    migrateLedgerEntry(
+      variables: MigrateLedgerEntryMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<MigrateLedgerEntryMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<MigrateLedgerEntryMutation>(
+            MigrateLedgerEntryDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "migrateLedgerEntry",
         "mutation",
         variables,
       );
