@@ -50,7 +50,7 @@ jobs:
           git config --global user.name "fragment-pr-bot[bot]"
           git config --global user.email "228685+fragment-pr-bot[bot]@users.noreply.github.com"
           echo "Creating NPM release ${{ inputs.type }}"
-          echo "version=$(npm version ${{ inputs.type }})" >> $GITHUB_OUTPUT
+          echo "version=$(npm version ${{ inputs.type }})\n" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
