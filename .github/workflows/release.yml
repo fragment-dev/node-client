@@ -43,7 +43,13 @@ jobs:
           command: yarn
 
       - name: Bump version
-        run: gh auth status && gh auth setup-git && npm version ${{ inputs.type }}
+        run: |
+          gh auth status
+          gh auth setup-git
+          git config --global user.name "fragment-pr-bot[bot]"
+          git config --global user.email "228685+fragment-pr-bot[bot]@users.noreply.github.com"
+          echo "Creating NPM release ${{ inputs.type }}"
+          npm version ${{ inputs.type }}
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
