@@ -252,6 +252,18 @@ export var LedgerTypes;
 (function (LedgerTypes) {
     LedgerTypes["Double"] = "double";
 })(LedgerTypes || (LedgerTypes = {}));
+/** The type of Link an external account belongs to. */
+export var LinkType;
+(function (LinkType) {
+    /** A Custom Link */
+    LinkType["CustomLink"] = "CustomLink";
+    /** An Increase Link */
+    LinkType["IncreaseLink"] = "IncreaseLink";
+    /** A Stripe Link */
+    LinkType["StripeLink"] = "StripeLink";
+    /** A Unit Link */
+    LinkType["UnitLink"] = "UnitLink";
+})(LinkType || (LinkType = {}));
 /** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
@@ -278,6 +290,16 @@ export var SchemaConsistencyMode;
     /** Strongly consistent entity updates */
     SchemaConsistencyMode["Strong"] = "strong";
 })(SchemaConsistencyMode || (SchemaConsistencyMode = {}));
+/** The status of a Ledger Entry. */
+export var SchemaLedgerEntryStatus;
+(function (SchemaLedgerEntryStatus) {
+    /** The Ledger Entry is active. */
+    SchemaLedgerEntryStatus["Active"] = "active";
+    /** The Ledger Entry is archived. */
+    SchemaLedgerEntryStatus["Archived"] = "archived";
+    /** The Ledger Entry is disabled. */
+    SchemaLedgerEntryStatus["Disabled"] = "disabled";
+})(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
 export var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";

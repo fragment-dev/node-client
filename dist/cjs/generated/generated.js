@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -255,6 +255,18 @@ var LedgerTypes;
 (function (LedgerTypes) {
     LedgerTypes["Double"] = "double";
 })(LedgerTypes || (exports.LedgerTypes = LedgerTypes = {}));
+/** The type of Link an external account belongs to. */
+var LinkType;
+(function (LinkType) {
+    /** A Custom Link */
+    LinkType["CustomLink"] = "CustomLink";
+    /** An Increase Link */
+    LinkType["IncreaseLink"] = "IncreaseLink";
+    /** A Stripe Link */
+    LinkType["StripeLink"] = "StripeLink";
+    /** A Unit Link */
+    LinkType["UnitLink"] = "UnitLink";
+})(LinkType || (exports.LinkType = LinkType = {}));
 /** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
@@ -281,6 +293,16 @@ var SchemaConsistencyMode;
     /** Strongly consistent entity updates */
     SchemaConsistencyMode["Strong"] = "strong";
 })(SchemaConsistencyMode || (exports.SchemaConsistencyMode = SchemaConsistencyMode = {}));
+/** The status of a Ledger Entry. */
+var SchemaLedgerEntryStatus;
+(function (SchemaLedgerEntryStatus) {
+    /** The Ledger Entry is active. */
+    SchemaLedgerEntryStatus["Active"] = "active";
+    /** The Ledger Entry is archived. */
+    SchemaLedgerEntryStatus["Archived"] = "archived";
+    /** The Ledger Entry is disabled. */
+    SchemaLedgerEntryStatus["Disabled"] = "disabled";
+})(SchemaLedgerEntryStatus || (exports.SchemaLedgerEntryStatus = SchemaLedgerEntryStatus = {}));
 var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";

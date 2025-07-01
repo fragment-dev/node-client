@@ -669,14 +669,38 @@ export type GroupBalanceAccountFilter = {
 };
 /** Filter for finding entries by group membership */
 export type GroupFilter = {
-    /** Find entries that are members of a group with all of these group keys */
+    /** Find groups that exactly match this group */
+    equalTo?: InputMaybe<GroupMatchInput>;
+    /** Find groups that match any of these groups */
+    in?: InputMaybe<Array<GroupMatchInput>>;
+    /** Find groups with a specific key */
+    keyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+    /** Find groups with any of these keys */
     keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
-    /** Find entries that do not match this predicate */
+    /**
+     * Find groups that do not match this predicate
+     * @deprecated not filter is deprecated. Use notKeyIn or notKeyEqualTo instead.
+     */
     not?: InputMaybe<GroupNotFilter>;
+    /** Find groups that do not exactly match this group */
+    notEqualTo?: InputMaybe<GroupMatchInput>;
+    /** Find groups that do not match any of these groups */
+    notIn?: InputMaybe<Array<GroupMatchInput>>;
+    /** Find groups that do not have a specific key */
+    notKeyEqualTo?: InputMaybe<Scalars["SafeString"]["input"]>;
+    /** Find groups that do not have any of these keys */
+    notKeyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
 };
-/** Filter for finding entries that do not match this predicate */
+/** Input type for matching a specific group by key and value */
+export type GroupMatchInput = {
+    /** The key of the group to match */
+    key: Scalars["SafeString"]["input"];
+    /** The value of the group to match */
+    value: Scalars["SafeString"]["input"];
+};
+/** DEPRECATED: Use GroupFilter and notKeyIn or notKeyEqualTo instead. Filter for finding entries that do not match this predicate */
 export type GroupNotFilter = {
-    /** Find entries that are not members of all of these groups. This is an AND filter. */
+    /** DEPRECATED: Find entries that are not members of all of these groups. This is an AND filter. */
     keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
 };
 /** A single amount and the timestamp requested */
@@ -772,6 +796,8 @@ export type Ledger = {
     created: Scalars["DateTime"]["output"];
     /** URL to the Fragment Dashboard for this Ledger. */
     dashboardUrl: Scalars["String"]["output"];
+    /** Entry statistics for this Ledger. */
+    entryStats: LedgerEntryStatsConnection;
     id: Scalars["ID"]["output"];
     /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a unique identifier for this Ledger. */
     ik: Scalars["SafeString"]["output"];
@@ -792,6 +818,13 @@ export type Ledger = {
     type: LedgerTypes;
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
+};
+/** Ledgers are databases designed for managing money */
+export type LedgerEntryStatsArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** Ledgers are databases designed for managing money */
 export type LedgerLedgerAccountsArgs = {
@@ -1268,7 +1301,7 @@ export type LedgerEntry = {
     tags: Array<LedgerEntryTag>;
     /** The type of the Ledger Entry. */
     type?: Maybe<Scalars["SafeString"]["output"]>;
-    /** Experimental: The version of the Ledger Entry type used when it was posted. */
+    /** The version of the Ledger Entry type used when it was posted. */
     typeVersion?: Maybe<Scalars["Int"]["output"]>;
     /** @deprecated Callers should not need to query or store this value. */
     workspaceId: Scalars["ID"]["output"];
@@ -1356,6 +1389,15 @@ export type LedgerEntryGroupBalanceConnection = {
     nodes: Array<LedgerEntryGroupBalance>;
     pageInfo: PageInfo;
 };
+/** Filter Ledger Entry Groups by their balance impact on a Ledger Account. If a group has a matching balance for the specified account, the group will be included in the results. */
+export type LedgerEntryGroupBalanceFilter = {
+    /** A Ledger Entry Group will be included in the result if it has a balance for the specified account. If 'account' is the only filter specified, then any non-null balance in any currency will match. */
+    account: GroupBalanceAccountFilter;
+    /** A Ledger Entry Group will be included in the result if it has a balance for the specified account in the specified currency. If the 'ownBalance' filter is omitted then any non-null balance will match. */
+    currency?: InputMaybe<CurrencyFilter>;
+    /** A Ledger Entry Group will be included in the result if it has a balance for the specified account that passes the specified value predicate. If the 'currency' filter is omitted then any balance in any currency that passes the predicate will match. If the 'currency' filter is included, the value predicate will only be evaluated against the specified currency.  */
+    ownBalance?: InputMaybe<Int96Filter>;
+};
 /** Optional filters for querying balances on a Ledger Entry Group. */
 export type LedgerEntryGroupBalanceFilterSet = {
     /** Filter to a subset of accounts */
@@ -1385,6 +1427,8 @@ export type LedgerEntryGroupsConnection = {
     pageInfo: PageInfo;
 };
 export type LedgerEntryGroupsFilterSet = {
+    /** Filter Ledger Entry Groups by their balance impact on a Ledger Account. If a group has a matching balance for the specified account, the group will be included in the results. */
+    balance?: InputMaybe<LedgerEntryGroupBalanceFilter>;
     /** Use to filter Ledger Entry Groups by their created timestamp */
     created?: InputMaybe<DateTimeFilter>;
     /** Use to filter Ledger Entry Groups by their key */
@@ -1423,6 +1467,32 @@ export type LedgerEntryMatchInput = {
     ik?: InputMaybe<Scalars["SafeString"]["input"]>;
     /** The FRAGMENT ID of the Ledger to which this Ledger Entry belongs. This is required if you have not provided `id`. */
     ledger?: InputMaybe<LedgerMatchInput>;
+};
+/** Posting count statistics for a specific type and typeVersion of entry in a Ledger. */
+export type LedgerEntryStats = {
+    __typename?: "LedgerEntryStats";
+    /** The total number of entries of this type. */
+    count: Scalars["Int96"]["output"];
+    /** The ledger ID these stats are for. */
+    ledgerId: Scalars["SafeString"]["output"];
+    /** The net number of entries (count - reversalsCount). */
+    netCount: Scalars["Int96"]["output"];
+    /** The number of entries that are reversals. */
+    reversalsCount: Scalars["Int96"]["output"];
+    /** The schema key associated with these stats. */
+    schemaKey: Scalars["SafeString"]["output"];
+    /** The type of entry these stats are for. */
+    type: Scalars["SafeString"]["output"];
+    /** The version of the entry type these stats are for. */
+    typeVersion: Scalars["Int"]["output"];
+};
+/** A paginated list of Ledger Entry Stats */
+export type LedgerEntryStatsConnection = {
+    __typename?: "LedgerEntryStatsConnection";
+    /** The current page of results */
+    nodes: Array<LedgerEntryStats>;
+    /** Pagination info for this list. */
+    pageInfo: PageInfo;
 };
 /** A tag attached to a Ledger Entry. */
 export type LedgerEntryTag = {
@@ -1644,6 +1714,17 @@ export type Link = {
 export type LinkMatchInput = {
     id: Scalars["ID"]["input"];
 };
+/** The type of Link an external account belongs to. */
+export declare enum LinkType {
+    /** A Custom Link */
+    CustomLink = "CustomLink",
+    /** An Increase Link */
+    IncreaseLink = "IncreaseLink",
+    /** A Stripe Link */
+    StripeLink = "StripeLink",
+    /** A Unit Link */
+    UnitLink = "UnitLink"
+}
 /** A paginated list of Links */
 export type LinksConnection = {
     __typename?: "LinksConnection";
@@ -1651,6 +1732,25 @@ export type LinksConnection = {
     nodes: Array<CustomLink | IncreaseLink | StripeLink | UnitLink>;
     /** The [pagination info](https://fragment.dev/api-reference/api-types#connection-types-pageinfo) for this list */
     pageInfo: PageInfo;
+};
+/** An object defining the input for migrating a Ledger Entry. */
+export type MigrateLedgerEntryInput = {
+    /** The Ledger Entry to migrate */
+    id: Scalars["ID"]["input"];
+    /** The Ledger Entry you want to migrate it to */
+    newLedgerEntry: LedgerEntryInput;
+};
+export type MigrateLedgerEntryResponse = BadRequestError | InternalError | MigrateLedgerEntryResult;
+export type MigrateLedgerEntryResult = {
+    __typename?: "MigrateLedgerEntryResult";
+    /** Whether this migration was an IK replay or not */
+    isIkReplay: Scalars["Boolean"]["output"];
+    /** The new Ledger Entry posted as a result of the migration */
+    newLedgerEntry: LedgerEntry;
+    /** The Ledger Entry that was migrated */
+    reversedLedgerEntry: LedgerEntry;
+    /** The reversal Ledger Entry that was posted to reverse the Ledger Entry being migrated */
+    reversingLedgerEntry: LedgerEntry;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type Mutation = {
@@ -1677,6 +1777,12 @@ export type Mutation = {
     deleteLedger: DeleteLedgerResponse;
     /** Delete a Schema */
     deleteSchema: DeleteSchemaResponse;
+    /**
+     * @deprecated EXPERIMENTAL: This mutation is experimental. You should not rely on this interface.
+     * Returns a BadRequestError as of now.
+     * @deprecated NOT IMPLEMENTED: This mutation is not yet implemented and will always throw an error.
+     */
+    migrateLedgerEntry: MigrateLedgerEntryResponse;
     /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
     reconcileTx: ReconcileTxResponse;
     /** Reverses a Ledger Entry */
@@ -1739,6 +1845,10 @@ export type MutationDeleteLedgerArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteSchemaArgs = {
     schema: SchemaMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationMigrateLedgerEntryArgs = {
+    input: MigrateLedgerEntryInput;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationReconcileTxArgs = {
@@ -2033,6 +2143,8 @@ export type SchemaExternalAccountMatchInput = {
     id?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
     /** The FRAGMENT ID of the link */
     linkId?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
+    /** The type of Link this external account belongs to. Must be one of: IncreaseLink, UnitLink, CustomLink, or StripeLink. */
+    linkType?: InputMaybe<LinkType>;
 };
 /** Input to the API for creating a Schema. */
 export type SchemaInput = {
@@ -2145,6 +2257,8 @@ export type SchemaLedgerEntryInput = {
     lines?: InputMaybe<Array<SchemaLedgerLineInput>>;
     /** Fixed partial set of parameters to be included in a templated Ledger Entry. */
     parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+    /** The status of this Ledger Entry. Defaults to active. */
+    status?: InputMaybe<SchemaLedgerEntryStatus>;
     /** Ledger Entries posted with this type will be associated with these tags. */
     tags?: InputMaybe<Array<SchemaLedgerEntryTagInput>>;
     /**
@@ -2155,6 +2269,15 @@ export type SchemaLedgerEntryInput = {
     /** Experimental: This field is not yet supported. */
     typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
+/** The status of a Ledger Entry. */
+export declare enum SchemaLedgerEntryStatus {
+    /** The Ledger Entry is active. */
+    Active = "active",
+    /** The Ledger Entry is archived. */
+    Archived = "archived",
+    /** The Ledger Entry is disabled. */
+    Disabled = "disabled"
+}
 /** A tag associated with a Ledger Entry type. */
 export type SchemaLedgerEntryTagInput = {
     /** The key for this tag. */
@@ -2424,6 +2547,8 @@ export type UpdateLedgerEntryInput = {
     groups?: InputMaybe<Array<LedgerEntryGroupInput>>;
     /** The list of Tags to add and/or update on this Ledger Entry. */
     tags?: InputMaybe<Array<LedgerEntryTagInput>>;
+    /** The list of Tags to remove from this Ledger Entry. */
+    tagsToRemove?: InputMaybe<Array<LedgerEntryTagInput>>;
 };
 export type UpdateLedgerEntryResponse = BadRequestError | InternalError | UpdateLedgerEntryResult;
 export type UpdateLedgerEntryResult = {
