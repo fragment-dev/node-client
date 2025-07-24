@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -293,6 +293,16 @@ var SchemaConsistencyMode;
     /** Strongly consistent entity updates */
     SchemaConsistencyMode["Strong"] = "strong";
 })(SchemaConsistencyMode || (exports.SchemaConsistencyMode = SchemaConsistencyMode = {}));
+/** The status of a Ledger Account. */
+var SchemaLedgerAccountStatus;
+(function (SchemaLedgerAccountStatus) {
+    /** The Ledger Account is active. */
+    SchemaLedgerAccountStatus["Active"] = "active";
+    /** The Ledger Account is archived. */
+    SchemaLedgerAccountStatus["Archived"] = "archived";
+    /** The Ledger Account is disabled. */
+    SchemaLedgerAccountStatus["Disabled"] = "disabled";
+})(SchemaLedgerAccountStatus || (exports.SchemaLedgerAccountStatus = SchemaLedgerAccountStatus = {}));
 /** The status of a Ledger Entry. */
 var SchemaLedgerEntryStatus;
 (function (SchemaLedgerEntryStatus) {
@@ -475,6 +485,7 @@ exports.AddLedgerEntryDocument = (0, graphql_tag_1.gql) `
 exports.ReverseLedgerEntryDocument = (0, graphql_tag_1.gql) `
   mutation reverseLedgerEntry($id: ID!) {
     reverseLedgerEntry(id: $id) {
+      __typename
       ... on ReverseLedgerEntryResult {
         reversingLedgerEntry {
           ik
@@ -530,6 +541,7 @@ exports.ReverseLedgerEntryDocument = (0, graphql_tag_1.gql) `
 exports.MigrateLedgerEntryDocument = (0, graphql_tag_1.gql) `
   mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
     migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      __typename
       ... on MigrateLedgerEntryResult {
         reversingLedgerEntry {
           ik

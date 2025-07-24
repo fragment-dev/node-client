@@ -290,6 +290,16 @@ export var SchemaConsistencyMode;
     /** Strongly consistent entity updates */
     SchemaConsistencyMode["Strong"] = "strong";
 })(SchemaConsistencyMode || (SchemaConsistencyMode = {}));
+/** The status of a Ledger Account. */
+export var SchemaLedgerAccountStatus;
+(function (SchemaLedgerAccountStatus) {
+    /** The Ledger Account is active. */
+    SchemaLedgerAccountStatus["Active"] = "active";
+    /** The Ledger Account is archived. */
+    SchemaLedgerAccountStatus["Archived"] = "archived";
+    /** The Ledger Account is disabled. */
+    SchemaLedgerAccountStatus["Disabled"] = "disabled";
+})(SchemaLedgerAccountStatus || (SchemaLedgerAccountStatus = {}));
 /** The status of a Ledger Entry. */
 export var SchemaLedgerEntryStatus;
 (function (SchemaLedgerEntryStatus) {
@@ -472,6 +482,7 @@ export const AddLedgerEntryDocument = gql `
 export const ReverseLedgerEntryDocument = gql `
   mutation reverseLedgerEntry($id: ID!) {
     reverseLedgerEntry(id: $id) {
+      __typename
       ... on ReverseLedgerEntryResult {
         reversingLedgerEntry {
           ik
@@ -527,6 +538,7 @@ export const ReverseLedgerEntryDocument = gql `
 export const MigrateLedgerEntryDocument = gql `
   mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
     migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      __typename
       ... on MigrateLedgerEntryResult {
         reversingLedgerEntry {
           ik
