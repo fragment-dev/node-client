@@ -841,6 +841,8 @@ export type Ledger = {
   ik: Scalars["SafeString"]["output"];
   /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
   ledgerAccounts: LedgerAccountsConnection;
+  /** **EXPERIMENTAL**: Data migrations affecting this Ledger. */
+  ledgerDataMigrations: LedgerDataMigrationConnection;
   /** Query Ledger Entries in a Ledger. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
   ledgerEntries: LedgerEntriesConnection;
   /** Query a Ledger Entry Group for this Ledger given its key and value. */
@@ -871,6 +873,14 @@ export type LedgerLedgerAccountsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
   filter?: InputMaybe<LedgerAccountsFilterSet>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** Ledgers are databases designed for managing money */
+export type LedgerLedgerDataMigrationsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
@@ -1294,6 +1304,35 @@ export type LedgerAccountsFilterSet = {
   type?: InputMaybe<LedgerAccountTypeFilter>;
 };
 
+/** Represents a data migration for a Ledger. */
+export type LedgerDataMigration = {
+  /** The ledger entries to be migrated. */
+  ledgerEntries: LedgerEntriesConnection;
+  /** The ledger ID this migration is for. */
+  ledgerId: Scalars["SafeString"]["output"];
+  /** The migration type being performed (e.g., 'archive'). */
+  migrationType: Scalars["String"]["output"];
+  /** The schema version when this migration was created. */
+  schemaVersion: Scalars["Int"]["output"];
+};
+
+/** Represents a data migration for a Ledger. */
+export type LedgerDataMigrationLedgerEntriesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** A paginated list of Ledger Entry Data Migrations */
+export type LedgerDataMigrationConnection = {
+  __typename?: "LedgerDataMigrationConnection";
+  /** The current page of results */
+  nodes: Array<LedgerEntryDataMigration>;
+  /** Pagination info for this list. */
+  pageInfo: PageInfo;
+};
+
 /** A paginated list of Ledger Entries */
 export type LedgerEntriesConnection = {
   __typename?: "LedgerEntriesConnection";
@@ -1410,6 +1449,31 @@ export type LedgerEntryConditionInput = {
   postcondition?: InputMaybe<LedgerAccountConditionInput>;
   /** The conditions that must hold prior to the operation. */
   precondition?: InputMaybe<LedgerAccountConditionInput>;
+};
+
+/** Represents a data migration for a specific entry type in a Ledger. */
+export type LedgerEntryDataMigration = LedgerDataMigration & {
+  __typename?: "LedgerEntryDataMigration";
+  /** The entry type being migrated. */
+  entryType: Scalars["SafeString"]["output"];
+  /** The ledger entries to be migrated. */
+  ledgerEntries: LedgerEntriesConnection;
+  /** The ledger ID this migration is for. */
+  ledgerId: Scalars["SafeString"]["output"];
+  /** The migration type being performed (e.g., 'archive'). */
+  migrationType: Scalars["String"]["output"];
+  /** The schema version when this migration was created. */
+  schemaVersion: Scalars["Int"]["output"];
+  /** The version of the entry type being migrated. */
+  typeVersion: Scalars["Int"]["output"];
+};
+
+/** Represents a data migration for a specific entry type in a Ledger. */
+export type LedgerEntryDataMigrationLedgerEntriesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 export type LedgerEntryFilter = {
@@ -2390,6 +2454,8 @@ export type SchemaLedgerAccountInput = {
   linkedAccount?: InputMaybe<SchemaExternalAccountMatchInput>;
   /** The human-readable name of this Ledger Account. */
   name?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
+  /** The status of this Ledger Account. Defaults to active. */
+  status?: InputMaybe<SchemaLedgerAccountStatus>;
   /** Whether or not this Ledger Account should be templated. */
   template?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The type of ledger account to create. Required if this is a top-level Ledger Account. If not provided, the type will be inferred from the parent. */
@@ -2407,6 +2473,16 @@ export type SchemaLedgerAccountMatchInput = {
    */
   path: Scalars["ParameterizedString"]["input"];
 };
+
+/** The status of a Ledger Account. */
+export enum SchemaLedgerAccountStatus {
+  /** The Ledger Account is active. */
+  Active = "active",
+  /** The Ledger Account is archived. */
+  Archived = "archived",
+  /** The Ledger Account is disabled. */
+  Disabled = "disabled",
+}
 
 /** The Ledger Entries in your Schema. */
 export type SchemaLedgerEntriesInput = {
@@ -2991,19 +3067,19 @@ export type ReverseLedgerEntryMutation = {
   __typename?: "Mutation";
   reverseLedgerEntry:
     | {
-        __typename?: "BadRequestError";
+        __typename: "BadRequestError";
         code: string;
         message: string;
         retryable: boolean;
       }
     | {
-        __typename?: "InternalError";
+        __typename: "InternalError";
         code: string;
         message: string;
         retryable: boolean;
       }
     | {
-        __typename?: "ReverseLedgerEntryResult";
+        __typename: "ReverseLedgerEntryResult";
         isIkReplay: boolean;
         reversingLedgerEntry: {
           __typename?: "LedgerEntry";
@@ -3055,19 +3131,19 @@ export type MigrateLedgerEntryMutation = {
   __typename?: "Mutation";
   migrateLedgerEntry:
     | {
-        __typename?: "BadRequestError";
+        __typename: "BadRequestError";
         code: string;
         message: string;
         retryable: boolean;
       }
     | {
-        __typename?: "InternalError";
+        __typename: "InternalError";
         code: string;
         message: string;
         retryable: boolean;
       }
     | {
-        __typename?: "MigrateLedgerEntryResult";
+        __typename: "MigrateLedgerEntryResult";
         isIkReplay: boolean;
         reversingLedgerEntry: {
           __typename?: "LedgerEntry";
@@ -4036,6 +4112,7 @@ export const AddLedgerEntryDocument = gql`
 export const ReverseLedgerEntryDocument = gql`
   mutation reverseLedgerEntry($id: ID!) {
     reverseLedgerEntry(id: $id) {
+      __typename
       ... on ReverseLedgerEntryResult {
         reversingLedgerEntry {
           ik
@@ -4091,6 +4168,7 @@ export const ReverseLedgerEntryDocument = gql`
 export const MigrateLedgerEntryDocument = gql`
   mutation migrateLedgerEntry($id: ID!, $newLedgerEntry: LedgerEntryInput!) {
     migrateLedgerEntry(input: { id: $id, newLedgerEntry: $newLedgerEntry }) {
+      __typename
       ... on MigrateLedgerEntryResult {
         reversingLedgerEntry {
           ik

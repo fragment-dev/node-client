@@ -155,6 +155,7 @@ mutation reverseLedgerEntry(
   $id: ID!
 ) {
   reverseLedgerEntry(id: $id) {
+    __typename
     ... on ReverseLedgerEntryResult {
       reversingLedgerEntry {
         ik
@@ -215,6 +216,7 @@ mutation migrateLedgerEntry(
     id: $id
     newLedgerEntry: $newLedgerEntry
   }) {
+    __typename
     ... on MigrateLedgerEntryResult {
       reversingLedgerEntry {
         ik
