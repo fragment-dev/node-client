@@ -78,7 +78,7 @@ export type AddLedgerEntryResult = {
 /** Equivalent to an HTTP 400 - request either has missing or incorrect data */
 export type BadRequestError = Error & {
   __typename?: "BadRequestError";
-  /** The HTTP status code corresponding to the error */
+  /** The status code of error. For example, 'ledger_not_found'. */
   code: Scalars["String"]["output"];
   /** The error message */
   message: Scalars["String"]["output"];
@@ -598,7 +598,7 @@ export type EntryGroupMatchInput = {
 
 /** Base error interface */
 export type Error = {
-  /** The HTTP status code corresponding to the error */
+  /** The status code of error. For example, 'ledger_not_found'. */
   code: Scalars["String"]["output"];
   /** The error message */
   message: Scalars["String"]["output"];
@@ -818,7 +818,7 @@ export type Int96Filter = {
 /** Equivalent to an HTTP 5XX - something went wrong with our API. */
 export type InternalError = Error & {
   __typename?: "InternalError";
-  /** The HTTP status code corresponding to the error */
+  /** The status code of error. For example, 'ledger_not_found'. */
   code: Scalars["String"]["output"];
   /** The error message */
   message: Scalars["String"]["output"];
@@ -839,12 +839,14 @@ export type Ledger = {
   id: Scalars["ID"]["output"];
   /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a unique identifier for this Ledger. */
   ik: Scalars["SafeString"]["output"];
+  /** **EXPERIMENTAL**: Ledger Account data migrations affecting this Ledger. */
+  ledgerAccountDataMigrations: LedgerAccountDataMigrationConnection;
   /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
   ledgerAccounts: LedgerAccountsConnection;
-  /** **EXPERIMENTAL**: Data migrations affecting this Ledger. */
-  ledgerDataMigrations: LedgerDataMigrationConnection;
   /** Query Ledger Entries in a Ledger. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
   ledgerEntries: LedgerEntriesConnection;
+  /** **EXPERIMENTAL**: Ledger Entry data migrations affecting this Ledger. */
+  ledgerEntryDataMigrations: LedgerEntryDataMigrationConnection;
   /** Query a Ledger Entry Group for this Ledger given its key and value. */
   ledgerEntryGroup: LedgerEntryGroup;
   /** Query LedgerEntryGroups in Ledger. Ledger Entry Groups are paginated and returned in order lexigraphically key then inverse chronologically by created. */
@@ -869,6 +871,15 @@ export type LedgerEntryStatsArgs = {
 };
 
 /** Ledgers are databases designed for managing money */
+export type LedgerLedgerAccountDataMigrationsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  filter?: InputMaybe<LedgerAccountDataMigrationsFilterSet>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** Ledgers are databases designed for managing money */
 export type LedgerLedgerAccountsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
@@ -878,18 +889,19 @@ export type LedgerLedgerAccountsArgs = {
 };
 
 /** Ledgers are databases designed for managing money */
-export type LedgerLedgerDataMigrationsArgs = {
+export type LedgerLedgerEntriesArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
+  filter?: InputMaybe<LedgerEntriesFilterSet>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** Ledgers are databases designed for managing money */
-export type LedgerLedgerEntriesArgs = {
+export type LedgerLedgerEntryDataMigrationsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
-  filter?: InputMaybe<LedgerEntriesFilterSet>;
+  filter?: InputMaybe<LedgerEntryDataMigrationsFilterSet>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
@@ -1221,6 +1233,52 @@ export type LedgerAccountConsistencyConfigInput = {
   ownBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
 };
 
+/** Represents a data migration for a specific Ledger Account in a Ledger. */
+export type LedgerAccountDataMigration = LedgerDataMigration & {
+  __typename?: "LedgerAccountDataMigration";
+  /** The path of the Ledger Account being migrated. */
+  accountPath: Scalars["String"]["output"];
+  /** Current active migration info (null if migration is inactive). */
+  currentMigration?: Maybe<LedgerDataMigrationHistoryEntry>;
+  /** The historical transitions of this migration. */
+  history: LedgerDataMigrationHistoryConnection;
+  /** The ledger entries to be migrated. */
+  ledgerEntries: LedgerEntriesConnection;
+  /** The status of the data migration. */
+  status: LedgerDataMigrationStatus;
+};
+
+/** Represents a data migration for a specific Ledger Account in a Ledger. */
+export type LedgerAccountDataMigrationHistoryArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** Represents a data migration for a specific Ledger Account in a Ledger. */
+export type LedgerAccountDataMigrationLedgerEntriesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type LedgerAccountDataMigrationConnection = {
+  __typename?: "LedgerAccountDataMigrationConnection";
+  /** The current page of results */
+  nodes: Array<LedgerAccountDataMigration>;
+  /** Pagination info for this list. */
+  pageInfo: PageInfo;
+};
+
+export type LedgerAccountDataMigrationsFilterSet = {
+  /** Filter by Ledger Account path. */
+  accountPath?: InputMaybe<Scalars["SafeString"]["input"]>;
+  /** Filter by the status of the data migration. */
+  status?: InputMaybe<LedgerDataMigrationStatus>;
+};
+
 export type LedgerAccountFilter = {
   /** Result must match the specified Ledger Account */
   equalTo?: InputMaybe<LedgerAccountMatchInput>;
@@ -1306,14 +1364,22 @@ export type LedgerAccountsFilterSet = {
 
 /** Represents a data migration for a Ledger. */
 export type LedgerDataMigration = {
+  /** Current active migration info (null if migration is inactive). */
+  currentMigration?: Maybe<LedgerDataMigrationHistoryEntry>;
+  /** The historical transitions of this migration. */
+  history: LedgerDataMigrationHistoryConnection;
   /** The ledger entries to be migrated. */
   ledgerEntries: LedgerEntriesConnection;
-  /** The ledger ID this migration is for. */
-  ledgerId: Scalars["SafeString"]["output"];
-  /** The migration type being performed (e.g., 'archive'). */
-  migrationType: Scalars["String"]["output"];
-  /** The schema version when this migration was created. */
-  schemaVersion: Scalars["Int"]["output"];
+  /** The status of the data migration. */
+  status: LedgerDataMigrationStatus;
+};
+
+/** Represents a data migration for a Ledger. */
+export type LedgerDataMigrationHistoryArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** Represents a data migration for a Ledger. */
@@ -1324,14 +1390,31 @@ export type LedgerDataMigrationLedgerEntriesArgs = {
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
-/** A paginated list of Ledger Entry Data Migrations */
-export type LedgerDataMigrationConnection = {
-  __typename?: "LedgerDataMigrationConnection";
+/** A paginated list of migration history entries. */
+export type LedgerDataMigrationHistoryConnection = {
+  __typename?: "LedgerDataMigrationHistoryConnection";
   /** The current page of results */
-  nodes: Array<LedgerEntryDataMigration>;
+  nodes: Array<LedgerDataMigrationHistoryEntry>;
   /** Pagination info for this list. */
   pageInfo: PageInfo;
 };
+
+/** A single schema version in the migration history. */
+export type LedgerDataMigrationHistoryEntry = {
+  __typename?: "LedgerDataMigrationHistoryEntry";
+  /** The schema version. */
+  schemaVersion: Scalars["Int"]["output"];
+  /** The current status of this schema version (active if it's the latest and migration is active, otherwise inactive). */
+  status: LedgerDataMigrationStatus;
+};
+
+/** The status of a ledger data migration. */
+export enum LedgerDataMigrationStatus {
+  /** The migration is active. */
+  Active = "active",
+  /** The migration is inactive. */
+  Inactive = "inactive",
+}
 
 /** A paginated list of Ledger Entries */
 export type LedgerEntriesConnection = {
@@ -1454,18 +1537,26 @@ export type LedgerEntryConditionInput = {
 /** Represents a data migration for a specific entry type in a Ledger. */
 export type LedgerEntryDataMigration = LedgerDataMigration & {
   __typename?: "LedgerEntryDataMigration";
+  /** Current active migration info (null if migration is inactive). */
+  currentMigration?: Maybe<LedgerDataMigrationHistoryEntry>;
   /** The entry type being migrated. */
   entryType: Scalars["SafeString"]["output"];
+  /** The historical transitions of this migration. */
+  history: LedgerDataMigrationHistoryConnection;
   /** The ledger entries to be migrated. */
   ledgerEntries: LedgerEntriesConnection;
-  /** The ledger ID this migration is for. */
-  ledgerId: Scalars["SafeString"]["output"];
-  /** The migration type being performed (e.g., 'archive'). */
-  migrationType: Scalars["String"]["output"];
-  /** The schema version when this migration was created. */
-  schemaVersion: Scalars["Int"]["output"];
+  /** The status of the data migration. */
+  status: LedgerDataMigrationStatus;
   /** The version of the entry type being migrated. */
   typeVersion: Scalars["Int"]["output"];
+};
+
+/** Represents a data migration for a specific entry type in a Ledger. */
+export type LedgerEntryDataMigrationHistoryArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** Represents a data migration for a specific entry type in a Ledger. */
@@ -1474,6 +1565,23 @@ export type LedgerEntryDataMigrationLedgerEntriesArgs = {
   before?: InputMaybe<Scalars["String"]["input"]>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type LedgerEntryDataMigrationConnection = {
+  __typename?: "LedgerEntryDataMigrationConnection";
+  /** The current page of results */
+  nodes: Array<LedgerEntryDataMigration>;
+  /** Pagination info for this list. */
+  pageInfo: PageInfo;
+};
+
+export type LedgerEntryDataMigrationsFilterSet = {
+  /** Filter by Ledger Entry type. */
+  entryType?: InputMaybe<Scalars["SafeString"]["input"]>;
+  /** Filter by the status of the data migration. */
+  status?: InputMaybe<LedgerDataMigrationStatus>;
+  /** Filter by Ledger Entry type version. */
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 export type LedgerEntryFilter = {
@@ -1787,6 +1895,8 @@ export enum LedgerLinesConsistencyMode {
 export type LedgerLinesFilterSet = {
   /** Filter by the created timestamp of the Ledger Line. This is the wall-clock time when the Ledger Line was created. */
   created?: InputMaybe<DateTimeFilter>;
+  /** Filter by the currency of the Ledger Line. */
+  currency?: InputMaybe<CurrencyFilter>;
   /** Filter by the posted date of the Ledger Line. This is identical to using `posted`, but only supports day-level granularity. */
   date?: InputMaybe<DateFilter>;
   /** Use this to filter Ledger Lines that were posted to this Ledger Account, using `reverseLedgerEntry`. */
@@ -2102,7 +2212,7 @@ export type MutationUpdateLedgerEntryArgs = {
 /** Equivalent to an HTTP 404 */
 export type NotFoundError = Error & {
   __typename?: "NotFoundError";
-  /** The HTTP status code corresponding to the error */
+  /** The status code of error. For example, 'ledger_not_found'. */
   code: Scalars["String"]["output"];
   /** The error message */
   message: Scalars["String"]["output"];
@@ -3812,6 +3922,23 @@ export type GetLedgerAccountBalanceQuery = {
   } | null;
 };
 
+export type GetLedgerAccountBalanceWithChildRollupQueryVariables = Exact<{
+  path: Scalars["String"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+  balanceCurrency?: InputMaybe<CurrencyMatchInput>;
+  balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
+}>;
+
+export type GetLedgerAccountBalanceWithChildRollupQuery = {
+  __typename?: "Query";
+  ledgerAccount?: {
+    __typename?: "LedgerAccount";
+    id: string;
+    path: string;
+    balance: string;
+  } | null;
+};
+
 export type GetSchemaQueryVariables = Exact<{
   key: Scalars["SafeString"]["input"];
   version?: InputMaybe<Scalars["Int"]["input"]>;
@@ -4797,6 +4924,20 @@ export const GetLedgerAccountBalanceDocument = gql`
     }
   }
 `;
+export const GetLedgerAccountBalanceWithChildRollupDocument = gql`
+  query GetLedgerAccountBalanceWithChildRollup(
+    $path: String!
+    $ledgerIk: SafeString!
+    $balanceCurrency: CurrencyMatchInput
+    $balanceAt: LastMoment
+  ) {
+    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
+      id
+      path
+      balance(currency: $balanceCurrency, at: $balanceAt)
+    }
+  }
+`;
 export const GetSchemaDocument = gql`
   query getSchema($key: SafeString!, $version: Int) {
     schema(schema: { key: $key, version: $version }) {
@@ -5323,6 +5464,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "getLedgerAccountBalance",
+        "query",
+        variables,
+      );
+    },
+    GetLedgerAccountBalanceWithChildRollup(
+      variables: GetLedgerAccountBalanceWithChildRollupQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetLedgerAccountBalanceWithChildRollupQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetLedgerAccountBalanceWithChildRollupQuery>(
+            GetLedgerAccountBalanceWithChildRollupDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "GetLedgerAccountBalanceWithChildRollup",
         "query",
         variables,
       );
