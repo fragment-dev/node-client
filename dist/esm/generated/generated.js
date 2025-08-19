@@ -219,6 +219,14 @@ export var LedgerAccountTypes;
     LedgerAccountTypes["Income"] = "income";
     LedgerAccountTypes["Liability"] = "liability";
 })(LedgerAccountTypes || (LedgerAccountTypes = {}));
+/** The status of a ledger data migration. */
+export var LedgerDataMigrationStatus;
+(function (LedgerDataMigrationStatus) {
+    /** The migration is active. */
+    LedgerDataMigrationStatus["Active"] = "active";
+    /** The migration is inactive. */
+    LedgerDataMigrationStatus["Inactive"] = "inactive";
+})(LedgerDataMigrationStatus || (LedgerDataMigrationStatus = {}));
 export var LedgerLinesConsistencyMode;
 (function (LedgerLinesConsistencyMode) {
     LedgerLinesConsistencyMode["Eventual"] = "eventual";
@@ -1167,6 +1175,20 @@ export const GetLedgerAccountBalanceDocument = gql `
     }
   }
 `;
+export const GetLedgerAccountBalanceWithChildRollupDocument = gql `
+  query GetLedgerAccountBalanceWithChildRollup(
+    $path: String!
+    $ledgerIk: SafeString!
+    $balanceCurrency: CurrencyMatchInput
+    $balanceAt: LastMoment
+  ) {
+    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
+      id
+      path
+      balance(currency: $balanceCurrency, at: $balanceAt)
+    }
+  }
+`;
 export const GetSchemaDocument = gql `
   query getSchema($key: SafeString!, $version: Int) {
     schema(schema: { key: $key, version: $version }) {
@@ -1392,6 +1414,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         getLedgerAccountBalance(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getLedgerAccountBalance", "query", variables);
+        },
+        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceWithChildRollupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
         getSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetSchemaDocument, variables, {

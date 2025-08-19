@@ -828,6 +828,23 @@ query getLedgerAccountBalance(
   }
 }
 
+query GetLedgerAccountBalanceWithChildRollup(
+  $path: String!
+  $ledgerIk: SafeString!
+  $balanceCurrency: CurrencyMatchInput
+  $balanceAt: LastMoment
+) {
+  ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
+    id
+    path
+    balance(
+      currency: $balanceCurrency
+      at: $balanceAt
+    )
+  }
+}
+
+
 query getSchema($key: SafeString!, $version: Int) {
   schema(schema: { key: $key, version: $version }) {
     key

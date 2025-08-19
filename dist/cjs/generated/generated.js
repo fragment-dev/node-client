@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -222,6 +223,14 @@ var LedgerAccountTypes;
     LedgerAccountTypes["Income"] = "income";
     LedgerAccountTypes["Liability"] = "liability";
 })(LedgerAccountTypes || (exports.LedgerAccountTypes = LedgerAccountTypes = {}));
+/** The status of a ledger data migration. */
+var LedgerDataMigrationStatus;
+(function (LedgerDataMigrationStatus) {
+    /** The migration is active. */
+    LedgerDataMigrationStatus["Active"] = "active";
+    /** The migration is inactive. */
+    LedgerDataMigrationStatus["Inactive"] = "inactive";
+})(LedgerDataMigrationStatus || (exports.LedgerDataMigrationStatus = LedgerDataMigrationStatus = {}));
 var LedgerLinesConsistencyMode;
 (function (LedgerLinesConsistencyMode) {
     LedgerLinesConsistencyMode["Eventual"] = "eventual";
@@ -1170,6 +1179,20 @@ exports.GetLedgerAccountBalanceDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.GetLedgerAccountBalanceWithChildRollupDocument = (0, graphql_tag_1.gql) `
+  query GetLedgerAccountBalanceWithChildRollup(
+    $path: String!
+    $ledgerIk: SafeString!
+    $balanceCurrency: CurrencyMatchInput
+    $balanceAt: LastMoment
+  ) {
+    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
+      id
+      path
+      balance(currency: $balanceCurrency, at: $balanceAt)
+    }
+  }
+`;
 exports.GetSchemaDocument = (0, graphql_tag_1.gql) `
   query getSchema($key: SafeString!, $version: Int) {
     schema(schema: { key: $key, version: $version }) {
@@ -1386,6 +1409,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         getLedgerAccountBalance(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedgerAccountBalance", "query", variables);
+        },
+        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceWithChildRollupDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
         getSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getSchema", "query", variables);
