@@ -1297,6 +1297,235 @@ export const ListLedgerEntryGroupBalancesDocument = gql `
     }
   }
 `;
+export const GetEntryDataMigrationsDocument = gql `
+  query getEntryDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerEntryDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          entryType
+          typeVersion
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+export const GetEntriesToMigrateForLedgerEntryDataMigrationDocument = gql `
+  query getEntriesToMigrateForLedgerEntryDataMigration(
+    $ledgerIk: SafeString!
+    $entryType: String!
+    $typeVersion: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        filter: {
+          entryType: { equalTo: $entryType }
+          typeVersion: { equalTo: $typeVersion }
+        }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetAccountDataMigrationsDocument = gql `
+  query getAccountDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerAccountDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          accountPath
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+export const GetEntriesToMigrateForLedgerAccountDataMigrationDocument = gql `
+  query getEntriesToMigrateForLedgerAccountDataMigration(
+    $ledgerIk: SafeString!
+    $accountPath: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        filter: { accountPath: { equalTo: $accountPath } }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const CreateCustomCurrencyDocument = gql `
   mutation createCustomCurrency(
     $id: SafeString!
@@ -1435,6 +1664,18 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         listLedgerEntryGroupBalances(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntryGroupBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntryGroupBalances", "query", variables);
+        },
+        getEntryDataMigrations(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetEntryDataMigrationsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntryDataMigrations", "query", variables);
+        },
+        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetEntriesToMigrateForLedgerEntryDataMigrationDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
+        },
+        getAccountDataMigrations(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetAccountDataMigrationsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getAccountDataMigrations", "query", variables);
+        },
+        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetEntriesToMigrateForLedgerAccountDataMigrationDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
         },
         createCustomCurrency(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomCurrencyDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomCurrency", "mutation", variables);

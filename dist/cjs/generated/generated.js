@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateCustomCurrencyDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = void 0;
+exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -1301,6 +1301,235 @@ exports.ListLedgerEntryGroupBalancesDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.GetEntryDataMigrationsDocument = (0, graphql_tag_1.gql) `
+  query getEntryDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerEntryDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          entryType
+          typeVersion
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = (0, graphql_tag_1.gql) `
+  query getEntriesToMigrateForLedgerEntryDataMigration(
+    $ledgerIk: SafeString!
+    $entryType: String!
+    $typeVersion: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        filter: {
+          entryType: { equalTo: $entryType }
+          typeVersion: { equalTo: $typeVersion }
+        }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+exports.GetAccountDataMigrationsDocument = (0, graphql_tag_1.gql) `
+  query getAccountDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerAccountDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          accountPath
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = (0, graphql_tag_1.gql) `
+  query getEntriesToMigrateForLedgerAccountDataMigration(
+    $ledgerIk: SafeString!
+    $accountPath: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        filter: { accountPath: { equalTo: $accountPath } }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 exports.CreateCustomCurrencyDocument = (0, graphql_tag_1.gql) `
   mutation createCustomCurrency(
     $id: SafeString!
@@ -1424,6 +1653,18 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         listLedgerEntryGroupBalances(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerEntryGroupBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerEntryGroupBalances", "query", variables);
+        },
+        getEntryDataMigrations(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntryDataMigrationsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntryDataMigrations", "query", variables);
+        },
+        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
+        },
+        getAccountDataMigrations(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetAccountDataMigrationsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getAccountDataMigrations", "query", variables);
+        },
+        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
         },
         createCustomCurrency(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateCustomCurrencyDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createCustomCurrency", "mutation", variables);

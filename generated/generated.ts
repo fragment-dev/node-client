@@ -839,13 +839,13 @@ export type Ledger = {
   id: Scalars["ID"]["output"];
   /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a unique identifier for this Ledger. */
   ik: Scalars["SafeString"]["output"];
-  /** **EXPERIMENTAL**: Ledger Account data migrations affecting this Ledger. */
+  /** Ledger Account data migrations affecting this Ledger. */
   ledgerAccountDataMigrations: LedgerAccountDataMigrationConnection;
   /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
   ledgerAccounts: LedgerAccountsConnection;
   /** Query Ledger Entries in a Ledger. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
   ledgerEntries: LedgerEntriesConnection;
-  /** **EXPERIMENTAL**: Ledger Entry data migrations affecting this Ledger. */
+  /** Ledger Entry data migrations affecting this Ledger. */
   ledgerEntryDataMigrations: LedgerEntryDataMigrationConnection;
   /** Query a Ledger Entry Group for this Ledger given its key and value. */
   ledgerEntryGroup: LedgerEntryGroup;
@@ -1274,7 +1274,7 @@ export type LedgerAccountDataMigrationConnection = {
 
 export type LedgerAccountDataMigrationsFilterSet = {
   /** Filter by Ledger Account path. */
-  accountPath?: InputMaybe<Scalars["SafeString"]["input"]>;
+  accountPath?: InputMaybe<StringFilter>;
   /** Filter by the status of the data migration. */
   status?: InputMaybe<LedgerDataMigrationStatus>;
 };
@@ -1577,11 +1577,11 @@ export type LedgerEntryDataMigrationConnection = {
 
 export type LedgerEntryDataMigrationsFilterSet = {
   /** Filter by Ledger Entry type. */
-  entryType?: InputMaybe<Scalars["SafeString"]["input"]>;
+  entryType?: InputMaybe<StringFilter>;
   /** Filter by the status of the data migration. */
   status?: InputMaybe<LedgerDataMigrationStatus>;
   /** Filter by Ledger Entry type version. */
-  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
+  typeVersion?: InputMaybe<StringFilter>;
 };
 
 export type LedgerEntryFilter = {
@@ -4047,6 +4047,250 @@ export type ListLedgerEntryGroupBalancesQuery = {
   } | null;
 };
 
+export type GetEntryDataMigrationsQueryVariables = Exact<{
+  ledgerIk: Scalars["SafeString"]["input"];
+  filter?: InputMaybe<LedgerEntryDataMigrationsFilterSet>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+
+export type GetEntryDataMigrationsQuery = {
+  __typename?: "Query";
+  ledger?: {
+    __typename?: "Ledger";
+    ledgerEntryDataMigrations: {
+      __typename?: "LedgerEntryDataMigrationConnection";
+      nodes: Array<{
+        __typename?: "LedgerEntryDataMigration";
+        entryType: string;
+        typeVersion: number;
+        status: LedgerDataMigrationStatus;
+        currentMigration?: {
+          __typename?: "LedgerDataMigrationHistoryEntry";
+          schemaVersion: number;
+          status: LedgerDataMigrationStatus;
+        } | null;
+        ledgerEntries: {
+          __typename?: "LedgerEntriesConnection";
+          nodes: Array<{
+            __typename?: "LedgerEntry";
+            id: string;
+            type?: string | null;
+            posted: string;
+            parameters?: string | null;
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+        history: {
+          __typename?: "LedgerDataMigrationHistoryConnection";
+          nodes: Array<{
+            __typename?: "LedgerDataMigrationHistoryEntry";
+            schemaVersion: number;
+            status: LedgerDataMigrationStatus;
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+      }>;
+      pageInfo: {
+        __typename?: "PageInfo";
+        hasNextPage: boolean;
+        endCursor?: string | null;
+        hasPreviousPage: boolean;
+        startCursor?: string | null;
+      };
+    };
+  } | null;
+};
+
+export type GetEntriesToMigrateForLedgerEntryDataMigrationQueryVariables =
+  Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    entryType: Scalars["String"]["input"];
+    typeVersion: Scalars["String"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+  }>;
+
+export type GetEntriesToMigrateForLedgerEntryDataMigrationQuery = {
+  __typename?: "Query";
+  ledger?: {
+    __typename?: "Ledger";
+    ledgerEntryDataMigrations: {
+      __typename?: "LedgerEntryDataMigrationConnection";
+      nodes: Array<{
+        __typename?: "LedgerEntryDataMigration";
+        ledgerEntries: {
+          __typename?: "LedgerEntriesConnection";
+          nodes: Array<{
+            __typename?: "LedgerEntry";
+            id: string;
+            ik: string;
+            type?: string | null;
+            typeVersion?: number | null;
+            description?: string | null;
+            posted: string;
+            created: string;
+            parameters?: string | null;
+            lines: {
+              __typename?: "LedgerLinesConnection";
+              nodes: Array<{
+                __typename?: "LedgerLine";
+                id: string;
+                amount: string;
+                account: { __typename?: "LedgerAccount"; path: string };
+              }>;
+            };
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+      }>;
+    };
+  } | null;
+};
+
+export type GetAccountDataMigrationsQueryVariables = Exact<{
+  ledgerIk: Scalars["SafeString"]["input"];
+  filter?: InputMaybe<LedgerAccountDataMigrationsFilterSet>;
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+
+export type GetAccountDataMigrationsQuery = {
+  __typename?: "Query";
+  ledger?: {
+    __typename?: "Ledger";
+    ledgerAccountDataMigrations: {
+      __typename?: "LedgerAccountDataMigrationConnection";
+      nodes: Array<{
+        __typename?: "LedgerAccountDataMigration";
+        accountPath: string;
+        status: LedgerDataMigrationStatus;
+        currentMigration?: {
+          __typename?: "LedgerDataMigrationHistoryEntry";
+          schemaVersion: number;
+          status: LedgerDataMigrationStatus;
+        } | null;
+        ledgerEntries: {
+          __typename?: "LedgerEntriesConnection";
+          nodes: Array<{
+            __typename?: "LedgerEntry";
+            id: string;
+            type?: string | null;
+            posted: string;
+            parameters?: string | null;
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+        history: {
+          __typename?: "LedgerDataMigrationHistoryConnection";
+          nodes: Array<{
+            __typename?: "LedgerDataMigrationHistoryEntry";
+            schemaVersion: number;
+            status: LedgerDataMigrationStatus;
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+      }>;
+      pageInfo: {
+        __typename?: "PageInfo";
+        hasNextPage: boolean;
+        endCursor?: string | null;
+        hasPreviousPage: boolean;
+        startCursor?: string | null;
+      };
+    };
+  } | null;
+};
+
+export type GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables =
+  Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    accountPath: Scalars["String"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+  }>;
+
+export type GetEntriesToMigrateForLedgerAccountDataMigrationQuery = {
+  __typename?: "Query";
+  ledger?: {
+    __typename?: "Ledger";
+    ledgerAccountDataMigrations: {
+      __typename?: "LedgerAccountDataMigrationConnection";
+      nodes: Array<{
+        __typename?: "LedgerAccountDataMigration";
+        ledgerEntries: {
+          __typename?: "LedgerEntriesConnection";
+          nodes: Array<{
+            __typename?: "LedgerEntry";
+            id: string;
+            ik: string;
+            type?: string | null;
+            typeVersion?: number | null;
+            description?: string | null;
+            posted: string;
+            created: string;
+            parameters?: string | null;
+            lines: {
+              __typename?: "LedgerLinesConnection";
+              nodes: Array<{
+                __typename?: "LedgerLine";
+                id: string;
+                amount: string;
+                account: { __typename?: "LedgerAccount"; path: string };
+              }>;
+            };
+          }>;
+          pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+            hasPreviousPage: boolean;
+            startCursor?: string | null;
+          };
+        };
+      }>;
+    };
+  } | null;
+};
+
 export type CreateCustomCurrencyMutationVariables = Exact<{
   id: Scalars["SafeString"]["input"];
   name: Scalars["String"]["input"];
@@ -5046,6 +5290,235 @@ export const ListLedgerEntryGroupBalancesDocument = gql`
     }
   }
 `;
+export const GetEntryDataMigrationsDocument = gql`
+  query getEntryDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerEntryDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          entryType
+          typeVersion
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+export const GetEntriesToMigrateForLedgerEntryDataMigrationDocument = gql`
+  query getEntriesToMigrateForLedgerEntryDataMigration(
+    $ledgerIk: SafeString!
+    $entryType: String!
+    $typeVersion: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerEntryDataMigrations(
+        filter: {
+          entryType: { equalTo: $entryType }
+          typeVersion: { equalTo: $typeVersion }
+        }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+export const GetAccountDataMigrationsDocument = gql`
+  query getAccountDataMigrations(
+    $ledgerIk: SafeString!
+    $filter: LedgerAccountDataMigrationsFilterSet
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        first: $first
+        after: $after
+        before: $before
+        last: $last
+        filter: $filter
+      ) {
+        nodes {
+          accountPath
+          status
+          currentMigration {
+            schemaVersion
+            status
+          }
+          ledgerEntries {
+            nodes {
+              id
+              type
+              posted
+              parameters
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+          history {
+            nodes {
+              schemaVersion
+              status
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
+export const GetEntriesToMigrateForLedgerAccountDataMigrationDocument = gql`
+  query getEntriesToMigrateForLedgerAccountDataMigration(
+    $ledgerIk: SafeString!
+    $accountPath: String!
+    $after: String
+    $before: String
+    $first: Int
+    $last: Int
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      ledgerAccountDataMigrations(
+        filter: { accountPath: { equalTo: $accountPath } }
+      ) {
+        nodes {
+          ledgerEntries(
+            first: $first
+            after: $after
+            last: $last
+            before: $before
+          ) {
+            nodes {
+              id
+              ik
+              type
+              typeVersion
+              description
+              posted
+              created
+              parameters
+              lines {
+                nodes {
+                  id
+                  amount
+                  account {
+                    path
+                  }
+                }
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+              hasPreviousPage
+              startCursor
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 export const CreateCustomCurrencyDocument = gql`
   mutation createCustomCurrency(
     $id: SafeString!
@@ -5542,6 +6015,70 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "listLedgerEntryGroupBalances",
+        "query",
+        variables,
+      );
+    },
+    getEntryDataMigrations(
+      variables: GetEntryDataMigrationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetEntryDataMigrationsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetEntryDataMigrationsQuery>(
+            GetEntryDataMigrationsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getEntryDataMigrations",
+        "query",
+        variables,
+      );
+    },
+    getEntriesToMigrateForLedgerEntryDataMigration(
+      variables: GetEntriesToMigrateForLedgerEntryDataMigrationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetEntriesToMigrateForLedgerEntryDataMigrationQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetEntriesToMigrateForLedgerEntryDataMigrationQuery>(
+            GetEntriesToMigrateForLedgerEntryDataMigrationDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getEntriesToMigrateForLedgerEntryDataMigration",
+        "query",
+        variables,
+      );
+    },
+    getAccountDataMigrations(
+      variables: GetAccountDataMigrationsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetAccountDataMigrationsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetAccountDataMigrationsQuery>(
+            GetAccountDataMigrationsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getAccountDataMigrations",
+        "query",
+        variables,
+      );
+    },
+    getEntriesToMigrateForLedgerAccountDataMigration(
+      variables: GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetEntriesToMigrateForLedgerAccountDataMigrationQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetEntriesToMigrateForLedgerAccountDataMigrationQuery>(
+            GetEntriesToMigrateForLedgerAccountDataMigrationDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getEntriesToMigrateForLedgerAccountDataMigration",
         "query",
         variables,
       );
