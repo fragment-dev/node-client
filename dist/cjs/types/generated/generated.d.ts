@@ -801,13 +801,13 @@ export type Ledger = {
     id: Scalars["ID"]["output"];
     /** The IK passed into the [createLedger](/api-reference/api-mutations#createledger) mutation. This is treated as a unique identifier for this Ledger. */
     ik: Scalars["SafeString"]["output"];
-    /** **EXPERIMENTAL**: Ledger Account data migrations affecting this Ledger. */
+    /** Ledger Account data migrations affecting this Ledger. */
     ledgerAccountDataMigrations: LedgerAccountDataMigrationConnection;
     /** Query LedgerAccounts in Ledger. Ledger Accounts are paginated and returned in reverse-chronological order by their created date. */
     ledgerAccounts: LedgerAccountsConnection;
     /** Query Ledger Entries in a Ledger. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
     ledgerEntries: LedgerEntriesConnection;
-    /** **EXPERIMENTAL**: Ledger Entry data migrations affecting this Ledger. */
+    /** Ledger Entry data migrations affecting this Ledger. */
     ledgerEntryDataMigrations: LedgerEntryDataMigrationConnection;
     /** Query a Ledger Entry Group for this Ledger given its key and value. */
     ledgerEntryGroup: LedgerEntryGroup;
@@ -1197,7 +1197,7 @@ export type LedgerAccountDataMigrationConnection = {
 };
 export type LedgerAccountDataMigrationsFilterSet = {
     /** Filter by Ledger Account path. */
-    accountPath?: InputMaybe<Scalars["SafeString"]["input"]>;
+    accountPath?: InputMaybe<StringFilter>;
     /** Filter by the status of the data migration. */
     status?: InputMaybe<LedgerDataMigrationStatus>;
 };
@@ -1477,11 +1477,11 @@ export type LedgerEntryDataMigrationConnection = {
 };
 export type LedgerEntryDataMigrationsFilterSet = {
     /** Filter by Ledger Entry type. */
-    entryType?: InputMaybe<Scalars["SafeString"]["input"]>;
+    entryType?: InputMaybe<StringFilter>;
     /** Filter by the status of the data migration. */
     status?: InputMaybe<LedgerDataMigrationStatus>;
     /** Filter by Ledger Entry type version. */
-    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
+    typeVersion?: InputMaybe<StringFilter>;
 };
 export type LedgerEntryFilter = {
     /** Result must be the specified Ledger Entry. */
@@ -3734,6 +3734,246 @@ export type ListLedgerEntryGroupBalancesQuery = {
         };
     } | null;
 };
+export type GetEntryDataMigrationsQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    filter?: InputMaybe<LedgerEntryDataMigrationsFilterSet>;
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+export type GetEntryDataMigrationsQuery = {
+    __typename?: "Query";
+    ledger?: {
+        __typename?: "Ledger";
+        ledgerEntryDataMigrations: {
+            __typename?: "LedgerEntryDataMigrationConnection";
+            nodes: Array<{
+                __typename?: "LedgerEntryDataMigration";
+                entryType: string;
+                typeVersion: number;
+                status: LedgerDataMigrationStatus;
+                currentMigration?: {
+                    __typename?: "LedgerDataMigrationHistoryEntry";
+                    schemaVersion: number;
+                    status: LedgerDataMigrationStatus;
+                } | null;
+                ledgerEntries: {
+                    __typename?: "LedgerEntriesConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerEntry";
+                        id: string;
+                        type?: string | null;
+                        posted: string;
+                        parameters?: string | null;
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+                history: {
+                    __typename?: "LedgerDataMigrationHistoryConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerDataMigrationHistoryEntry";
+                        schemaVersion: number;
+                        status: LedgerDataMigrationStatus;
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+            }>;
+            pageInfo: {
+                __typename?: "PageInfo";
+                hasNextPage: boolean;
+                endCursor?: string | null;
+                hasPreviousPage: boolean;
+                startCursor?: string | null;
+            };
+        };
+    } | null;
+};
+export type GetEntriesToMigrateForLedgerEntryDataMigrationQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    entryType: Scalars["String"]["input"];
+    typeVersion: Scalars["String"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+export type GetEntriesToMigrateForLedgerEntryDataMigrationQuery = {
+    __typename?: "Query";
+    ledger?: {
+        __typename?: "Ledger";
+        ledgerEntryDataMigrations: {
+            __typename?: "LedgerEntryDataMigrationConnection";
+            nodes: Array<{
+                __typename?: "LedgerEntryDataMigration";
+                ledgerEntries: {
+                    __typename?: "LedgerEntriesConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerEntry";
+                        id: string;
+                        ik: string;
+                        type?: string | null;
+                        typeVersion?: number | null;
+                        description?: string | null;
+                        posted: string;
+                        created: string;
+                        parameters?: string | null;
+                        lines: {
+                            __typename?: "LedgerLinesConnection";
+                            nodes: Array<{
+                                __typename?: "LedgerLine";
+                                id: string;
+                                amount: string;
+                                account: {
+                                    __typename?: "LedgerAccount";
+                                    path: string;
+                                };
+                            }>;
+                        };
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+            }>;
+        };
+    } | null;
+};
+export type GetAccountDataMigrationsQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    filter?: InputMaybe<LedgerAccountDataMigrationsFilterSet>;
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+export type GetAccountDataMigrationsQuery = {
+    __typename?: "Query";
+    ledger?: {
+        __typename?: "Ledger";
+        ledgerAccountDataMigrations: {
+            __typename?: "LedgerAccountDataMigrationConnection";
+            nodes: Array<{
+                __typename?: "LedgerAccountDataMigration";
+                accountPath: string;
+                status: LedgerDataMigrationStatus;
+                currentMigration?: {
+                    __typename?: "LedgerDataMigrationHistoryEntry";
+                    schemaVersion: number;
+                    status: LedgerDataMigrationStatus;
+                } | null;
+                ledgerEntries: {
+                    __typename?: "LedgerEntriesConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerEntry";
+                        id: string;
+                        type?: string | null;
+                        posted: string;
+                        parameters?: string | null;
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+                history: {
+                    __typename?: "LedgerDataMigrationHistoryConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerDataMigrationHistoryEntry";
+                        schemaVersion: number;
+                        status: LedgerDataMigrationStatus;
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+            }>;
+            pageInfo: {
+                __typename?: "PageInfo";
+                hasNextPage: boolean;
+                endCursor?: string | null;
+                hasPreviousPage: boolean;
+                startCursor?: string | null;
+            };
+        };
+    } | null;
+};
+export type GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables = Exact<{
+    ledgerIk: Scalars["SafeString"]["input"];
+    accountPath: Scalars["String"]["input"];
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+export type GetEntriesToMigrateForLedgerAccountDataMigrationQuery = {
+    __typename?: "Query";
+    ledger?: {
+        __typename?: "Ledger";
+        ledgerAccountDataMigrations: {
+            __typename?: "LedgerAccountDataMigrationConnection";
+            nodes: Array<{
+                __typename?: "LedgerAccountDataMigration";
+                ledgerEntries: {
+                    __typename?: "LedgerEntriesConnection";
+                    nodes: Array<{
+                        __typename?: "LedgerEntry";
+                        id: string;
+                        ik: string;
+                        type?: string | null;
+                        typeVersion?: number | null;
+                        description?: string | null;
+                        posted: string;
+                        created: string;
+                        parameters?: string | null;
+                        lines: {
+                            __typename?: "LedgerLinesConnection";
+                            nodes: Array<{
+                                __typename?: "LedgerLine";
+                                id: string;
+                                amount: string;
+                                account: {
+                                    __typename?: "LedgerAccount";
+                                    path: string;
+                                };
+                            }>;
+                        };
+                    }>;
+                    pageInfo: {
+                        __typename?: "PageInfo";
+                        hasNextPage: boolean;
+                        endCursor?: string | null;
+                        hasPreviousPage: boolean;
+                        startCursor?: string | null;
+                    };
+                };
+            }>;
+        };
+    } | null;
+};
 export type CreateCustomCurrencyMutationVariables = Exact<{
     id: Scalars["SafeString"]["input"];
     name: Scalars["String"]["input"];
@@ -3792,6 +4032,10 @@ export declare const GetSchemaDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const GetWorkspaceDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntryGroupBalancesDocument: import("graphql").DocumentNode;
+export declare const GetEntryDataMigrationsDocument: import("graphql").DocumentNode;
+export declare const GetEntriesToMigrateForLedgerEntryDataMigrationDocument: import("graphql").DocumentNode;
+export declare const GetAccountDataMigrationsDocument: import("graphql").DocumentNode;
+export declare const GetEntriesToMigrateForLedgerAccountDataMigrationDocument: import("graphql").DocumentNode;
 export declare const CreateCustomCurrencyDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
@@ -3823,6 +4067,10 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
     getWorkspace(variables?: GetWorkspaceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetWorkspaceQuery>;
     listLedgerEntryGroupBalances(variables: ListLedgerEntryGroupBalancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntryGroupBalancesQuery>;
+    getEntryDataMigrations(variables: GetEntryDataMigrationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetEntryDataMigrationsQuery>;
+    getEntriesToMigrateForLedgerEntryDataMigration(variables: GetEntriesToMigrateForLedgerEntryDataMigrationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetEntriesToMigrateForLedgerEntryDataMigrationQuery>;
+    getAccountDataMigrations(variables: GetAccountDataMigrationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAccountDataMigrationsQuery>;
+    getEntriesToMigrateForLedgerAccountDataMigration(variables: GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetEntriesToMigrateForLedgerAccountDataMigrationQuery>;
     createCustomCurrency(variables: CreateCustomCurrencyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomCurrencyMutation>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
