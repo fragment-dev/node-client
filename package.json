@@ -2,6 +2,7 @@
   "name": "@fragment-dev/node-client",
   "sideEffects": false,
   "scripts": {
+    "postinstall": "chmod 644 dist/esm/src/bin.js",
     "test": "vitest",
     "test:ci": "vitest run",
     "gen-clients": "rm -rf ./generated/* && yarn node --loader=ts-node/esm src/codegen.ts",
@@ -24,7 +25,7 @@
     "dset": "3.1.4",
     "micromatch": "4.0.8",
     "ws": "8.17.1",
-    "vite": "6.3.5",
+    "vite": "6.3.6",
     "@babel/runtime": "7.27.1",
     "@babel/helpers": "7.27.1"
   },
@@ -128,5 +129,6 @@
     "accounting",
     "money",
     "payments"
-  ]
+  ],
+  "packageManager": "yarn@4.9.2+sha512.1fc009bc09d13cfd0e19efa44cbfc2b9cf6ca61482725eb35bbc5e257e093ebf4130db6dfe15d604ff4b79efd8e1e8e99b25fa7d0a6197c9f9826358d4d65c3c"
 }
