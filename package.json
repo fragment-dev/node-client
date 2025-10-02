@@ -2,6 +2,7 @@
   "name": "@fragment-dev/node-client",
   "sideEffects": false,
   "scripts": {
+    "postinstall": "chmod 644 dist/esm/src/bin.js",
     "test": "vitest",
     "test:ci": "vitest run",
     "gen-clients": "rm -rf ./generated/* && yarn node --loader=ts-node/esm src/codegen.ts",
