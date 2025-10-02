@@ -138,9 +138,9 @@ export type ChartOfAccountsInput = {
 };
 
 export type CreateCustomCurrencyInput = {
-  /** The currency code for custom currencies. It can be up to 5 characters long. This is used for display purposes. */
+  /** The currency code for custom currencies. It can be up to 36 characters long. This is used for display purposes. */
   customCode: Scalars["String"]["input"];
-  /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
+  /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. It can be up to 36 characters long. */
   customCurrencyId: Scalars["SafeString"]["input"];
   /** A human readable name for the currency (e.g. United States Dollar). This is used for display purposes. */
   name: Scalars["String"]["input"];
@@ -269,7 +269,7 @@ export type Currency = {
   __typename?: "Currency";
   /** The currency code. This is an [enum type](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode) . */
   code: CurrencyCode;
-  /** The currency code for custom currencies. This is only set if 'currency' is set to CUSTOM. It can be up to 32 characters long. */
+  /** The currency code for custom currencies. This is only set if 'currency' is set to CUSTOM. It can be up to 36 characters long. */
   customCode?: Maybe<Scalars["String"]["output"]>;
   /** The ID for a custom currency. This is specified when creating the custom currency using the [createCustomCurrency](https://fragment.dev/api-reference/api-mutations#createcustomcurrency) mutation. */
   customCurrencyId?: Maybe<Scalars["SafeString"]["output"]>;
@@ -596,6 +596,14 @@ export type EntryGroupMatchInput = {
   value: Scalars["SafeString"]["input"];
 };
 
+/** A key used to identify Entries in an group */
+export type EntryKeyInput = {
+  /** The type of the Entry */
+  type: Scalars["SafeString"]["input"];
+  /** The version of the Entry */
+  typeVersion: Scalars["Int"]["input"];
+};
+
 /** Base error interface */
 export type Error = {
   /** The status code of error. For example, 'ledger_not_found'. */
@@ -718,6 +726,20 @@ export type GroupFilter = {
   notKeyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
 };
 
+/** A Group in a Schema. Group define sequences of Ledger Entries and can help with reconciliation tasks. */
+export type GroupInput = {
+  /** Human-readable description of the Group. */
+  description?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
+  /** The entries that make up this group. */
+  entries: Array<EntryKeyInput>;
+  /** The key of this Group. This combined with its value is a stable, unique identifier for this group. */
+  key: Scalars["SafeString"]["input"];
+  /** The parameters that are used to enable reconciliation abilities in a group. */
+  reconciliation?: InputMaybe<GroupReconciliationParametersInput>;
+  /** The value of this Group, can be a parameterized string to allow for dynamic values. */
+  value: Scalars["ParameterizedString"]["input"];
+};
+
 /** Input type for matching a specific group by key and value */
 export type GroupMatchInput = {
   /** The key of the group to match */
@@ -730,6 +752,12 @@ export type GroupMatchInput = {
 export type GroupNotFilter = {
   /** DEPRECATED: Find entries that are not members of all of these groups. This is an AND filter. */
   keyIn?: InputMaybe<Array<Scalars["SafeString"]["input"]>>;
+};
+
+/** A set of parameters that are used to enable reconciliation abilities in a group */
+export type GroupReconciliationParametersInput = {
+  /** The path to the clearing account for this group. A clearing account is an account that is used to indicate funds that are in transit. Also called a suspense account, pending account, or zero balance account. */
+  clearingAccountPath: SchemaLedgerAccountMatchInput;
 };
 
 /** A single amount and the timestamp requested */
@@ -1055,7 +1083,11 @@ export type LedgerAccountBalanceChangesDuringArgs = {
 
 /** A ledger account is a container for money */
 export type LedgerAccountBalancesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** A ledger account is a container for money */
@@ -1093,7 +1125,11 @@ export type LedgerAccountChildBalanceChangesDuringArgs = {
 
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalancesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** A ledger account is a container for money */
@@ -1149,8 +1185,12 @@ export type LedgerAccountOwnBalanceChangesDuringArgs = {
 
 /** A ledger account is a container for money */
 export type LedgerAccountOwnBalancesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
   consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
 /** A ledger account is a container for money */
@@ -2515,6 +2555,8 @@ export type SchemaInput = {
   chartOfAccounts: ChartOfAccountsInput;
   /** The consistency configuration for this Schema. */
   consistencyConfig?: InputMaybe<SchemaConsistencyConfigInput>;
+  /** Any groups associated with this Schema. */
+  groups?: InputMaybe<Array<GroupInput>>;
   /** The key of the Schema. This is a stable, unique identifier for the Schema. Uniqueness is enforced at the Workspace level. */
   key: Scalars["SafeString"]["input"];
   /** The Ledger Entries to add to the Schema. */
@@ -2648,7 +2690,7 @@ export type SchemaLedgerEntryInput = {
    * You can filter on this field when querying for Ledger Entries. See the docs on [LedgerEntryFilterSet](https://fragment.dev/api-reference/api-types#filter-types-ledgerentriesfilterset)
    */
   type: Scalars["SafeString"]["input"];
-  /** Experimental: This field is not yet supported. */
+  /** The version of the Ledger Entry type. */
   typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
