@@ -161,7 +161,8 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
   expect(result1.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
   if (result1.addLedgerEntry.__typename === "AddLedgerEntryResult") {
     expect(result1.addLedgerEntry.entry.type).toEqual("user-funds-account");
-    expect(result1.addLedgerEntry.entry.typeVersion).toEqual(1);
+    // Version 1 has 2 lines (asset-line and liability-line)
+    expect(result1.addLedgerEntry.lines).toHaveLength(2);
   }
 
   // Use the generated PostUserFundsAccount_v2 method for version 2 (with feeAmount)
@@ -176,7 +177,14 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
   expect(result2.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
   if (result2.addLedgerEntry.__typename === "AddLedgerEntryResult") {
     expect(result2.addLedgerEntry.entry.type).toEqual("user-funds-account");
-    expect(result2.addLedgerEntry.entry.typeVersion).toEqual(2);
+    // Version 2 has 3 lines (asset-line, liability-line, and fee-line)
+    expect(result2.addLedgerEntry.lines).toHaveLength(3);
+    // Verify fee-line exists
+    const feeLine = result2.addLedgerEntry.lines.find(
+      (line) => line.key === "fee-line"
+    );
+    expect(feeLine).toBeDefined();
+    expect(feeLine?.amount).toEqual("10");
   }
 
   // Verify both entries exist

@@ -10,7 +10,6 @@ mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: Sa
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -62,7 +61,6 @@ mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk:
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -114,7 +112,6 @@ mutation PostFundingSettlement($ik: SafeString!, $posted: DateTime, $ledgerIk: S
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -166,7 +163,6 @@ mutation PostPaymentProcessing($ik: SafeString!, $posted: DateTime, $ledgerIk: S
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
