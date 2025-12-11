@@ -281,25 +281,38 @@ test("Entry type methods with hyphenated naming", async () => {
 
   if (methodExists) {
     const entryIk = uuidv4();
-    const method = (client as ClientWithDynamicMethods)[
-      expectedMethodName
-    ] as (args: {
-      ik: string;
-      ledgerIk: string;
-      parameters: Record<string, unknown>;
-    }) => Promise<{
+    const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
+      args: {
+        ik: string;
+        ledgerIk: string;
+        amount?: string;
+        parameters?: Record<string, unknown>;
+      }
+    ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    const result = await method({
-      ik: entryIk,
-      ledgerIk,
-      parameters: {
+    // Try both parameter styles: individual args or parameters object
+    let result;
+    try {
+      // First try with individual parameter (amount as direct arg)
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
         amount: "200",
-      },
-    });
+      });
+    } catch {
+      // If that fails, try with parameters object
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
+        parameters: {
+          amount: "200",
+        },
+      });
+    }
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -398,25 +411,38 @@ test("Entry type methods with camelCase naming", async () => {
 
   if (methodExists) {
     const entryIk = uuidv4();
-    const method = (client as ClientWithDynamicMethods)[
-      expectedMethodName
-    ] as (args: {
-      ik: string;
-      ledgerIk: string;
-      parameters: Record<string, unknown>;
-    }) => Promise<{
+    const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
+      args: {
+        ik: string;
+        ledgerIk: string;
+        amount?: string;
+        parameters?: Record<string, unknown>;
+      }
+    ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    const result = await method({
-      ik: entryIk,
-      ledgerIk,
-      parameters: {
+    // Try both parameter styles: individual args or parameters object
+    let result;
+    try {
+      // First try with individual parameter (amount as direct arg)
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
         amount: "300",
-      },
-    });
+      });
+    } catch {
+      // If that fails, try with parameters object
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
+        parameters: {
+          amount: "300",
+        },
+      });
+    }
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -515,25 +541,38 @@ test("Entry type methods with underscore naming", async () => {
 
   if (methodExists) {
     const entryIk = uuidv4();
-    const method = (client as ClientWithDynamicMethods)[
-      expectedMethodName
-    ] as (args: {
-      ik: string;
-      ledgerIk: string;
-      parameters: Record<string, unknown>;
-    }) => Promise<{
+    const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
+      args: {
+        ik: string;
+        ledgerIk: string;
+        amount?: string;
+        parameters?: Record<string, unknown>;
+      }
+    ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    const result = await method({
-      ik: entryIk,
-      ledgerIk,
-      parameters: {
+    // Try both parameter styles: individual args or parameters object
+    let result;
+    try {
+      // First try with individual parameter (amount as direct arg)
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
         amount: "400",
-      },
-    });
+      });
+    } catch {
+      // If that fails, try with parameters object
+      result = await method({
+        ik: entryIk,
+        ledgerIk,
+        parameters: {
+          amount: "400",
+        },
+      });
+    }
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -687,25 +726,38 @@ test("Multiple entry types in single schema", async () => {
 
     if (methodExists) {
       const entryIk = uuidv4();
-      const method = (client as ClientWithDynamicMethods)[
-        methodName
-      ] as (args: {
-        ik: string;
-        ledgerIk: string;
-        parameters: Record<string, unknown>;
-      }) => Promise<{
+      const method = (client as ClientWithDynamicMethods)[methodName] as (
+        args: {
+          ik: string;
+          ledgerIk: string;
+          amount?: string;
+          parameters?: Record<string, unknown>;
+        }
+      ) => Promise<{
         addLedgerEntry: {
           __typename: string;
           entry?: { type?: string | null };
         };
       }>;
-      const result = await method({
-        ik: entryIk,
-        ledgerIk,
-        parameters: {
+      // Try both parameter styles: individual args or parameters object
+      let result;
+      try {
+        // First try with individual parameter (amount as direct arg)
+        result = await method({
+          ik: entryIk,
+          ledgerIk,
           amount: "500",
-        },
-      });
+        });
+      } catch {
+        // If that fails, try with parameters object
+        result = await method({
+          ik: entryIk,
+          ledgerIk,
+          parameters: {
+            amount: "500",
+          },
+        });
+      }
 
       expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
       if (
