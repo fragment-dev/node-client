@@ -1,0 +1,143 @@
+{
+  "key": "test-schema",
+  "chartOfAccounts": {
+    "defaultCurrencyMode": "multi",
+    "accounts": [
+      {
+        "key": "asset-root",
+        "name": "Asset Root",
+        "type": "asset",
+        "children": []
+      },
+      {
+        "key": "liability-root",
+        "name": "Liability Root",
+        "type": "liability",
+        "children": []
+      },
+      {
+        "key": "expense-root",
+        "name": "Expense Root",
+        "type": "expense",
+        "children": []
+      }
+    ]
+  },
+  "ledgerEntries": {
+    "types": [
+      {
+        "type": "user-funds-account",
+        "typeVersion": 1,
+        "lines": [
+          {
+            "key": "asset-line",
+            "account": {
+              "path": "asset-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "liability-line",
+            "account": {
+              "path": "liability-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "user-funds-account",
+        "typeVersion": 2,
+        "lines": [
+          {
+            "key": "asset-line",
+            "account": {
+              "path": "asset-root"
+            },
+            "amount": "{{amount}} - {{feeAmount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "liability-line",
+            "account": {
+              "path": "liability-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "fee-line",
+            "account": {
+              "path": "expense-root"
+            },
+            "amount": "{{feeAmount}}",
+            "currency": {
+              "code": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "fundingSettlement",
+        "lines": [
+          {
+            "key": "asset-line",
+            "account": {
+              "path": "asset-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "liability-line",
+            "account": {
+              "path": "liability-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "payment_processing",
+        "lines": [
+          {
+            "key": "asset-line",
+            "account": {
+              "path": "asset-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "liability-line",
+            "account": {
+              "path": "liability-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+

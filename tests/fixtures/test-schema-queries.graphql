@@ -1,0 +1,204 @@
+mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 1, posted: $posted, parameters: {amount: $amount}}
+  ) {
+    __typename
+    ... on AddLedgerEntryResult {
+      entry {
+        ik
+        id
+        created
+        type
+        posted
+        description
+        ledger {
+          ik
+        }
+        tags {
+          key
+          value
+        }
+        groups {
+          key
+          value
+        }
+      }
+      lines {
+        account {
+          path
+        }
+        amount
+        currency {
+          code
+          customCurrencyId
+        }
+        key
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!, $feeAmount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 2, posted: $posted, parameters: {amount: $amount, feeAmount: $feeAmount}}
+  ) {
+    __typename
+    ... on AddLedgerEntryResult {
+      entry {
+        ik
+        id
+        created
+        type
+        posted
+        description
+        ledger {
+          ik
+        }
+        tags {
+          key
+          value
+        }
+        groups {
+          key
+          value
+        }
+      }
+      lines {
+        account {
+          path
+        }
+        amount
+        currency {
+          code
+          customCurrencyId
+        }
+        key
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+mutation PostFundingSettlement($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "fundingSettlement", posted: $posted, parameters: {amount: $amount}}
+  ) {
+    __typename
+    ... on AddLedgerEntryResult {
+      entry {
+        ik
+        id
+        created
+        type
+        posted
+        description
+        ledger {
+          ik
+        }
+        tags {
+          key
+          value
+        }
+        groups {
+          key
+          value
+        }
+      }
+      lines {
+        account {
+          path
+        }
+        amount
+        currency {
+          code
+          customCurrencyId
+        }
+        key
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+mutation PostPaymentProcessing($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "payment_processing", posted: $posted, parameters: {amount: $amount}}
+  ) {
+    __typename
+    ... on AddLedgerEntryResult {
+      entry {
+        ik
+        id
+        created
+        type
+        posted
+        description
+        ledger {
+          ik
+        }
+        tags {
+          key
+          value
+        }
+        groups {
+          key
+          value
+        }
+      }
+      lines {
+        account {
+          path
+        }
+        amount
+        currency {
+          code
+          customCurrencyId
+        }
+        key
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}

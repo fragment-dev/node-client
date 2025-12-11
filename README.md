@@ -81,6 +81,52 @@ await fragment.addLedgerEntryRuntime({
 });
 ```
 
+### Post a Ledger Entry using type-specific methods
+
+When your Schema defines Ledger Entry types with lines, the SDK generates type-specific methods for posting those entries. These methods follow the naming convention `Post<EntryType>` where the entry type name is converted to PascalCase.
+
+For example, an entry type `user-funds-account` generates a method `PostUserFundsAccount`:
+
+```typescript
+await fragment.PostUserFundsAccount({
+  ik: "some-ik",
+  ledgerIk: "your-ledger-ik",
+  amount: "200",
+});
+```
+
+The SDK handles different naming conventions:
+- Hyphenated: `user-funds-account` → `PostUserFundsAccount`
+- CamelCase: `fundingSettlement` → `PostFundingSettlement`
+- Underscore: `payment_processing` → `PostPaymentProcessing`
+
+#### Entry Type Versions
+
+When your schema defines multiple versions of the same entry type using `typeVersion`, the SDK generates separate methods for each version. Version 1 uses the base method name, and subsequent versions append `_v2`, `_v3`, etc.
+
+For example, an entry type `user-funds-account` with `typeVersion: 1` and `typeVersion: 2` generates:
+- `PostUserFundsAccount` for version 1
+- `PostUserFundsAccount_v2` for version 2
+
+```typescript
+// Post version 1 entry
+await fragment.PostUserFundsAccount({
+  ik: "entry-ik-1",
+  ledgerIk: "your-ledger-ik",
+  amount: "200",
+});
+
+// Post version 2 entry (with additional feeAmount parameter)
+await fragment.PostUserFundsAccount_v2({
+  ik: "entry-ik-2",
+  ledgerIk: "your-ledger-ik",
+  amount: "200",
+  feeAmount: "10",
+});
+```
+
+Each version can have different parameters and line structures, and the generated methods will reflect those differences.
+
 ### Sync transactions
 
 To sync transaction using a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system):

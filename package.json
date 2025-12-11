@@ -18,6 +18,7 @@
     "prepack": "yarn build",
     "postversion": "yarn gen-version",
     "fragment-node-client-codegen": "node --loader ts-node/esm --no-warnings=ExperimentalWarning src/bin.ts",
+    "update-test-schema": "./scripts/update-test-schema.sh",
     "prepublishOnly": "yarn build"
   },
   "resolutions": {

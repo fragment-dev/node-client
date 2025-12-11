@@ -45,6 +45,29 @@ jobs:
           max_attempts: 2
           command: yarn
 
+      - name: Cache Homebrew
+        id: cache-homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/linuxbrew/.linuxbrew
+            ~/.cache/Homebrew
+          key: ${{ runner.os }}-homebrew-fragment-cli
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
+
+      - name: Install Fragment CLI
+        run: |
+          if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
+          echo "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" >> $GITHUB_ENV
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          /home/linuxbrew/.linuxbrew/bin/brew tap fragment-dev/tap || true
+          if ! /home/linuxbrew/.linuxbrew/bin/brew list fragment-dev/tap/fragment-cli &>/dev/null; then
+            /home/linuxbrew/.linuxbrew/bin/brew install fragment-dev/tap/fragment-cli
+          fi
+
       - name: Typecheck
         run: yarn typecheck
 
@@ -55,4 +78,11 @@ jobs:
         run: |
           yarn build
           git diff --exit-code
+          exit $?
+
+      - name: Verify test schema generated files are up-to-date
+        run: |
+          /home/linuxbrew/.linuxbrew/bin/fragment gen-graphql --path tests/fixtures/test-schema.json --output tests/fixtures/test-schema-queries.graphql
+          yarn fragment-node-client-codegen -i tests/fixtures/test-schema-queries.graphql -o tests/fixtures/generated-test-client.ts
+          git diff --exit-code tests/fixtures/test-schema-queries.graphql tests/fixtures/generated-test-client.ts
           exit $?
