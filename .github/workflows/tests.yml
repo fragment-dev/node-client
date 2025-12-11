@@ -45,6 +45,13 @@ jobs:
           max_attempts: 2
           command: yarn
 
+      - name: Install Fragment CLI
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" >> $GITHUB_ENV
+          /home/linuxbrew/.linuxbrew/bin/brew tap fragment-dev/tap
+          /home/linuxbrew/.linuxbrew/bin/brew install fragment-dev/tap/fragment-cli
+
       - name: Typecheck
         run: yarn typecheck
 
