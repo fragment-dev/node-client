@@ -100,8 +100,6 @@ The SDK handles different naming conventions:
 - CamelCase: `fundingSettlement` → `PostFundingSettlement`
 - Underscore: `payment_processing` → `PostPaymentProcessing`
 
-These methods are only available when the entry type has lines defined in the schema. If the methods don't exist, you can still use `addLedgerEntry` with the entry type name.
-
 ### Sync transactions
 
 To sync transaction using a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system):
