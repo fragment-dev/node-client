@@ -23,6 +23,9 @@ jobs:
         with:
           path: node-client
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
