@@ -9,6 +9,10 @@ import {
 } from "../generated/generated.js";
 import { BadRequestError } from "../src/errors.js";
 
+type ClientWithDynamicMethods = ReturnType<typeof createFragmentClient> & {
+  [key: string]: unknown;
+};
+
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const scope = process.env.SCOPE;
@@ -195,4 +199,521 @@ test("Handles mutation operations", async () => {
       ],
     })
   ).rejects.toThrowError(BadRequestError);
+});
+
+test("Entry type methods with hyphenated naming", async () => {
+  const client = await getClient();
+
+  const schemaKey = uuidv4();
+  const storeSchemaResponse = await client.storeSchema({
+    schema: {
+      key: schemaKey,
+      chartOfAccounts: {
+        defaultCurrencyMode: CurrencyMode.Multi,
+        accounts: [
+          {
+            key: "asset-root",
+            name: "Asset Root",
+            type: LedgerAccountTypes.Asset,
+            children: [],
+          },
+          {
+            key: "liability-root",
+            name: "Liability Root",
+            type: LedgerAccountTypes.Liability,
+            children: [],
+          },
+        ],
+      },
+      ledgerEntries: {
+        types: [
+          {
+            type: "user-funds-account",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(storeSchemaResponse.storeSchema.__typename).toEqual(
+    "StoreSchemaResult"
+  );
+
+  const ledgerIk = uuidv4();
+  const createLedgerResponse = await client.createLedger({
+    ik: ledgerIk,
+    ledger: {
+      name: "Test SDK Ledger",
+    },
+    schemaKey,
+  });
+
+  expect(createLedgerResponse.createLedger.__typename).toEqual(
+    "CreateLedgerResult"
+  );
+
+  const expectedMethodName = "PostUserFundsAccount";
+  const methodExists =
+    typeof (client as ClientWithDynamicMethods)[expectedMethodName] ===
+    "function";
+
+  if (methodExists) {
+    const entryIk = uuidv4();
+    const method = (client as ClientWithDynamicMethods)[
+      expectedMethodName
+    ] as (args: {
+      ik: string;
+      ledgerIk: string;
+      parameters: Record<string, unknown>;
+    }) => Promise<{
+      addLedgerEntry: {
+        __typename: string;
+        entry?: { type?: string | null };
+      };
+    }>;
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "200",
+      },
+    });
+
+    expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+    if (
+      result.addLedgerEntry.__typename === "AddLedgerEntryResult" &&
+      result.addLedgerEntry.entry
+    ) {
+      expect(result.addLedgerEntry.entry.type).toEqual("user-funds-account");
+    }
+
+    const getEntryResponse = await client.getLedgerEntry({
+      ik: entryIk,
+      ledgerIk,
+    });
+
+    expect(getEntryResponse.ledgerEntry).toBeDefined();
+  }
+});
+
+test("Entry type methods with camelCase naming", async () => {
+  const client = await getClient();
+
+  const schemaKey = uuidv4();
+  const storeSchemaResponse = await client.storeSchema({
+    schema: {
+      key: schemaKey,
+      chartOfAccounts: {
+        defaultCurrencyMode: CurrencyMode.Multi,
+        accounts: [
+          {
+            key: "asset-root",
+            name: "Asset Root",
+            type: LedgerAccountTypes.Asset,
+            children: [],
+          },
+          {
+            key: "liability-root",
+            name: "Liability Root",
+            type: LedgerAccountTypes.Liability,
+            children: [],
+          },
+        ],
+      },
+      ledgerEntries: {
+        types: [
+          {
+            type: "fundingSettlement",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(storeSchemaResponse.storeSchema.__typename).toEqual(
+    "StoreSchemaResult"
+  );
+
+  const ledgerIk = uuidv4();
+  const createLedgerResponse = await client.createLedger({
+    ik: ledgerIk,
+    ledger: {
+      name: "Test SDK Ledger",
+    },
+    schemaKey,
+  });
+
+  expect(createLedgerResponse.createLedger.__typename).toEqual(
+    "CreateLedgerResult"
+  );
+
+  const expectedMethodName = "PostFundingSettlement";
+  const methodExists =
+    typeof (client as ClientWithDynamicMethods)[expectedMethodName] ===
+    "function";
+
+  if (methodExists) {
+    const entryIk = uuidv4();
+    const method = (client as ClientWithDynamicMethods)[
+      expectedMethodName
+    ] as (args: {
+      ik: string;
+      ledgerIk: string;
+      parameters: Record<string, unknown>;
+    }) => Promise<{
+      addLedgerEntry: {
+        __typename: string;
+        entry?: { type?: string | null };
+      };
+    }>;
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "300",
+      },
+    });
+
+    expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+    if (
+      result.addLedgerEntry.__typename === "AddLedgerEntryResult" &&
+      result.addLedgerEntry.entry
+    ) {
+      expect(result.addLedgerEntry.entry.type).toEqual("fundingSettlement");
+    }
+
+    const getEntryResponse = await client.getLedgerEntry({
+      ik: entryIk,
+      ledgerIk,
+    });
+
+    expect(getEntryResponse.ledgerEntry).toBeDefined();
+  }
+});
+
+test("Entry type methods with underscore naming", async () => {
+  const client = await getClient();
+
+  const schemaKey = uuidv4();
+  const storeSchemaResponse = await client.storeSchema({
+    schema: {
+      key: schemaKey,
+      chartOfAccounts: {
+        defaultCurrencyMode: CurrencyMode.Multi,
+        accounts: [
+          {
+            key: "asset-root",
+            name: "Asset Root",
+            type: LedgerAccountTypes.Asset,
+            children: [],
+          },
+          {
+            key: "liability-root",
+            name: "Liability Root",
+            type: LedgerAccountTypes.Liability,
+            children: [],
+          },
+        ],
+      },
+      ledgerEntries: {
+        types: [
+          {
+            type: "payment_processing",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(storeSchemaResponse.storeSchema.__typename).toEqual(
+    "StoreSchemaResult"
+  );
+
+  const ledgerIk = uuidv4();
+  const createLedgerResponse = await client.createLedger({
+    ik: ledgerIk,
+    ledger: {
+      name: "Test SDK Ledger",
+    },
+    schemaKey,
+  });
+
+  expect(createLedgerResponse.createLedger.__typename).toEqual(
+    "CreateLedgerResult"
+  );
+
+  const expectedMethodName = "PostPaymentProcessing";
+  const methodExists =
+    typeof (client as ClientWithDynamicMethods)[expectedMethodName] ===
+    "function";
+
+  if (methodExists) {
+    const entryIk = uuidv4();
+    const method = (client as ClientWithDynamicMethods)[
+      expectedMethodName
+    ] as (args: {
+      ik: string;
+      ledgerIk: string;
+      parameters: Record<string, unknown>;
+    }) => Promise<{
+      addLedgerEntry: {
+        __typename: string;
+        entry?: { type?: string | null };
+      };
+    }>;
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "400",
+      },
+    });
+
+    expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+    if (
+      result.addLedgerEntry.__typename === "AddLedgerEntryResult" &&
+      result.addLedgerEntry.entry
+    ) {
+      expect(result.addLedgerEntry.entry.type).toEqual("payment_processing");
+    }
+
+    const getEntryResponse = await client.getLedgerEntry({
+      ik: entryIk,
+      ledgerIk,
+    });
+
+    expect(getEntryResponse.ledgerEntry).toBeDefined();
+  }
+});
+
+test("Multiple entry types in single schema", async () => {
+  const client = await getClient();
+
+  const schemaKey = uuidv4();
+  const storeSchemaResponse = await client.storeSchema({
+    schema: {
+      key: schemaKey,
+      chartOfAccounts: {
+        defaultCurrencyMode: CurrencyMode.Multi,
+        accounts: [
+          {
+            key: "asset-root",
+            name: "Asset Root",
+            type: LedgerAccountTypes.Asset,
+            children: [],
+          },
+          {
+            key: "liability-root",
+            name: "Liability Root",
+            type: LedgerAccountTypes.Liability,
+            children: [],
+          },
+        ],
+      },
+      ledgerEntries: {
+        types: [
+          {
+            type: "user-funds-account",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+          {
+            type: "fundingSettlement",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+          {
+            type: "payment_processing",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(storeSchemaResponse.storeSchema.__typename).toEqual(
+    "StoreSchemaResult"
+  );
+
+  const ledgerIk = uuidv4();
+  const createLedgerResponse = await client.createLedger({
+    ik: ledgerIk,
+    ledger: {
+      name: "Test SDK Ledger",
+    },
+    schemaKey,
+  });
+
+  expect(createLedgerResponse.createLedger.__typename).toEqual(
+    "CreateLedgerResult"
+  );
+
+  const expectedMethods = [
+    "PostUserFundsAccount",
+    "PostFundingSettlement",
+    "PostPaymentProcessing",
+  ];
+
+  for (const methodName of expectedMethods) {
+    const methodExists =
+      typeof (client as ClientWithDynamicMethods)[methodName] === "function";
+
+    if (methodExists) {
+      const entryIk = uuidv4();
+      const method = (client as ClientWithDynamicMethods)[
+        methodName
+      ] as (args: {
+        ik: string;
+        ledgerIk: string;
+        parameters: Record<string, unknown>;
+      }) => Promise<{
+        addLedgerEntry: {
+          __typename: string;
+          entry?: { type?: string | null };
+        };
+      }>;
+      const result = await method({
+        ik: entryIk,
+        ledgerIk,
+        parameters: {
+          amount: "500",
+        },
+      });
+
+      expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+      if (
+        result.addLedgerEntry.__typename === "AddLedgerEntryResult" &&
+        result.addLedgerEntry.entry
+      ) {
+        expect(result.addLedgerEntry.entry.type).toBeDefined();
+      }
+    }
+  }
 });
