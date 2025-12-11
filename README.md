@@ -91,9 +91,7 @@ For example, an entry type `user-funds-account` generates a method `PostUserFund
 await fragment.PostUserFundsAccount({
   ik: "some-ik",
   ledgerIk: "your-ledger-ik",
-  parameters: {
-    amount: "200",
-  },
+  amount: "200",
 });
 ```
 

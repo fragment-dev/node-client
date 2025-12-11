@@ -56,3 +56,10 @@ jobs:
           yarn build
           git diff --exit-code
           exit $?
+
+      - name: Verify test schema generated files are up-to-date
+        run: |
+          fragment gen-graphql --path tests/fixtures/test-schema.json --output tests/fixtures/test-schema-queries.graphql
+          yarn fragment-node-client-codegen -i tests/fixtures/test-schema-queries.graphql -o tests/fixtures/generated-test-client.ts
+          git diff --exit-code tests/fixtures/test-schema-queries.graphql tests/fixtures/generated-test-client.ts
+          exit $?

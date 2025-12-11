@@ -14,9 +14,10 @@ type ClientWithDynamicMethods = ReturnType<typeof createFragmentClient> & {
 };
 
 // Expected parameter style for Post methods
+// The Fragment CLI generates methods with individual parameters (ik, ledgerIk, amount, etc.)
 // Change this if the SDK generates methods with a different signature
 const EXPECTED_PARAMETER_STYLE: "individual" | "parameters-object" =
-  "parameters-object";
+  "individual";
 
 // Helper to verify the method uses the expected parameter style
 // This will fail the test if the signature doesn't match expectations
@@ -359,13 +360,11 @@ test("Entry type methods with hyphenated naming", async () => {
     // This will throw if the signature doesn't match expectations
     await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the expected style
+    // Call with the expected style (individual parameters)
     const result = await method({
       ik: entryIk,
       ledgerIk,
-      parameters: {
-        amount: "200",
-      },
+      amount: "200",
     });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
@@ -478,13 +477,11 @@ test("Entry type methods with camelCase naming", async () => {
     // This will throw if the signature doesn't match expectations
     await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the expected style
+    // Call with the expected style (individual parameters)
     const result = await method({
       ik: entryIk,
       ledgerIk,
-      parameters: {
-        amount: "300",
-      },
+      amount: "300",
     });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
@@ -597,13 +594,11 @@ test("Entry type methods with underscore naming", async () => {
     // This will throw if the signature doesn't match expectations
     await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the expected style
+    // Call with the expected style (individual parameters)
     const result = await method({
       ik: entryIk,
       ledgerIk,
-      parameters: {
-        amount: "400",
-      },
+      amount: "400",
     });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
@@ -771,13 +766,11 @@ test("Multiple entry types in single schema", async () => {
       // This will throw if the signature doesn't match expectations
       await verifyParameterStyle(method, entryIk, ledgerIk);
 
-      // Call with the expected style
+      // Call with the expected style (individual parameters)
       const result = await method({
         ik: entryIk,
         ledgerIk,
-        parameters: {
-          amount: "500",
-        },
+        amount: "500",
       });
 
       expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
@@ -880,12 +873,12 @@ test("Post method parameter style verification", async () => {
     await verifyParameterStyle(method, entryIk, ledgerIk);
 
     // Verify that calling with the wrong style fails
-    // Since EXPECTED_PARAMETER_STYLE is "parameters-object", test that individual params fail
+    // Since EXPECTED_PARAMETER_STYLE is "individual", test that parameters object fails
     await expect(
       method({
         ik: uuidv4(),
         ledgerIk,
-        amount: "100",
+        parameters: { amount: "100" },
       })
     ).rejects.toThrow();
   }
