@@ -13,6 +13,59 @@ type ClientWithDynamicMethods = ReturnType<typeof createFragmentClient> & {
   [key: string]: unknown;
 };
 
+// Helper to detect parameter style by checking which call succeeds
+// This will fail the test if neither style works, ensuring we catch API changes
+async function detectParameterStyle(
+  method: (args: unknown) => Promise<unknown>,
+  ik: string,
+  ledgerIk: string,
+): Promise<"individual" | "parameters-object"> {
+  let individualWorked = false;
+  let parametersObjectWorked = false;
+
+  // Try individual parameter style
+  try {
+    await method({
+      ik,
+      ledgerIk,
+      amount: "1",
+    });
+    individualWorked = true;
+  } catch {
+    // Individual style didn't work
+  }
+
+  // Try parameters object style
+  try {
+    await method({
+      ik,
+      ledgerIk,
+      parameters: {
+        amount: "1",
+      },
+    });
+    parametersObjectWorked = true;
+  } catch {
+    // Parameters object style didn't work
+  }
+
+  // Fail if neither works - this indicates the method signature is unexpected
+  if (!individualWorked && !parametersObjectWorked) {
+    throw new Error(
+      `Method does not accept either individual parameters or parameters object. This indicates the method signature is different than expected.`
+    );
+  }
+
+  // Fail if both work - this would be ambiguous
+  if (individualWorked && parametersObjectWorked) {
+    throw new Error(
+      `Method accepts both parameter styles. This is ambiguous and should be fixed.`
+    );
+  }
+
+  return individualWorked ? "individual" : "parameters-object";
+}
+
 const clientId = process.env.CLIENT_ID;
 const clientSecret = process.env.CLIENT_SECRET;
 const scope = process.env.SCOPE;
@@ -282,37 +335,33 @@ test("Entry type methods with hyphenated naming", async () => {
   if (methodExists) {
     const entryIk = uuidv4();
     const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
-      args: {
-        ik: string;
-        ledgerIk: string;
-        amount?: string;
-        parameters?: Record<string, unknown>;
-      }
+      args: unknown
     ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    // Try both parameter styles: individual args or parameters object
-    let result;
-    try {
-      // First try with individual parameter (amount as direct arg)
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        amount: "200",
-      });
-    } catch {
-      // If that fails, try with parameters object
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        parameters: {
-          amount: "200",
-        },
-      });
-    }
+
+    // Detect which parameter style the method uses
+    // This will throw if the method signature is unexpected
+    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+
+    // Call with the detected style
+    const result =
+      parameterStyle === "individual"
+        ? await method({
+            ik: entryIk,
+            ledgerIk,
+            amount: "200",
+          })
+        : await method({
+            ik: entryIk,
+            ledgerIk,
+            parameters: {
+              amount: "200",
+            },
+          });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -412,37 +461,33 @@ test("Entry type methods with camelCase naming", async () => {
   if (methodExists) {
     const entryIk = uuidv4();
     const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
-      args: {
-        ik: string;
-        ledgerIk: string;
-        amount?: string;
-        parameters?: Record<string, unknown>;
-      }
+      args: unknown
     ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    // Try both parameter styles: individual args or parameters object
-    let result;
-    try {
-      // First try with individual parameter (amount as direct arg)
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        amount: "300",
-      });
-    } catch {
-      // If that fails, try with parameters object
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        parameters: {
-          amount: "300",
-        },
-      });
-    }
+
+    // Detect which parameter style the method uses
+    // This will throw if the method signature is unexpected
+    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+
+    // Call with the detected style
+    const result =
+      parameterStyle === "individual"
+        ? await method({
+            ik: entryIk,
+            ledgerIk,
+            amount: "300",
+          })
+        : await method({
+            ik: entryIk,
+            ledgerIk,
+            parameters: {
+              amount: "300",
+            },
+          });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -542,37 +587,33 @@ test("Entry type methods with underscore naming", async () => {
   if (methodExists) {
     const entryIk = uuidv4();
     const method = (client as ClientWithDynamicMethods)[expectedMethodName] as (
-      args: {
-        ik: string;
-        ledgerIk: string;
-        amount?: string;
-        parameters?: Record<string, unknown>;
-      }
+      args: unknown
     ) => Promise<{
       addLedgerEntry: {
         __typename: string;
         entry?: { type?: string | null };
       };
     }>;
-    // Try both parameter styles: individual args or parameters object
-    let result;
-    try {
-      // First try with individual parameter (amount as direct arg)
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        amount: "400",
-      });
-    } catch {
-      // If that fails, try with parameters object
-      result = await method({
-        ik: entryIk,
-        ledgerIk,
-        parameters: {
-          amount: "400",
-        },
-      });
-    }
+
+    // Detect which parameter style the method uses
+    // This will throw if the method signature is unexpected
+    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+
+    // Call with the detected style
+    const result =
+      parameterStyle === "individual"
+        ? await method({
+            ik: entryIk,
+            ledgerIk,
+            amount: "400",
+          })
+        : await method({
+            ik: entryIk,
+            ledgerIk,
+            parameters: {
+              amount: "400",
+            },
+          });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -727,37 +768,37 @@ test("Multiple entry types in single schema", async () => {
     if (methodExists) {
       const entryIk = uuidv4();
       const method = (client as ClientWithDynamicMethods)[methodName] as (
-        args: {
-          ik: string;
-          ledgerIk: string;
-          amount?: string;
-          parameters?: Record<string, unknown>;
-        }
+        args: unknown
       ) => Promise<{
         addLedgerEntry: {
           __typename: string;
           entry?: { type?: string | null };
         };
       }>;
-      // Try both parameter styles: individual args or parameters object
-      let result;
-      try {
-        // First try with individual parameter (amount as direct arg)
-        result = await method({
-          ik: entryIk,
-          ledgerIk,
-          amount: "500",
-        });
-      } catch {
-        // If that fails, try with parameters object
-        result = await method({
-          ik: entryIk,
-          ledgerIk,
-          parameters: {
-            amount: "500",
-          },
-        });
-      }
+
+      // Detect which parameter style the method uses
+      // This will throw if the method signature is unexpected
+      const parameterStyle = await detectParameterStyle(
+        method,
+        entryIk,
+        ledgerIk,
+      );
+
+      // Call with the detected style
+      const result =
+        parameterStyle === "individual"
+          ? await method({
+              ik: entryIk,
+              ledgerIk,
+              amount: "500",
+            })
+          : await method({
+              ik: entryIk,
+              ledgerIk,
+              parameters: {
+                amount: "500",
+              },
+            });
 
       expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
       if (
@@ -766,6 +807,123 @@ test("Multiple entry types in single schema", async () => {
       ) {
         expect(result.addLedgerEntry.entry.type).toBeDefined();
       }
+    }
+  }
+});
+
+test("Post method parameter style verification", async () => {
+  const client = await getClient();
+
+  const schemaKey = uuidv4();
+  const storeSchemaResponse = await client.storeSchema({
+    schema: {
+      key: schemaKey,
+      chartOfAccounts: {
+        defaultCurrencyMode: CurrencyMode.Multi,
+        accounts: [
+          {
+            key: "asset-root",
+            name: "Asset Root",
+            type: LedgerAccountTypes.Asset,
+            children: [],
+          },
+          {
+            key: "liability-root",
+            name: "Liability Root",
+            type: LedgerAccountTypes.Liability,
+            children: [],
+          },
+        ],
+      },
+      ledgerEntries: {
+        types: [
+          {
+            type: "test-entry",
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  expect(storeSchemaResponse.storeSchema.__typename).toEqual(
+    "StoreSchemaResult"
+  );
+
+  const ledgerIk = uuidv4();
+  const createLedgerResponse = await client.createLedger({
+    ik: ledgerIk,
+    ledger: {
+      name: "Test SDK Ledger",
+    },
+    schemaKey,
+  });
+
+  expect(createLedgerResponse.createLedger.__typename).toEqual(
+    "CreateLedgerResult"
+  );
+
+  const expectedMethodName = "PostTestEntry";
+  const methodExists =
+    typeof (client as ClientWithDynamicMethods)[expectedMethodName] ===
+    "function";
+
+  if (methodExists) {
+    const method = (client as ClientWithDynamicMethods)[
+      expectedMethodName
+    ] as (args: unknown) => Promise<unknown>;
+
+    const entryIk = uuidv4();
+    // This will throw if the method signature is unexpected
+    const parameterStyle = await detectParameterStyle(
+      method,
+      entryIk,
+      ledgerIk,
+    );
+
+    // Verify we detected a valid style
+    expect(parameterStyle).toMatch(/^(individual|parameters-object)$/);
+
+    // Verify that calling with the wrong style fails
+    if (parameterStyle === "individual") {
+      // Should fail with parameters object if method expects individual params
+      await expect(
+        method({
+          ik: uuidv4(),
+          ledgerIk,
+          parameters: { amount: "100" },
+        })
+      ).rejects.toThrow();
+    } else {
+      // Should fail with individual params if method expects parameters object
+      await expect(
+        method({
+          ik: uuidv4(),
+          ledgerIk,
+          amount: "100",
+        })
+      ).rejects.toThrow();
     }
   }
 });
