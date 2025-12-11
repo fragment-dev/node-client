@@ -45,12 +45,28 @@ jobs:
           max_attempts: 2
           command: yarn
 
+      - name: Cache Homebrew
+        id: cache-homebrew
+        uses: actions/cache@v4
+        with:
+          path: |
+            /home/linuxbrew/.linuxbrew
+            ~/.cache/Homebrew
+          key: ${{ runner.os }}-homebrew-fragment-cli
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
+
       - name: Install Fragment CLI
         run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          fi
           echo "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" >> $GITHUB_ENV
-          /home/linuxbrew/.linuxbrew/bin/brew tap fragment-dev/tap
-          /home/linuxbrew/.linuxbrew/bin/brew install fragment-dev/tap/fragment-cli
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          /home/linuxbrew/.linuxbrew/bin/brew tap fragment-dev/tap || true
+          if ! /home/linuxbrew/.linuxbrew/bin/brew list fragment-dev/tap/fragment-cli &>/dev/null; then
+            /home/linuxbrew/.linuxbrew/bin/brew install fragment-dev/tap/fragment-cli
+          fi
 
       - name: Typecheck
         run: yarn typecheck
