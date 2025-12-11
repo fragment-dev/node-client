@@ -83,7 +83,7 @@ await fragment.addLedgerEntryRuntime({
 
 ### Post a Ledger Entry using type-specific methods
 
-When your schema defines entry types with lines, the SDK generates type-specific methods for posting those entries. These methods follow the naming convention `Post<EntryType>` where the entry type name is converted to PascalCase.
+When your Schema defines Ledger Entry types with lines, the SDK generates type-specific methods for posting those entries. These methods follow the naming convention `Post<EntryType>` where the entry type name is converted to PascalCase.
 
 For example, an entry type `user-funds-account` generates a method `PostUserFundsAccount`:
 
