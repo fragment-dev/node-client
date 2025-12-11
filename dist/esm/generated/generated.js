@@ -212,6 +212,14 @@ export var IncreaseEnv;
     IncreaseEnv["Production"] = "production";
     IncreaseEnv["Sandbox"] = "sandbox";
 })(IncreaseEnv || (IncreaseEnv = {}));
+/** The clearing status of a Ledger Account. */
+export var LedgerAccountClearingStatus;
+(function (LedgerAccountClearingStatus) {
+    /** The account has no outstanding balances. */
+    LedgerAccountClearingStatus["Cleared"] = "cleared";
+    /** The account has outstanding balances that have not been cleared. */
+    LedgerAccountClearingStatus["Pending"] = "pending";
+})(LedgerAccountClearingStatus || (LedgerAccountClearingStatus = {}));
 export var LedgerAccountTypes;
 (function (LedgerAccountTypes) {
     LedgerAccountTypes["Asset"] = "asset";

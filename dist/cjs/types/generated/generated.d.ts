@@ -68,7 +68,7 @@ export type Scalars = {
         input: string;
         output: string;
     };
-    /** A string representing integers as big as 2^96-1. The number is signed so the range is from -79,228,162,514,264,337,593,543,950,336 to 79,228,162,514,264,337,593,543,950,336. */
+    /** A string representing integers as big as 2^120-1. The number is signed so the range is from -1,329,227,995,784,915,872,903,807,060,280,344,575 to 1,329,227,995,784,915,872,903,807,060,280,344,575. */
     Int96: {
         input: string;
         output: string;
@@ -581,13 +581,6 @@ export type EntryGroupMatchInput = {
     key: Scalars["SafeString"]["input"];
     value: Scalars["SafeString"]["input"];
 };
-/** A key used to identify Entries in an group */
-export type EntryKeyInput = {
-    /** The type of the Entry */
-    type: Scalars["SafeString"]["input"];
-    /** The version of the Entry */
-    typeVersion: Scalars["Int"]["input"];
-};
 /** Base error interface */
 export type Error = {
     /** The status code of error. For example, 'ledger_not_found'. */
@@ -702,14 +695,10 @@ export type GroupFilter = {
 export type GroupInput = {
     /** Human-readable description of the Group. */
     description?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
-    /** The entries that make up this group. */
-    entries: Array<EntryKeyInput>;
     /** The key of this Group. This combined with its value is a stable, unique identifier for this group. */
     key: Scalars["SafeString"]["input"];
     /** The parameters that are used to enable reconciliation abilities in a group. */
     reconciliation?: InputMaybe<GroupReconciliationParametersInput>;
-    /** The value of this Group, can be a parameterized string to allow for dynamic values. */
-    value: Scalars["ParameterizedString"]["input"];
 };
 /** Input type for matching a specific group by key and value */
 export type GroupMatchInput = {
@@ -947,6 +936,12 @@ export type LedgerAccount = {
     childBalancesDuring: HistoricalBalanceConnection;
     /** The child Ledger Accounts of this Ledger Accountw */
     childLedgerAccounts: LedgerAccountsConnection;
+    /**
+     * The clearing status of the Ledger Account.
+     *
+     * This field is null when the Ledger Account is not configured to be a Clearing account.
+     */
+    clearingStatus?: Maybe<LedgerAccountClearingStatus>;
     /** The consistency configuration for this Ledger Account. This defines how updates to this Ledger Account's ownBalance are handled. */
     consistencyConfig: LedgerAccountConsistencyConfig;
     created: Scalars["DateTime"]["output"];
@@ -961,6 +956,8 @@ export type LedgerAccount = {
     ik: Scalars["String"]["output"];
     /** Ledger this account is in */
     ledger: Ledger;
+    /** All Ledger Entries that have posted to this Ledger Account. Ledger Entries are paginated and sorted in reverse-chronological order by posted date. */
+    ledgerEntries: LedgerEntriesConnection;
     /** ID of the ledger this account is in */
     ledgerId: Scalars["ID"]["output"];
     /** List Ledger Lines in this account, sorted by `posted` in reverse chronological order. Does not include Ledger Lines from child Ledger Accounts. */
@@ -1085,6 +1082,13 @@ export type LedgerAccountChildLedgerAccountsArgs = {
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** A ledger account is a container for money */
+export type LedgerAccountLedgerEntriesArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+/** A ledger account is a container for money */
 export type LedgerAccountLinesArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     before?: InputMaybe<Scalars["String"]["input"]>;
@@ -1136,6 +1140,17 @@ export type LedgerAccountUnreconciledTxsArgs = {
     before?: InputMaybe<Scalars["String"]["input"]>;
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+/** The clearing status of a Ledger Account. */
+export declare enum LedgerAccountClearingStatus {
+    /** The account has no outstanding balances. */
+    Cleared = "cleared",
+    /** The account has outstanding balances that have not been cleared. */
+    Pending = "pending"
+}
+export type LedgerAccountClearingStatusFilter = {
+    /** Results must match the specified clearing account status */
+    equalTo?: InputMaybe<LedgerAccountClearingStatus>;
 };
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountCondition = {
@@ -1247,7 +1262,7 @@ export type LedgerAccountFilter = {
 /** The consistency configuration for a specific Ledger Entry Group in this account. */
 export type LedgerAccountGroupConsistencyConfigInput = {
     /** The group key for this configuration. */
-    key: Scalars["String"]["input"];
+    key: Scalars["SafeString"]["input"];
     /**
      * If set to `strong`, then Ledger Entry Group `ownBalance`s updates for this account will be strongly consistent with the API response.
      * This Ledger Account's Ledger Entry Group balances will be updated and available for strongly consistent reads before you receive an API response.
@@ -1295,6 +1310,8 @@ export type LedgerAccountsConnection = {
     pageInfo: PageInfo;
 };
 export type LedgerAccountsFilterSet = {
+    /** Use this to filter Ledger Accounts by their clearing account status */
+    clearingStatus?: InputMaybe<LedgerAccountClearingStatusFilter>;
     /** Use this to filter Ledger Accounts by their parent status */
     hasParentLedgerAccount?: InputMaybe<Scalars["Boolean"]["input"]>;
     /** Use this to filter Ledger Accounts by their linked status */
@@ -2375,6 +2392,11 @@ export type SchemaInt96ConditionInput = {
 export type SchemaLedgerAccountInput = {
     /** Ledger Accounts to create as children of this Ledger Account. Ledger Accounts may be nested up to a maximum depth of 10. */
     children?: InputMaybe<Array<SchemaLedgerAccountInput>>;
+    /**
+     * EXPERIMENTAL: Whether or not this Ledger Account is a Clearing Account.
+     * Clearing Accounts have balances that should tend to zero. They are used to track in-progress workflows and payments.
+     */
+    clearing?: InputMaybe<Scalars["Boolean"]["input"]>;
     /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
     consistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /**
