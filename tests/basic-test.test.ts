@@ -13,13 +13,18 @@ type ClientWithDynamicMethods = ReturnType<typeof createFragmentClient> & {
   [key: string]: unknown;
 };
 
-// Helper to detect parameter style by checking which call succeeds
-// This will fail the test if neither style works, ensuring we catch API changes
-async function detectParameterStyle(
+// Expected parameter style for Post methods
+// Change this if the SDK generates methods with a different signature
+const EXPECTED_PARAMETER_STYLE: "individual" | "parameters-object" =
+  "parameters-object";
+
+// Helper to verify the method uses the expected parameter style
+// This will fail the test if the signature doesn't match expectations
+async function verifyParameterStyle(
   method: (args: unknown) => Promise<unknown>,
   ik: string,
   ledgerIk: string,
-): Promise<"individual" | "parameters-object"> {
+): Promise<void> {
   let individualWorked = false;
   let parametersObjectWorked = false;
 
@@ -63,7 +68,14 @@ async function detectParameterStyle(
     );
   }
 
-  return individualWorked ? "individual" : "parameters-object";
+  const actualStyle = individualWorked ? "individual" : "parameters-object";
+
+  // Fail if the actual style doesn't match what we expect
+  if (actualStyle !== EXPECTED_PARAMETER_STYLE) {
+    throw new Error(
+      `Method uses "${actualStyle}" parameter style, but we expected "${EXPECTED_PARAMETER_STYLE}". Update EXPECTED_PARAMETER_STYLE if this is intentional.`
+    );
+  }
 }
 
 const clientId = process.env.CLIENT_ID;
@@ -343,25 +355,18 @@ test("Entry type methods with hyphenated naming", async () => {
       };
     }>;
 
-    // Detect which parameter style the method uses
-    // This will throw if the method signature is unexpected
-    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+    // Verify the method uses the expected parameter style
+    // This will throw if the signature doesn't match expectations
+    await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the detected style
-    const result =
-      parameterStyle === "individual"
-        ? await method({
-            ik: entryIk,
-            ledgerIk,
-            amount: "200",
-          })
-        : await method({
-            ik: entryIk,
-            ledgerIk,
-            parameters: {
-              amount: "200",
-            },
-          });
+    // Call with the expected style
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "200",
+      },
+    });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -469,25 +474,18 @@ test("Entry type methods with camelCase naming", async () => {
       };
     }>;
 
-    // Detect which parameter style the method uses
-    // This will throw if the method signature is unexpected
-    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+    // Verify the method uses the expected parameter style
+    // This will throw if the signature doesn't match expectations
+    await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the detected style
-    const result =
-      parameterStyle === "individual"
-        ? await method({
-            ik: entryIk,
-            ledgerIk,
-            amount: "300",
-          })
-        : await method({
-            ik: entryIk,
-            ledgerIk,
-            parameters: {
-              amount: "300",
-            },
-          });
+    // Call with the expected style
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "300",
+      },
+    });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -595,25 +593,18 @@ test("Entry type methods with underscore naming", async () => {
       };
     }>;
 
-    // Detect which parameter style the method uses
-    // This will throw if the method signature is unexpected
-    const parameterStyle = await detectParameterStyle(method, entryIk, ledgerIk);
+    // Verify the method uses the expected parameter style
+    // This will throw if the signature doesn't match expectations
+    await verifyParameterStyle(method, entryIk, ledgerIk);
 
-    // Call with the detected style
-    const result =
-      parameterStyle === "individual"
-        ? await method({
-            ik: entryIk,
-            ledgerIk,
-            amount: "400",
-          })
-        : await method({
-            ik: entryIk,
-            ledgerIk,
-            parameters: {
-              amount: "400",
-            },
-          });
+    // Call with the expected style
+    const result = await method({
+      ik: entryIk,
+      ledgerIk,
+      parameters: {
+        amount: "400",
+      },
+    });
 
     expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
     if (
@@ -776,29 +767,18 @@ test("Multiple entry types in single schema", async () => {
         };
       }>;
 
-      // Detect which parameter style the method uses
-      // This will throw if the method signature is unexpected
-      const parameterStyle = await detectParameterStyle(
-        method,
-        entryIk,
-        ledgerIk,
-      );
+      // Verify the method uses the expected parameter style
+      // This will throw if the signature doesn't match expectations
+      await verifyParameterStyle(method, entryIk, ledgerIk);
 
-      // Call with the detected style
-      const result =
-        parameterStyle === "individual"
-          ? await method({
-              ik: entryIk,
-              ledgerIk,
-              amount: "500",
-            })
-          : await method({
-              ik: entryIk,
-              ledgerIk,
-              parameters: {
-                amount: "500",
-              },
-            });
+      // Call with the expected style
+      const result = await method({
+        ik: entryIk,
+        ledgerIk,
+        parameters: {
+          amount: "500",
+        },
+      });
 
       expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
       if (
@@ -895,35 +875,18 @@ test("Post method parameter style verification", async () => {
     ] as (args: unknown) => Promise<unknown>;
 
     const entryIk = uuidv4();
-    // This will throw if the method signature is unexpected
-    const parameterStyle = await detectParameterStyle(
-      method,
-      entryIk,
-      ledgerIk,
-    );
-
-    // Verify we detected a valid style
-    expect(parameterStyle).toMatch(/^(individual|parameters-object)$/);
+    // Verify the method uses the expected parameter style
+    // This will throw if the signature doesn't match expectations
+    await verifyParameterStyle(method, entryIk, ledgerIk);
 
     // Verify that calling with the wrong style fails
-    if (parameterStyle === "individual") {
-      // Should fail with parameters object if method expects individual params
-      await expect(
-        method({
-          ik: uuidv4(),
-          ledgerIk,
-          parameters: { amount: "100" },
-        })
-      ).rejects.toThrow();
-    } else {
-      // Should fail with individual params if method expects parameters object
-      await expect(
-        method({
-          ik: uuidv4(),
-          ledgerIk,
-          amount: "100",
-        })
-      ).rejects.toThrow();
-    }
+    // Since EXPECTED_PARAMETER_STYLE is "parameters-object", test that individual params fail
+    await expect(
+      method({
+        ik: uuidv4(),
+        ledgerIk,
+        amount: "100",
+      })
+    ).rejects.toThrow();
   }
 });
