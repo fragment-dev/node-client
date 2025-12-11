@@ -10,7 +10,6 @@ mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: Sa
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -50,10 +49,10 @@ mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: Sa
     }
   }
 }
-mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!, $feeAmount: String!) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 2, posted: $posted, parameters: {amount: $amount}}
+    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 2, posted: $posted, parameters: {amount: $amount, feeAmount: $feeAmount}}
   ) {
     __typename
     ... on AddLedgerEntryResult {
@@ -62,7 +61,6 @@ mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk:
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -114,7 +112,6 @@ mutation PostFundingSettlement($ik: SafeString!, $posted: DateTime, $ledgerIk: S
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {
@@ -166,7 +163,6 @@ mutation PostPaymentProcessing($ik: SafeString!, $posted: DateTime, $ledgerIk: S
         id
         created
         type
-        typeVersion
         posted
         description
         ledger {

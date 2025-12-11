@@ -56,6 +56,12 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
             type: LedgerAccountTypes.Liability,
             children: [],
           },
+          {
+            key: "expense-root",
+            name: "Expense Root",
+            type: LedgerAccountTypes.Expense,
+            children: [],
+          },
         ],
       },
       ledgerEntries: {
@@ -95,7 +101,7 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
                 account: {
                   path: "asset-root",
                 },
-                amount: "{{amount}}",
+                amount: "{{amount}} - {{feeAmount}}",
                 currency: {
                   code: CurrencyCode.Usd,
                 },
@@ -106,6 +112,16 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
                   path: "liability-root",
                 },
                 amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "fee-line",
+                account: {
+                  path: "expense-root",
+                },
+                amount: "{{feeAmount}}",
                 currency: {
                   code: CurrencyCode.Usd,
                 },
@@ -148,12 +164,13 @@ test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async (
     expect(result1.addLedgerEntry.entry.typeVersion).toEqual(1);
   }
 
-  // Use the generated PostUserFundsAccount_v2 method for version 2
+  // Use the generated PostUserFundsAccount_v2 method for version 2 (with feeAmount)
   const entryIk2 = uuidv4();
   const result2 = await client.PostUserFundsAccount_v2({
     ik: entryIk2,
     ledgerIk,
     amount: "300",
+    feeAmount: "10",
   });
 
   expect(result2.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");

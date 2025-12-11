@@ -14,6 +14,12 @@
         "name": "Liability Root",
         "type": "liability",
         "children": []
+      },
+      {
+        "key": "expense-root",
+        "name": "Expense Root",
+        "type": "expense",
+        "children": []
       }
     ]
   },
@@ -54,7 +60,7 @@
             "account": {
               "path": "asset-root"
             },
-            "amount": "{{amount}}",
+            "amount": "{{amount}} - {{feeAmount}}",
             "currency": {
               "code": "USD"
             }
@@ -65,6 +71,16 @@
               "path": "liability-root"
             },
             "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "fee-line",
+            "account": {
+              "path": "expense-root"
+            },
+            "amount": "{{feeAmount}}",
             "currency": {
               "code": "USD"
             }
