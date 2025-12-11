@@ -33,10 +33,10 @@ const getClient = async () => {
   });
 };
 
-test("PostUserFundsAccount method from generated SDK", async () => {
+test("PostUserFundsAccount method from generated SDK (version 1 and 2)", async () => {
   const client = await getClient();
 
-  // Create schema matching the test schema
+  // Create schema matching the test schema with both typeVersions
   const schemaKey = uuidv4();
   const storeSchemaResponse = await client.storeSchema({
     schema: {
@@ -62,6 +62,33 @@ test("PostUserFundsAccount method from generated SDK", async () => {
         types: [
           {
             type: "user-funds-account",
+            typeVersion: 1,
+            lines: [
+              {
+                key: "asset-line",
+                account: {
+                  path: "asset-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+              {
+                key: "liability-line",
+                account: {
+                  path: "liability-root",
+                },
+                amount: "{{amount}}",
+                currency: {
+                  code: CurrencyCode.Usd,
+                },
+              },
+            ],
+          },
+          {
+            type: "user-funds-account",
+            typeVersion: 2,
             lines: [
               {
                 key: "asset-line",
@@ -107,25 +134,46 @@ test("PostUserFundsAccount method from generated SDK", async () => {
     "CreateLedgerResult"
   );
 
-  // Use the generated PostUserFundsAccount method directly
-  const entryIk = uuidv4();
-  const result = await client.PostUserFundsAccount({
-    ik: entryIk,
+  // Use the generated PostUserFundsAccount method for version 1
+  const entryIk1 = uuidv4();
+  const result1 = await client.PostUserFundsAccount({
+    ik: entryIk1,
     ledgerIk,
     amount: "200",
   });
 
-  expect(result.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
-  if (result.addLedgerEntry.__typename === "AddLedgerEntryResult") {
-    expect(result.addLedgerEntry.entry.type).toEqual("user-funds-account");
+  expect(result1.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+  if (result1.addLedgerEntry.__typename === "AddLedgerEntryResult") {
+    expect(result1.addLedgerEntry.entry.type).toEqual("user-funds-account");
+    expect(result1.addLedgerEntry.entry.typeVersion).toEqual(1);
   }
 
-  const getEntryResponse = await client.getLedgerEntry({
-    ik: entryIk,
+  // Use the generated PostUserFundsAccount_v2 method for version 2
+  const entryIk2 = uuidv4();
+  const result2 = await client.PostUserFundsAccount_v2({
+    ik: entryIk2,
     ledgerIk,
+    amount: "300",
   });
 
-  expect(getEntryResponse.ledgerEntry).toBeDefined();
+  expect(result2.addLedgerEntry.__typename).toEqual("AddLedgerEntryResult");
+  if (result2.addLedgerEntry.__typename === "AddLedgerEntryResult") {
+    expect(result2.addLedgerEntry.entry.type).toEqual("user-funds-account");
+    expect(result2.addLedgerEntry.entry.typeVersion).toEqual(2);
+  }
+
+  // Verify both entries exist
+  const getEntryResponse1 = await client.getLedgerEntry({
+    ik: entryIk1,
+    ledgerIk,
+  });
+  expect(getEntryResponse1.ledgerEntry).toBeDefined();
+
+  const getEntryResponse2 = await client.getLedgerEntry({
+    ik: entryIk2,
+    ledgerIk,
+  });
+  expect(getEntryResponse2.ledgerEntry).toBeDefined();
 });
 
 test("PostFundingSettlement method from generated SDK", async () => {

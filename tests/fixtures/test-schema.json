@@ -21,6 +21,33 @@
     "types": [
       {
         "type": "user-funds-account",
+        "typeVersion": 1,
+        "lines": [
+          {
+            "key": "asset-line",
+            "account": {
+              "path": "asset-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          },
+          {
+            "key": "liability-line",
+            "account": {
+              "path": "liability-root"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "user-funds-account",
+        "typeVersion": 2,
         "lines": [
           {
             "key": "asset-line",

@@ -3092,7 +3092,17 @@ export type PostUserFundsAccountMutationVariables = Exact<{
 }>;
 
 
-export type PostUserFundsAccountMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
+export type PostUserFundsAccountMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, typeVersion?: number | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
+
+export type PostUserFundsAccount_V2MutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  posted?: InputMaybe<Scalars['DateTime']['input']>;
+  ledgerIk: Scalars['SafeString']['input'];
+  amount: Scalars['String']['input'];
+}>;
+
+
+export type PostUserFundsAccount_V2Mutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, typeVersion?: number | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
 
 export type PostFundingSettlementMutationVariables = Exact<{
   ik: Scalars['SafeString']['input'];
@@ -3102,7 +3112,7 @@ export type PostFundingSettlementMutationVariables = Exact<{
 }>;
 
 
-export type PostFundingSettlementMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
+export type PostFundingSettlementMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, typeVersion?: number | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
 
 export type PostPaymentProcessingMutationVariables = Exact<{
   ik: Scalars['SafeString']['input'];
@@ -3112,14 +3122,14 @@ export type PostPaymentProcessingMutationVariables = Exact<{
 }>;
 
 
-export type PostPaymentProcessingMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
+export type PostPaymentProcessingMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, typeVersion?: number | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
 
 
 export const PostUserFundsAccountDocument = gql`
     mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", posted: $posted, parameters: {amount: $amount}}
+    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 1, posted: $posted, parameters: {amount: $amount}}
   ) {
     __typename
     ... on AddLedgerEntryResult {
@@ -3128,6 +3138,61 @@ export const PostUserFundsAccountDocument = gql`
         id
         created
         type
+        typeVersion
+        posted
+        description
+        ledger {
+          ik
+        }
+        tags {
+          key
+          value
+        }
+        groups {
+          key
+          value
+        }
+      }
+      lines {
+        account {
+          path
+        }
+        amount
+        currency {
+          code
+          customCurrencyId
+        }
+        key
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+    `;
+export const PostUserFundsAccount_V2Document = gql`
+    mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 2, posted: $posted, parameters: {amount: $amount}}
+  ) {
+    __typename
+    ... on AddLedgerEntryResult {
+      entry {
+        ik
+        id
+        created
+        type
+        typeVersion
         posted
         description
         ledger {
@@ -3181,6 +3246,7 @@ export const PostFundingSettlementDocument = gql`
         id
         created
         type
+        typeVersion
         posted
         description
         ledger {
@@ -3234,6 +3300,7 @@ export const PostPaymentProcessingDocument = gql`
         id
         created
         type
+        typeVersion
         posted
         description
         ledger {
@@ -3284,6 +3351,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
   return {
     PostUserFundsAccount(variables: PostUserFundsAccountMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostUserFundsAccountMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<PostUserFundsAccountMutation>(PostUserFundsAccountDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostUserFundsAccount', 'mutation', variables);
+    },
+    PostUserFundsAccount_v2(variables: PostUserFundsAccount_V2MutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostUserFundsAccount_V2Mutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostUserFundsAccount_V2Mutation>(PostUserFundsAccount_V2Document, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostUserFundsAccount_v2', 'mutation', variables);
     },
     PostFundingSettlement(variables: PostFundingSettlementMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostFundingSettlementMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<PostFundingSettlementMutation>(PostFundingSettlementDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostFundingSettlement', 'mutation', variables);
