@@ -42,7 +42,7 @@ const createRequestWrapper =
   (
     tokenCache: TokenCache,
     params: CreateFragmentClientParams,
-    retryConfig: RetryConfig,
+    retryConfig: RetryConfig
   ): SdkFunctionWrapper =>
   async (request, operationName, operationType) => {
     const { clientId, clientSecret, scope, authUrl } = params;
@@ -86,7 +86,7 @@ const createRequestWrapper =
           bail(
             new FragmentError({
               message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
-            }),
+            })
           );
         }
         const [graphQlOperationName] = dataKeys;
@@ -94,7 +94,7 @@ const createRequestWrapper =
           .__typename as string;
         const { code, message } = (data as any)[graphQlOperationName];
         const retryable = getRetryableField(
-          (data as any)[graphQlOperationName] as any,
+          (data as any)[graphQlOperationName] as any
         );
 
         switch (typeName) {
@@ -127,7 +127,7 @@ const createRequestWrapper =
                 new FragmentError({
                   message: `Encountered unsupported error type: ${typeName}`,
                   cause: (data as any)[graphQlOperationName],
-                }),
+                })
               );
             }
             break;
@@ -144,7 +144,7 @@ const createRequestWrapper =
             bail(
               new FragmentError({
                 cause: error,
-              }),
+              })
             );
           } else {
             bail(error as Error);
@@ -155,7 +155,7 @@ const createRequestWrapper =
       bail(
         new FragmentError({
           message: `Unknown operation type: ${operationType}`,
-        }),
+        })
       );
 
       return {} as never;
@@ -181,7 +181,7 @@ type CreateFragmentClientResult<
 export const createFragmentClient = <
   T extends (
     client: GraphQLClient,
-    wrapper: SdkFunctionWrapper,
+    wrapper: SdkFunctionWrapper
   ) => any = typeof getDefaultSdk,
 >({
   params,
@@ -200,6 +200,6 @@ export const createFragmentClient = <
   }
   return getDefaultSdk(
     graphql,
-    requestWrapper,
+    requestWrapper
   ) as CreateFragmentClientResult<T>;
 };

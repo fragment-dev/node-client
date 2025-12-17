@@ -1211,6 +1211,15 @@ export type LedgerAccountConsistencyConfigInput = {
      * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
+    /**
+     * EXPERIMENTAL: If set to `strong`, then a Ledger Account's `totalBalance` updates will be strongly consistent with the API response.
+     * This Ledger Account's balance will be updated and available for strongly consistent reads before you receive an API response.
+     *
+     * Otherwise if unset or set to `eventual`, `totalBalance` updates are applied asynchronously and may not be immediately reflected in queries.
+     *
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+     */
+    totalBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
 };
 /** Represents a data migration for a specific Ledger Account in a Ledger. */
 export type LedgerAccountDataMigration = LedgerDataMigration & {
@@ -1312,10 +1321,20 @@ export type LedgerAccountsConnection = {
 export type LedgerAccountsFilterSet = {
     /** Use this to filter Ledger Accounts by their clearing account status */
     clearingStatus?: InputMaybe<LedgerAccountClearingStatusFilter>;
+    /**
+     * Filter by the earliest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+     * Only clearing accounts where the minimum posted timestamp (across all currencies) matches this filter will be included.
+     */
+    earliestPostedTimestamp?: InputMaybe<DateTimeFilter>;
     /** Use this to filter Ledger Accounts by their parent status */
     hasParentLedgerAccount?: InputMaybe<Scalars["Boolean"]["input"]>;
     /** Use this to filter Ledger Accounts by their linked status */
     isLinkedAccount?: InputMaybe<Scalars["Boolean"]["input"]>;
+    /**
+     * Filter by the latest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+     * Only clearing accounts where the maximum posted timestamp (across all currencies) matches this filter will be included.
+     */
+    latestPostedTimestamp?: InputMaybe<DateTimeFilter>;
     /** Use this to filter Ledger Accounts by their ID or path */
     ledgerAccount?: InputMaybe<LedgerAccountFilter>;
     /** Use this to filter Ledger Accounts by their external linked account ID */
