@@ -1,5 +1,5 @@
 /**
  * A string representing the current version of the package.
  */
-export declare const version: "1.3.4";
+export declare const version: "1.4.0";
 //# sourceMappingURL=version.d.ts.map
