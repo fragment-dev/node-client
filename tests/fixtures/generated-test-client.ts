@@ -656,6 +656,8 @@ export type GroupBalanceAccountFilter = {
 
 /** Filter for finding entries by group membership */
 export type GroupFilter = {
+  /** Find entries that have ALL of the specified groups. Limited to 10 items maximum. */
+  all?: InputMaybe<Array<GroupMatchInput>>;
   /** Find groups that exactly match this group */
   equalTo?: InputMaybe<GroupMatchInput>;
   /** Find groups that match any of these groups */
@@ -1014,6 +1016,14 @@ export type LedgerAccount = {
    * this will be composed of the IKs of an account and its ancestors.
    */
   path: Scalars['String']['output'];
+  /**
+   * The posted timestamp window for this clearing account, representing the earliest and latest
+   * posted timestamps across all currencies.
+   *
+   * This field is null when the Ledger Account is not configured to be a Clearing account
+   * or when no entries have been posted to this account.
+   */
+  postedWindow?: Maybe<PostedWindow>;
   type: LedgerAccountTypes;
   /** A list of external account transactions that haven't been reconciled to this ledger account yet. Only populated for linked ledger accounts. Transactions are sorted in reverse chronological order by posted date. */
   unreconciledTxs: TxsConnection;
@@ -1407,7 +1417,7 @@ export type LedgerAccountsFilterSet = {
    * Filter by the earliest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
    * Only clearing accounts where the minimum posted timestamp (across all currencies) matches this filter will be included.
    */
-  earliestPostedTimestamp?: InputMaybe<DateTimeFilter>;
+  earliestPosted?: InputMaybe<DateTimeFilter>;
   /** Use this to filter Ledger Accounts by their parent status */
   hasParentLedgerAccount?: InputMaybe<Scalars['Boolean']['input']>;
   /** Use this to filter Ledger Accounts by their linked status */
@@ -1416,7 +1426,7 @@ export type LedgerAccountsFilterSet = {
    * Filter by the latest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
    * Only clearing accounts where the maximum posted timestamp (across all currencies) matches this filter will be included.
    */
-  latestPostedTimestamp?: InputMaybe<DateTimeFilter>;
+  latestPosted?: InputMaybe<DateTimeFilter>;
   /** Use this to filter Ledger Accounts by their ID or path */
   ledgerAccount?: InputMaybe<LedgerAccountFilter>;
   /** Use this to filter Ledger Accounts by their external linked account ID */
@@ -2323,6 +2333,18 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']['output']>;
 };
 
+/**
+ * The posted timestamp window for a clearing account, representing the earliest and latest
+ * posted timestamps across all currencies.
+ */
+export type PostedWindow = {
+  __typename?: 'PostedWindow';
+  /** The earliest posted timestamp across all currencies for this clearing account. */
+  earliest: Scalars['DateTime']['output'];
+  /** The latest posted timestamp across all currencies for this clearing account. */
+  latest: Scalars['DateTime']['output'];
+};
+
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type Query = {
   __typename?: 'Query';
@@ -2554,6 +2576,8 @@ export type SchemaVersionsArgs = {
 export type SchemaConditionInput = {
   /** A condition on the `ownBalance` of the Ledger Account. */
   ownBalance?: InputMaybe<SchemaInt96ConditionInput>;
+  /** A condition on the `totalBalance` of the Ledger Account. */
+  totalBalance?: InputMaybe<SchemaInt96ConditionInput>;
 };
 
 /** A paginated list of Schemas in a Workspace. */
@@ -2923,6 +2947,8 @@ export type SyncCustomTxsResult = {
 
 /** Filters a result set based on the tags it contains. */
 export type TagFilter = {
+  /** Matches entries that have ALL of the specified tags. The key and value are both matched exactly. Limited to 10 items maximum. */
+  all?: InputMaybe<Array<TagMatchInput>>;
   /** Matches tag values based on the existence of the provided string within the tag value. The key is matched exactly. */
   contains?: InputMaybe<TagMatchInput>;
   /** Matches tags based on the exact value provided. The key and value are both matched exactly. */
