@@ -1232,12 +1232,16 @@ export type LedgerAccountCondition = {
   __typename?: 'LedgerAccountCondition';
   /** A condition that the `ownBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs/read-balances) for more on the different types of Ledger Account balances. */
   ownBalance?: Maybe<Int96Condition>;
+  /** A condition that the `totalBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs/read-balances) for more on the different types of Ledger Account balances. */
+  totalBalance?: Maybe<Int96Condition>;
 };
 
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountConditionInput = {
   /** A condition that the ownBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/read-balances) for more on the different types of Ledger Account balances. */
-  ownBalance: Int96ConditionInput;
+  ownBalance?: InputMaybe<Int96ConditionInput>;
+  /** A condition that the totalBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/read-balances) for more on the different types of Ledger Account balances. */
+  totalBalance?: InputMaybe<Int96ConditionInput>;
 };
 
 /**
