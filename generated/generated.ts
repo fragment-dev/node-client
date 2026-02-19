@@ -328,6 +328,8 @@ export enum CurrencyCode {
   Byr = "BYR",
   Bzd = "BZD",
   Cad = "CAD",
+  Cadc = "CADC",
+  Cadt = "CADT",
   Cdf = "CDF",
   Chf = "CHF",
   Clp = "CLP",
@@ -349,6 +351,7 @@ export enum CurrencyCode {
   Etb = "ETB",
   Eth = "ETH",
   Eur = "EUR",
+  Eurc = "EURC",
   Fjd = "FJD",
   Fkp = "FKP",
   Gbp = "GBP",
@@ -458,6 +461,7 @@ export enum CurrencyCode {
   Uni = "UNI",
   Usd = "USD",
   Usdc = "USDC",
+  Usdg = "USDG",
   Usdt = "USDT",
   Uyu = "UYU",
   Uzs = "UZS",
@@ -1065,6 +1069,7 @@ export type LedgerAccount = {
 /** A ledger account is a container for money */
 export type LedgerAccountBalanceArgs = {
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+  consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
   currency?: InputMaybe<CurrencyMatchInput>;
 };
 
@@ -1092,6 +1097,7 @@ export type LedgerAccountBalancesArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
+  consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
@@ -1107,6 +1113,7 @@ export type LedgerAccountBalancesDuringArgs = {
 /** A ledger account is a container for money */
 export type LedgerAccountChildBalanceArgs = {
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
+  consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
   currency?: InputMaybe<CurrencyMatchInput>;
 };
 
@@ -1134,6 +1141,7 @@ export type LedgerAccountChildBalancesArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   at?: InputMaybe<Scalars["LastMoment"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
+  consistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
