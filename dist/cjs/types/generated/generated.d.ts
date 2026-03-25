@@ -833,6 +833,11 @@ export type Ledger = {
     ledgerEntryGroup: LedgerEntryGroup;
     /** Query LedgerEntryGroups in Ledger. Ledger Entry Groups are paginated and returned in order lexigraphically key then inverse chronologically by created. */
     ledgerEntryGroups: LedgerEntryGroupsConnection;
+    /**
+     * List Ledger Lines across accounts in this Ledger, sorted by `posted` in reverse chronological order.
+     * Specify a single Ledger Account via the `ledgerAccount` field, or query across multiple accounts using the `path` filter or `ledgerAccount.in`.
+     */
+    lines: LedgerLinesConnection;
     /** Schema migrations affecting this Ledger. */
     migrations: LedgerMigrationConnection;
     /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference/api-mutations#updateledger) mutation. */
@@ -891,6 +896,14 @@ export type LedgerLedgerEntryGroupsArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     before?: InputMaybe<Scalars["String"]["input"]>;
     filter?: InputMaybe<LedgerEntryGroupsFilterSet>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+/** Ledgers are databases designed for managing money */
+export type LedgerLinesArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    filter: LedgerLinesFilterSet;
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
@@ -1818,6 +1831,8 @@ export type LedgerLine = {
     reversedBy?: Maybe<LedgerLine>;
     /** The Ledger Line whose balance changes are reversed by this Ledger Line. */
     reverses?: Maybe<LedgerLine>;
+    /** Tags attached to this Ledger Line. */
+    tags: Array<LedgerLineTag>;
     /** The transaction linked to this LedgerLine */
     tx?: Maybe<Tx>;
     /** Fragment ID of the transaction linked to this LedgerLine */
@@ -1841,6 +1856,8 @@ export type LedgerLineInput = {
     description?: InputMaybe<Scalars["String"]["input"]>;
     /** Optional identifier for Ledger Line. You can filter lines by key using [LedgerLinesFilterSet](https://fragment.dev/api-reference/api-types#filter-types-ledgerlinesfilterset). */
     key?: InputMaybe<Scalars["String"]["input"]>;
+    /** A set of tags attached to this Ledger Line. */
+    tags?: InputMaybe<Array<LedgerEntryTagInput>>;
     /** Required for reconcileTx to specify the transaction being reconciled, you can specify either the FRAGMENT ID or external ID of the transaction */
     tx?: InputMaybe<TxMatchInput>;
 };
@@ -1848,6 +1865,14 @@ export type LedgerLineInput = {
 export type LedgerLineMatchInput = {
     /** The FRAGMENT ID of the ledger line */
     id: Scalars["ID"]["input"];
+};
+/** A tag attached to a Ledger Line. */
+export type LedgerLineTag = {
+    __typename?: "LedgerLineTag";
+    /** The key of this tag. */
+    key: Scalars["SafeString"]["output"];
+    /** The value associated with this tag's key. */
+    value: Scalars["SafeString"]["output"];
 };
 /** A paginated list of Ledger Lines */
 export type LedgerLinesConnection = {
@@ -1874,10 +1899,21 @@ export type LedgerLinesFilterSet = {
     isReversed?: InputMaybe<Scalars["Boolean"]["input"]>;
     /** Use this to filter Ledger Lines by key. Ledger Line keys are defined in Schemas. */
     key?: InputMaybe<StringFilter>;
+    /** Specify which Ledger Account to read lines from. Required when querying lines via `Ledger.lines` without a `path` filter. Not allowed when querying via `LedgerAccount.lines`. */
+    ledgerAccount?: InputMaybe<LedgerAccountFilter>;
+    /**
+     * A filter that string matches the account path. Wildcards ('*') can be used to return lines across multiple accounts.
+     * To search for all instances of a a Ledger Account template, use the `matches` filter  with an wildcard character in place of the template value e.g. `assets/user:*`. This returns lines from all instances of this template, interleaved by `posted` timestamp.
+     * To search for all descendant Ledger Accounts under a given path, use a trailing `/*` in the `matches` filter e.g. `assets/user:user-1>/*`. This returns lines from all descendants at any depth, but not lines from the parent account at `assets/user:user-1>`.
+     * Cannot be combined with `ledgerAccount` filter. Not allowed when querying via `LedgerAccount.lines`. You cannot use wildcards for both descendant and template instance matching in the same query.
+     */
+    path?: InputMaybe<StringMatchFilter>;
     /** Filter by the posted timestamp of the Ledger Line. */
     posted?: InputMaybe<DateTimeFilter>;
     /** Use this filter to find hidden Ledger Lines. */
     showHidden?: InputMaybe<Scalars["Boolean"]["input"]>;
+    /** Filter Ledger Lines by tag. Only matches lines that have the specified tags attached directly to them. */
+    tag?: InputMaybe<TagFilter>;
     type?: InputMaybe<TxTypeFilter>;
 };
 /** Specify a Ledger by using `id` or `ik`. */
@@ -2158,6 +2194,19 @@ export type PageInfo = {
     hasPreviousPage: Scalars["Boolean"]["output"];
     startCursor?: Maybe<Scalars["String"]["output"]>;
 };
+/**
+ * Controls how lines are posted for a Ledger Entry.
+ * New entries created via the dashboard default to `net_amounts`.
+ * Existing entries without this field set are treated as `raw_lines`.
+ */
+export declare enum PostLinesAs {
+    /** Lines targeting the same account, currency, and tx are aggregated into a single line with the net amount. Lines that sum to zero are skipped. If all lines sum to zero, no lines are skipped. */
+    NetAmounts = "net_amounts",
+    /** Lines are posted as-is without aggregation. */
+    RawLines = "raw_lines",
+    /** Lines with a zero amount are skipped, but lines are not aggregated. If all lines have a zero amount, no lines are skipped. */
+    SkipZeroLines = "skip_zero_lines"
+}
 /**
  * The posted timestamp window for a clearing account, representing the earliest and latest
  * posted timestamps across all currencies.
@@ -2517,6 +2566,11 @@ export type SchemaLedgerEntryConditionInput = {
     postcondition?: InputMaybe<SchemaConditionInput>;
     /** A `precondition` must be met before any Ledger Entry updates are applied. */
     precondition?: InputMaybe<SchemaConditionInput>;
+    /**
+     * Repeated expansion configuration. When set, this condition is expanded at runtime for each element
+     * in the array parameter named by the key.
+     */
+    repeated?: InputMaybe<SchemaRepeatedConfigInput>;
 };
 /** A Ledger Entry Group associated with a Ledger Entry type. */
 export type SchemaLedgerEntryGroupInput = {
@@ -2541,6 +2595,8 @@ export type SchemaLedgerEntryInput = {
     lines?: InputMaybe<Array<SchemaLedgerLineInput>>;
     /** Fixed partial set of parameters to be included in a templated Ledger Entry. */
     parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+    /** Controls how lines are posted. When set to `net_amounts`, all lines targeting the same account, currency, and tx are aggregated into a single line with the net amount, and lines that sum to zero are skipped. When set to `skip_zero_lines`, lines with a zero amount are skipped but not aggregated. In both modes, if all lines are zero, no lines are skipped. When set to `raw_lines`, lines are posted as-is without aggregation. New entries created via the dashboard default to `net_amounts`. Existing entries without this field set are treated as `raw_lines`. */
+    postLinesAs?: InputMaybe<PostLinesAs>;
     /** The status of this Ledger Entry. Defaults to active. */
     status?: InputMaybe<SchemaLedgerEntryStatus>;
     /** Ledger Entries posted with this type will be associated with these tags. */
@@ -2588,6 +2644,13 @@ export type SchemaLedgerLineInput = {
     /** The key for the Ledger Line. Ledger Line keys must be unique within a Ledger Entry. Key can be filtered on as part of the LedgerLinesFilterSet. */
     key: Scalars["SafeString"]["input"];
     /**
+     * Repeated expansion configuration. When set, this line is expanded at runtime for each element
+     * in the array parameter named by the key.
+     */
+    repeated?: InputMaybe<SchemaRepeatedConfigInput>;
+    /** Tags to attach to this Ledger Line. Supports parameterized values via handlebars syntax. */
+    tags?: InputMaybe<Array<SchemaLedgerEntryTagInput>>;
+    /**
      * The external transaction to reconcile.
      * This field is required if the Ledger Account being posted to is a Linked Ledger Account. Otherwise, this field is disallowed.
      * It supports parameters in its attributes via handlebars syntax.
@@ -2605,6 +2668,14 @@ export type SchemaMatchInput = {
     key: Scalars["SafeString"]["input"];
     /** Optional parameter to specify version of requested Schema. If not provided, it defaults to 0, representing the latest available version for the provided Schema key. */
     version?: InputMaybe<Scalars["Int"]["input"]>;
+};
+/**
+ * Configuration for repeated expansion of a line or condition. The key names a client-supplied
+ * array parameter whose elements each generate one copy of the line or condition at runtime.
+ */
+export type SchemaRepeatedConfigInput = {
+    /** The key of the array parameter whose elements expand this line or condition. */
+    key: Scalars["SafeString"]["input"];
 };
 /**
  * Matches a transaction at an external system.
