@@ -5,7 +5,7 @@ set -e
 # Run this when you update tests/fixtures/test-schema.json
 
 echo "Generating GraphQL queries from test schema..."
-fragment gen-graphql \
+yarn exec fragment gen-graphql \
   --path tests/fixtures/test-schema.json \
   --output tests/fixtures/test-schema-queries.graphql
 
