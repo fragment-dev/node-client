@@ -2,4 +2,4 @@
 /**
  * A string representing the current version of the package.
  */
-export const version = '1.5.0';
+export const version = '1.5.1';
