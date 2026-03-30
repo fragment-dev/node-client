@@ -46,6 +46,9 @@ jobs:
         working-directory: ./node-client
         run: yarn
 
+      - name: Install Fragment CLI
+        run: npm install -g @fragment-dev/cli
+
       - name: Copy queries.graphql
         working-directory: ./node-client
         run: |

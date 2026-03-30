@@ -1059,6 +1059,8 @@ export const ListLedgerAccountBalancesDocument = gql `
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
     $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $childBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -1077,8 +1079,16 @@ export const ListLedgerAccountBalancesDocument = gql `
             at: $balanceAt
             consistencyMode: $ownBalanceConsistencyMode
           )
-          childBalance(currency: $balanceCurrency, at: $balanceAt)
-          balance(currency: $balanceCurrency, at: $balanceAt)
+          childBalance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $childBalanceConsistencyMode
+          )
+          balance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $balanceConsistencyMode
+          )
         }
         pageInfo {
           hasNextPage
@@ -1098,6 +1108,8 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql `
     $before: String
     $balanceAt: LastMoment
     $ownBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $childBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $balancesConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -1123,7 +1135,10 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql `
               amount
             }
           }
-          childBalances(at: $balanceAt) {
+          childBalances(
+            at: $balanceAt
+            consistencyMode: $childBalancesConsistencyMode
+          ) {
             nodes {
               currency {
                 code
@@ -1132,7 +1147,7 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql `
               amount
             }
           }
-          balances(at: $balanceAt) {
+          balances(at: $balanceAt, consistencyMode: $balancesConsistencyMode) {
             nodes {
               currency {
                 code
@@ -1188,30 +1203,16 @@ export const GetLedgerAccountBalanceDocument = gql `
     $ledgerIk: SafeString!
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
-    $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
       id
       path
-      ownBalance(
+      balance(
         currency: $balanceCurrency
         at: $balanceAt
-        consistencyMode: $ownBalanceConsistencyMode
+        consistencyMode: $balanceConsistencyMode
       )
-    }
-  }
-`;
-export const GetLedgerAccountBalanceWithChildRollupDocument = gql `
-  query GetLedgerAccountBalanceWithChildRollup(
-    $path: String!
-    $ledgerIk: SafeString!
-    $balanceCurrency: CurrencyMatchInput
-    $balanceAt: LastMoment
-  ) {
-    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
-      id
-      path
-      balance(currency: $balanceCurrency, at: $balanceAt)
     }
   }
 `;
@@ -1669,9 +1670,6 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         getLedgerAccountBalance(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getLedgerAccountBalance", "query", variables);
-        },
-        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceWithChildRollupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
         getSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetSchemaDocument, variables, {

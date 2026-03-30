@@ -1293,6 +1293,17 @@ export type LedgerAccountConsistencyConfig = {
    * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
    */
   ownBalanceUpdates: BalanceUpdateConsistencyMode;
+  /**
+   * If set to `strong`, then a Ledger Account's `ownBalance` updates will be strongly consistent with
+   * the API response. This Ledger Account's balance will be updated and
+   * available for strongly consistent reads once you receive an API response.
+   *
+   * Otherwise if not set or set to `eventual`, `ownBalance` updates are applied
+   * asynchronously and may not be immediately reflected in queries.
+   *
+   * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+   */
+  totalBalanceUpdates?: Maybe<BalanceUpdateConsistencyMode>;
 };
 
 /**
@@ -1447,7 +1458,7 @@ export type LedgerAccountsFilterSet = {
   /** Use this to filter Ledger Accounts by their clearing account status */
   clearingStatus?: InputMaybe<LedgerAccountClearingStatusFilter>;
   /**
-   * Filter by the earliest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+   * Filter by the earliest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
    * Only clearing accounts where the minimum posted timestamp (across all currencies) matches this filter will be included.
    */
   earliestPosted?: InputMaybe<DateTimeFilter>;
@@ -1456,7 +1467,7 @@ export type LedgerAccountsFilterSet = {
   /** Use this to filter Ledger Accounts by their linked status */
   isLinkedAccount?: InputMaybe<Scalars["Boolean"]["input"]>;
   /**
-   * Filter by the latest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+   * Filter by the latest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
    * Only clearing accounts where the maximum posted timestamp (across all currencies) matches this filter will be included.
    */
   latestPosted?: InputMaybe<DateTimeFilter>;
@@ -3958,6 +3969,8 @@ export type ListLedgerAccountBalancesQueryVariables = Exact<{
   balanceCurrency?: InputMaybe<CurrencyMatchInput>;
   balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
   ownBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  childBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  balanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 
 export type ListLedgerAccountBalancesQuery = {
@@ -3999,6 +4012,8 @@ export type ListMultiCurrencyLedgerAccountBalancesQueryVariables = Exact<{
   before?: InputMaybe<Scalars["String"]["input"]>;
   balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
   ownBalancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  childBalancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  balancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 
 export type ListMultiCurrencyLedgerAccountBalancesQuery = {
@@ -4107,27 +4122,10 @@ export type GetLedgerAccountBalanceQueryVariables = Exact<{
   ledgerIk: Scalars["SafeString"]["input"];
   balanceCurrency?: InputMaybe<CurrencyMatchInput>;
   balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
-  ownBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+  balanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 
 export type GetLedgerAccountBalanceQuery = {
-  __typename?: "Query";
-  ledgerAccount?: {
-    __typename?: "LedgerAccount";
-    id: string;
-    path: string;
-    ownBalance: string;
-  } | null;
-};
-
-export type GetLedgerAccountBalanceWithChildRollupQueryVariables = Exact<{
-  path: Scalars["String"]["input"];
-  ledgerIk: Scalars["SafeString"]["input"];
-  balanceCurrency?: InputMaybe<CurrencyMatchInput>;
-  balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
-}>;
-
-export type GetLedgerAccountBalanceWithChildRollupQuery = {
   __typename?: "Query";
   ledgerAccount?: {
     __typename?: "LedgerAccount";
@@ -5224,6 +5222,8 @@ export const ListLedgerAccountBalancesDocument = gql`
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
     $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $childBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -5242,8 +5242,16 @@ export const ListLedgerAccountBalancesDocument = gql`
             at: $balanceAt
             consistencyMode: $ownBalanceConsistencyMode
           )
-          childBalance(currency: $balanceCurrency, at: $balanceAt)
-          balance(currency: $balanceCurrency, at: $balanceAt)
+          childBalance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $childBalanceConsistencyMode
+          )
+          balance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $balanceConsistencyMode
+          )
         }
         pageInfo {
           hasNextPage
@@ -5263,6 +5271,8 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql`
     $before: String
     $balanceAt: LastMoment
     $ownBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $childBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $balancesConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -5288,7 +5298,10 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql`
               amount
             }
           }
-          childBalances(at: $balanceAt) {
+          childBalances(
+            at: $balanceAt
+            consistencyMode: $childBalancesConsistencyMode
+          ) {
             nodes {
               currency {
                 code
@@ -5297,7 +5310,7 @@ export const ListMultiCurrencyLedgerAccountBalancesDocument = gql`
               amount
             }
           }
-          balances(at: $balanceAt) {
+          balances(at: $balanceAt, consistencyMode: $balancesConsistencyMode) {
             nodes {
               currency {
                 code
@@ -5353,30 +5366,16 @@ export const GetLedgerAccountBalanceDocument = gql`
     $ledgerIk: SafeString!
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
-    $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
       id
       path
-      ownBalance(
+      balance(
         currency: $balanceCurrency
         at: $balanceAt
-        consistencyMode: $ownBalanceConsistencyMode
+        consistencyMode: $balanceConsistencyMode
       )
-    }
-  }
-`;
-export const GetLedgerAccountBalanceWithChildRollupDocument = gql`
-  query GetLedgerAccountBalanceWithChildRollup(
-    $path: String!
-    $ledgerIk: SafeString!
-    $balanceCurrency: CurrencyMatchInput
-    $balanceAt: LastMoment
-  ) {
-    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
-      id
-      path
-      balance(currency: $balanceCurrency, at: $balanceAt)
     }
   }
 `;
@@ -6135,22 +6134,6 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "getLedgerAccountBalance",
-        "query",
-        variables,
-      );
-    },
-    GetLedgerAccountBalanceWithChildRollup(
-      variables: GetLedgerAccountBalanceWithChildRollupQueryVariables,
-      requestHeaders?: GraphQLClientRequestHeaders,
-    ): Promise<GetLedgerAccountBalanceWithChildRollupQuery> {
-      return withWrapper(
-        (wrappedRequestHeaders) =>
-          client.request<GetLedgerAccountBalanceWithChildRollupQuery>(
-            GetLedgerAccountBalanceWithChildRollupDocument,
-            variables,
-            { ...requestHeaders, ...wrappedRequestHeaders },
-          ),
-        "GetLedgerAccountBalanceWithChildRollup",
         "query",
         variables,
       );

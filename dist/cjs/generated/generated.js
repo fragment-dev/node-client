@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = void 0;
+exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -1063,6 +1063,8 @@ exports.ListLedgerAccountBalancesDocument = (0, graphql_tag_1.gql) `
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
     $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $childBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -1081,8 +1083,16 @@ exports.ListLedgerAccountBalancesDocument = (0, graphql_tag_1.gql) `
             at: $balanceAt
             consistencyMode: $ownBalanceConsistencyMode
           )
-          childBalance(currency: $balanceCurrency, at: $balanceAt)
-          balance(currency: $balanceCurrency, at: $balanceAt)
+          childBalance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $childBalanceConsistencyMode
+          )
+          balance(
+            currency: $balanceCurrency
+            at: $balanceAt
+            consistencyMode: $balanceConsistencyMode
+          )
         }
         pageInfo {
           hasNextPage
@@ -1102,6 +1112,8 @@ exports.ListMultiCurrencyLedgerAccountBalancesDocument = (0, graphql_tag_1.gql) 
     $before: String
     $balanceAt: LastMoment
     $ownBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $childBalancesConsistencyMode: ReadBalanceConsistencyMode
+    $balancesConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledger(ledger: { ik: $ledgerIk }) {
       id
@@ -1127,7 +1139,10 @@ exports.ListMultiCurrencyLedgerAccountBalancesDocument = (0, graphql_tag_1.gql) 
               amount
             }
           }
-          childBalances(at: $balanceAt) {
+          childBalances(
+            at: $balanceAt
+            consistencyMode: $childBalancesConsistencyMode
+          ) {
             nodes {
               currency {
                 code
@@ -1136,7 +1151,7 @@ exports.ListMultiCurrencyLedgerAccountBalancesDocument = (0, graphql_tag_1.gql) 
               amount
             }
           }
-          balances(at: $balanceAt) {
+          balances(at: $balanceAt, consistencyMode: $balancesConsistencyMode) {
             nodes {
               currency {
                 code
@@ -1192,30 +1207,16 @@ exports.GetLedgerAccountBalanceDocument = (0, graphql_tag_1.gql) `
     $ledgerIk: SafeString!
     $balanceCurrency: CurrencyMatchInput
     $balanceAt: LastMoment
-    $ownBalanceConsistencyMode: ReadBalanceConsistencyMode
+    $balanceConsistencyMode: ReadBalanceConsistencyMode
   ) {
     ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
       id
       path
-      ownBalance(
+      balance(
         currency: $balanceCurrency
         at: $balanceAt
-        consistencyMode: $ownBalanceConsistencyMode
+        consistencyMode: $balanceConsistencyMode
       )
-    }
-  }
-`;
-exports.GetLedgerAccountBalanceWithChildRollupDocument = (0, graphql_tag_1.gql) `
-  query GetLedgerAccountBalanceWithChildRollup(
-    $path: String!
-    $ledgerIk: SafeString!
-    $balanceCurrency: CurrencyMatchInput
-    $balanceAt: LastMoment
-  ) {
-    ledgerAccount(ledgerAccount: { ledger: { ik: $ledgerIk }, path: $path }) {
-      id
-      path
-      balance(currency: $balanceCurrency, at: $balanceAt)
     }
   }
 `;
@@ -1664,9 +1665,6 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         getLedgerAccountBalance(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedgerAccountBalance", "query", variables);
-        },
-        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceWithChildRollupDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
         getSchema(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getSchema", "query", variables);
