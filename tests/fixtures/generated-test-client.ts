@@ -1286,11 +1286,11 @@ export type LedgerAccountConsistencyConfig = {
    */
   ownBalanceUpdates: BalanceUpdateConsistencyMode;
   /**
-   * If set to `strong`, then a Ledger Account's `ownBalance` updates will be strongly consistent with
+   * If set to `strong`, then a Ledger Account's `ownBalance`, `childBalance`, and `balance` fields' updates will be strongly consistent with
    * the API response. This Ledger Account's balance will be updated and
    * available for strongly consistent reads once you receive an API response.
    *
-   * Otherwise if not set or set to `eventual`, `ownBalance` updates are applied
+   * Otherwise if not set or set to `eventual`, updates are applied
    * asynchronously and may not be immediately reflected in queries.
    *
    * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
