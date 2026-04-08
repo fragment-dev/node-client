@@ -1285,6 +1285,17 @@ export type LedgerAccountConsistencyConfig = {
    * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
    */
   ownBalanceUpdates: BalanceUpdateConsistencyMode;
+  /**
+   * If set to `strong`, then a Ledger Account's `ownBalance`, `childBalance`, and `balance` fields' updates will be strongly consistent with
+   * the API response. This Ledger Account's balance will be updated and
+   * available for strongly consistent reads once you receive an API response.
+   *
+   * Otherwise if not set or set to `eventual`, updates are applied
+   * asynchronously and may not be immediately reflected in queries.
+   *
+   * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+   */
+  totalBalanceUpdates?: Maybe<BalanceUpdateConsistencyMode>;
 };
 
 /**
@@ -1441,7 +1452,7 @@ export type LedgerAccountsFilterSet = {
   /** Use this to filter Ledger Accounts by their clearing account status */
   clearingStatus?: InputMaybe<LedgerAccountClearingStatusFilter>;
   /**
-   * Filter by the earliest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+   * Filter by the earliest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
    * Only clearing accounts where the minimum posted timestamp (across all currencies) matches this filter will be included.
    */
   earliestPosted?: InputMaybe<DateTimeFilter>;
@@ -1450,7 +1461,7 @@ export type LedgerAccountsFilterSet = {
   /** Use this to filter Ledger Accounts by their linked status */
   isLinkedAccount?: InputMaybe<Scalars['Boolean']['input']>;
   /**
-   * Filter by the latest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+   * Filter by the latest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
    * Only clearing accounts where the maximum posted timestamp (across all currencies) matches this filter will be included.
    */
   latestPosted?: InputMaybe<DateTimeFilter>;

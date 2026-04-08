@@ -1216,6 +1216,17 @@ export type LedgerAccountConsistencyConfig = {
      * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates: BalanceUpdateConsistencyMode;
+    /**
+     * If set to `strong`, then a Ledger Account's `ownBalance`, `childBalance`, and `balance` fields' updates will be strongly consistent with
+     * the API response. This Ledger Account's balance will be updated and
+     * available for strongly consistent reads once you receive an API response.
+     *
+     * Otherwise if not set or set to `eventual`, updates are applied
+     * asynchronously and may not be immediately reflected in queries.
+     *
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+     */
+    totalBalanceUpdates?: Maybe<BalanceUpdateConsistencyMode>;
 };
 /**
  * The payload configuring the consistency for this Ledger Account.
@@ -1357,7 +1368,7 @@ export type LedgerAccountsFilterSet = {
     /** Use this to filter Ledger Accounts by their clearing account status */
     clearingStatus?: InputMaybe<LedgerAccountClearingStatusFilter>;
     /**
-     * Filter by the earliest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+     * Filter by the earliest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
      * Only clearing accounts where the minimum posted timestamp (across all currencies) matches this filter will be included.
      */
     earliestPosted?: InputMaybe<DateTimeFilter>;
@@ -1366,7 +1377,7 @@ export type LedgerAccountsFilterSet = {
     /** Use this to filter Ledger Accounts by their linked status */
     isLinkedAccount?: InputMaybe<Scalars["Boolean"]["input"]>;
     /**
-     * Filter by the latest posted timestamp across all currencies for clearing accounts. This must be used alongside the clearingStatus filter.
+     * Filter by the latest posted timestamp across all currencies for clearing accounts. You must also provide clearingStatus in the same filter.
      * Only clearing accounts where the maximum posted timestamp (across all currencies) matches this filter will be included.
      */
     latestPosted?: InputMaybe<DateTimeFilter>;
@@ -3641,6 +3652,8 @@ export type ListLedgerAccountBalancesQueryVariables = Exact<{
     balanceCurrency?: InputMaybe<CurrencyMatchInput>;
     balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
     ownBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    childBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    balanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 export type ListLedgerAccountBalancesQuery = {
     __typename?: "Query";
@@ -3680,6 +3693,8 @@ export type ListMultiCurrencyLedgerAccountBalancesQueryVariables = Exact<{
     before?: InputMaybe<Scalars["String"]["input"]>;
     balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
     ownBalancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    childBalancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    balancesConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 export type ListMultiCurrencyLedgerAccountBalancesQuery = {
     __typename?: "Query";
@@ -3784,24 +3799,9 @@ export type GetLedgerAccountBalanceQueryVariables = Exact<{
     ledgerIk: Scalars["SafeString"]["input"];
     balanceCurrency?: InputMaybe<CurrencyMatchInput>;
     balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
-    ownBalanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
+    balanceConsistencyMode?: InputMaybe<ReadBalanceConsistencyMode>;
 }>;
 export type GetLedgerAccountBalanceQuery = {
-    __typename?: "Query";
-    ledgerAccount?: {
-        __typename?: "LedgerAccount";
-        id: string;
-        path: string;
-        ownBalance: string;
-    } | null;
-};
-export type GetLedgerAccountBalanceWithChildRollupQueryVariables = Exact<{
-    path: Scalars["String"]["input"];
-    ledgerIk: Scalars["SafeString"]["input"];
-    balanceCurrency?: InputMaybe<CurrencyMatchInput>;
-    balanceAt?: InputMaybe<Scalars["LastMoment"]["input"]>;
-}>;
-export type GetLedgerAccountBalanceWithChildRollupQuery = {
     __typename?: "Query";
     ledgerAccount?: {
         __typename?: "LedgerAccount";
@@ -4215,7 +4215,6 @@ export declare const ListLedgerAccountBalancesDocument: import("graphql").Docume
 export declare const ListMultiCurrencyLedgerAccountBalancesDocument: import("graphql").DocumentNode;
 export declare const GetLedgerAccountLinesDocument: import("graphql").DocumentNode;
 export declare const GetLedgerAccountBalanceDocument: import("graphql").DocumentNode;
-export declare const GetLedgerAccountBalanceWithChildRollupDocument: import("graphql").DocumentNode;
 export declare const GetSchemaDocument: import("graphql").DocumentNode;
 export declare const ListLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const GetWorkspaceDocument: import("graphql").DocumentNode;
@@ -4250,7 +4249,6 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     listMultiCurrencyLedgerAccountBalances(variables: ListMultiCurrencyLedgerAccountBalancesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListMultiCurrencyLedgerAccountBalancesQuery>;
     getLedgerAccountLines(variables: GetLedgerAccountLinesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLedgerAccountLinesQuery>;
     getLedgerAccountBalance(variables: GetLedgerAccountBalanceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLedgerAccountBalanceQuery>;
-    GetLedgerAccountBalanceWithChildRollup(variables: GetLedgerAccountBalanceWithChildRollupQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetLedgerAccountBalanceWithChildRollupQuery>;
     getSchema(variables: GetSchemaQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetSchemaQuery>;
     listLedgerEntries(variables: ListLedgerEntriesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListLedgerEntriesQuery>;
     getWorkspace(variables?: GetWorkspaceQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetWorkspaceQuery>;
