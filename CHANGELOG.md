@@ -21,13 +21,65 @@ are not documented here.
 
 ### Upgrade Guide
 
-1. Upgrade your schema to use total balance consistency.
-   - Change `ownBalanceUpdates` to `totalBalanceUpdates` in ledger account consistency config.
-   - Change `ownBalance` to `totalBalance` in entry conditions.
-   - A schema can use only one of `ownBalanceUpdates` or `totalBalanceUpdates` for consistency and conditions.
-   - Deploy the new schema.
-2. You can now set `consistencyConfig.totalBalanceUpdates: strong` on any account in the tree to make its balance strongly consistent.
-3. Upgrade the Fragment SDK to this version.
-   - `GetLedgerAccountBalance` now returns total `balance` (self + children) instead of `ownBalance`. 
-    - Change `$ownBalanceConsistencyMode` to `$balanceConsistencyMode`
-  - Use `GetLedgerAccountBalance` instead of `GetLedgerAccountBalanceWithChildRollup`.
+1.  **Upgrade your schema to use the total balance consistency feature:**
+
+    1.  Add the path to your schema JSON or the JSON itself to the top of the prompt below and give it to your LLM of choice. It'll make some small changes to your consistency configs and conditions.
+    2.  Deploy the new schema
+```
+ Fragment schema JSON path or full schema: <YOUR_SCHEMA_OR_PATH>                                           
+                                                                                                                                                                                                                        
+  Above is a Fragment schema JSON file or the path to it. Transform it to use total balances by following   
+  the rules below, then validate the result. If a file path is provided, edit the file in place — do not
+  create a copy or temporary file.  
+                                                                                                            
+  Rules                                                           
+
+  1. Entry conditions
+
+  Replace ownBalance with totalBalance in all entry conditions.
+
+  2. Default consistency config                                                                             
+   
+  In the schema's defaultConsistencyConfig, replace ownBalanceUpdates with totalBalanceUpdates.             
+                                                                  
+  3. Ledger account consistency config
+
+  For each ledger account (not groups — groups keep ownBalanceUpdates unchanged), determine the new         
+  consistency value using these three questions:
+                                                                                                            
+  - (A) Is this account a leaf on any entry line? Check whether any entry in the schema references this
+  account as a line target.
+  - (B) Is this account strongly consistent? Either it has an explicit ownBalanceUpdates: "strong", or it
+  inherits "strong" from defaultConsistencyConfig.                                                          
+  - (C) Does this account have an entry condition? Check whether any entry condition references this
+  account.                                                                                                  
+                                                                  
+  Then apply:
+
+  - (A) Yes + (B) Yes           → totalBalanceUpdates: "strong"
+  - (C) Yes                      → totalBalanceUpdates: "strong"
+  - (A) No  + (B) Yes + (C) No  → totalBalanceUpdates: "eventual"
+  - (B) No  + (C) No            → totalBalanceUpdates: "eventual"
+
+  In short: an account gets totalBalanceUpdates: "strong" if it is either a leaf on an entry line and was   
+  already strongly consistent, or has an entry condition. Everything else becomes "eventual".
+                                                                                                            
+  4. Groups are excluded                                          
+
+  Do not change ownBalanceUpdates on groups. This migration only applies to ledger accounts.
+
+  Pre-Validation                                                                                            
+   
+  Validate the transformed schema before returning it:                                                      
+                                                                  
+  - If the input was a file path, run: fragment verify-schema --path <path-to-schema> --verbose
+  - If the input was pasted schema JSON, write it to a temporary file and run: fragment verify-schema --path
+   <temp-file> --verbose                                                                                    
+  - If you don't have access to a shell, skip this step.
+```
+
+2.  **Upgrade your Fragment SDK to the latest version:**
+
+    1.  `GetLedgerAccountBalance` now returns total `balance` (self + children) instead of `ownBalance`.
+        1.  Change `$ownBalanceConsistencyMode` to `$balanceConsistencyMode`
+    2.  Use `GetLedgerAccountBalance` instead of `GetLedgerAccountBalanceWithChildRollup`.
