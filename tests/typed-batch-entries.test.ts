@@ -192,6 +192,31 @@ describe("identity", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it("warns when two operations at one identity bind different entry fields", () => {
+    const warn = vi.fn();
+    // Feeding both the plain and the runtime-args generation of one Schema in
+    // together is the realistic way to hit this: they describe the same entries
+    // but bind different fields, and the first one in wins.
+    const payloads = derive(
+      [
+        entryOperation({ name: "PostThing" }),
+        entryOperation({
+          name: "PostThingRuntimeArgs",
+          parameters:
+            "tags: $tags, parameters: {amount: $amount}",
+          variables:
+            "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!, $tags: [LedgerEntryTagInput!]",
+        }),
+      ].join("\n"),
+      warn,
+    );
+
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0].fields.map((field) => field.name)).toEqual(["ledgerIk"]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("different entry fields");
+  });
+
   it("warns when two operations at one identity declare different parameters", () => {
     const warn = vi.fn();
     const payloads = derive(
@@ -223,9 +248,9 @@ describe("parameters", () => {
     );
 
     expect(
-      payloads[0].parameters.map(({ wireName, required }) => ({
-        wireName,
-        required,
+      payloads[0].parameters.map((parameter) => ({
+        wireName: parameter.wireName,
+        required: parameter.source === "variable" && parameter.required,
       })),
     ).toEqual([
       { wireName: "amount", required: true },
@@ -250,15 +275,23 @@ describe("parameters", () => {
     ]);
   });
 
-  it("skips a parameter whose value is fixed by the operation", () => {
+  it("marks a parameter fixed by the operation rather than caller-supplied", () => {
     const payloads = derive(
       entryOperation({
         parameters: `parameters: {amount: $amount, currency: "USD", nested: {a: 1}}`,
       }),
     );
 
-    expect(payloads[0].parameters.map((parameter) => parameter.wireName)).toEqual([
-      "amount",
+    // All three are posted, in source order; only `amount` comes from the caller.
+    expect(
+      payloads[0].parameters.map((parameter) => [
+        parameter.wireName,
+        parameter.source,
+      ]),
+    ).toEqual([
+      ["amount", "variable"],
+      ["currency", "fixed"],
+      ["nested", "fixed"],
     ]);
   });
 
@@ -284,6 +317,34 @@ describe("parameters", () => {
       parametersMode: "absent",
       parameters: [],
     });
+  });
+
+  it("keeps a value the operation fixes, without offering it to the caller", () => {
+    const warn = vi.fn();
+    const output = generate(
+      entryOperation({
+        parameters: `posted: "2024-01-01", parameters: {amount: $amount, currency: "USD"}`,
+      }),
+      warn,
+    );
+
+    // The operation fixed these, so the entry still posts them — the caller just
+    // has no say in them. This is normal, so it is not warned about.
+    expect(builderBody(output, "thingV1")).toContain("    posted: '2024-01-01',");
+    expect(builderBody(output, "thingV1")).toContain("      currency: 'USD',");
+    expect(payloadType(output, "ThingV1")).not.toContain("posted");
+    expect(payloadType(output, "ThingV1")).not.toContain("currency");
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("posts fixed parameters even when the caller can set none of them", () => {
+    const output = generate(
+      entryOperation({ parameters: `parameters: {currency: "USD"}` }),
+    );
+
+    expect(builderBody(output, "thingV1")).toContain("      currency: 'USD',");
+    // Nothing is caller-settable, so the payload has no `parameters` field.
+    expect(payloadType(output, "ThingV1")).not.toContain("parameters");
   });
 
   it("warns and skips a parameter bound to an undeclared variable", () => {

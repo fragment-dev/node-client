@@ -17,6 +17,7 @@
  */
 import {
   Kind,
+  valueFromASTUntyped,
   type DocumentNode,
   type ListTypeNode,
   type NamedTypeNode,
@@ -24,37 +25,47 @@ import {
   type OperationDefinitionNode,
   type TypeNode,
   type VariableDefinitionNode,
+  type VariableNode,
 } from "graphql";
 
-/** A single caller-supplied parameter of a typed entry payload. */
-export type TypedEntryParameter = {
-  /** The parameter name from the Schema. Goes on the wire verbatim. */
-  wireName: string;
-  /** The operation variable the parameter is bound to. */
-  variableName: string;
+/** A value the source operation fixes, which the caller cannot set. */
+export type FixedValue = {
+  /** Fixed by the operation, so it is posted as written rather than exposed. */
+  source: "fixed";
+  /** The value itself, already reduced from its AST node. */
+  value: unknown;
+};
+
+/** A value the caller supplies, typed by the variable the operation binds. */
+export type BoundValue = {
+  source: "variable";
   /** The variable's declared type, which is where the payload's type comes from. */
   type: TypeNode;
   /** True when the variable's type is non-null. */
   required: boolean;
 };
 
+/** A single parameter of a typed entry payload. */
+export type TypedEntryParameter = {
+  /** The parameter name from the Schema. Goes on the wire verbatim. */
+  wireName: string;
+} & (BoundValue | FixedValue);
+
 /**
  * An entry field a typed payload lets the caller set, derived from the source
  * operation binding it to a variable.
  */
 export type TypedEntryField = {
-  /** The field name on the generated payload. */
+  /** The field name on the generated payload, for a value the caller supplies. */
   name: string;
   /** The `LedgerEntryInput` field it sets. */
   wireName: string;
   /**
-   * Set when the caller's value is a match key nested inside the wire field —
-   * `ledgerIk` sets `ledger: { ik }`, so this is `"ik"` there.
+   * Set when the value is a match key nested inside the wire field — `ledgerIk`
+   * sets `ledger: { ik }`, so this is `"ik"` there.
    */
   wireKey?: string;
-  type: TypeNode;
-  required: boolean;
-};
+} & (BoundValue | FixedValue);
 
 /** How the source operation exposes `parameters`, if at all. */
 export type ParametersMode =
@@ -191,12 +202,13 @@ const getFields = (
     const bind = ({
       name,
       wireKey,
-      variableName,
+      variable,
     }: {
       name: string;
       wireKey?: string;
-      variableName: string;
+      variable: VariableNode;
     }) => {
+      const variableName = variable.name.value;
       const definition = findVariableDefinition(operation, variableName);
       if (!definition) {
         warn(
@@ -208,13 +220,14 @@ const getFields = (
         name,
         wireName,
         wireKey,
+        source: "variable",
         type: definition.type,
         required: definition.type.kind === Kind.NON_NULL_TYPE,
       });
     };
 
     if (entryField.value.kind === Kind.VARIABLE) {
-      bind({ name: wireName, variableName: entryField.value.name.value });
+      bind({ name: wireName, variable: entryField.value });
       return;
     }
 
@@ -222,18 +235,34 @@ const getFields = (
     // supplies the Idempotency Key, so the payload exposes it as `ledgerIk`.
     if (entryField.value.kind === Kind.OBJECT) {
       entryField.value.fields.forEach((matchField) => {
-        if (matchField.value.kind !== Kind.VARIABLE) {
+        const key = matchField.name.value;
+        if (matchField.value.kind === Kind.VARIABLE) {
+          bind({
+            name: `${wireName}${key.charAt(0).toUpperCase()}${key.slice(1)}`,
+            wireKey: key,
+            variable: matchField.value,
+          });
           return;
         }
-        bind({
-          name: `${wireName}${matchField.name.value
-            .charAt(0)
-            .toUpperCase()}${matchField.name.value.slice(1)}`,
-          wireKey: matchField.name.value,
-          variableName: matchField.value.name.value,
+        fields.push({
+          name: key,
+          wireName,
+          wireKey: key,
+          source: "fixed",
+          value: valueFromASTUntyped(matchField.value),
         });
       });
+      return;
     }
+
+    // The operation fixes this field, so the caller cannot set it — but it is
+    // still part of the entry the operation describes, so it is still posted.
+    fields.push({
+      name: wireName,
+      wireName,
+      source: "fixed",
+      value: valueFromASTUntyped(entryField.value),
+    });
   });
 
   return fields;
@@ -271,7 +300,12 @@ const getParameters = (
   // Source order is the only ordering all SDKs can agree on, so it is preserved.
   parametersField.value.fields.forEach((field) => {
     if (field.value.kind !== Kind.VARIABLE) {
-      // Fixed by the operation, so not caller-supplied.
+      // Fixed by the operation: not the caller's to set, but still posted.
+      parameters.push({
+        wireName: field.name.value,
+        source: "fixed",
+        value: valueFromASTUntyped(field.value),
+      });
       return;
     }
     const variableName = field.value.name.value;
@@ -284,11 +318,16 @@ const getParameters = (
     }
     parameters.push({
       wireName: field.name.value,
-      variableName,
+      source: "variable",
       type: definition.type,
       required: definition.type.kind === Kind.NON_NULL_TYPE,
     });
   });
+
+  if (parameters.length === 0) {
+    // An empty object posts nothing, so the payload takes no parameters.
+    return { parameters: [], parametersMode: "absent" };
+  }
 
   return { parameters, parametersMode: "typed" };
 };
@@ -297,9 +336,23 @@ const identityOf = (
   payload: Pick<TypedEntryPayload, "entryType" | "typeVersion">,
 ) => JSON.stringify([payload.entryType, payload.typeVersion]);
 
-const sameParameters = (a: TypedEntryParameter[], b: TypedEntryParameter[]) =>
-  a.length === b.length &&
-  a.every((parameter, index) => parameter.wireName === b[index].wireName);
+const sameNames = (
+  a: ReadonlyArray<{ wireName: string }>,
+  b: ReadonlyArray<{ wireName: string }>,
+) => a.length === b.length && a.every(({ wireName }, i) => wireName === b[i].wireName);
+
+/**
+ * What the two operations disagree about, if anything. Both halves matter: the
+ * winning operation decides the payload's parameters *and* which entry fields a
+ * caller may set, so losing either silently is a surprise.
+ */
+const describeConflict = (a: TypedEntryPayload, b: TypedEntryPayload) => {
+  const conflicts = [
+    !sameNames(a.parameters, b.parameters) ? "parameters" : undefined,
+    !sameNames(a.fields, b.fields) ? "entry fields" : undefined,
+  ].filter((conflict): conflict is string => conflict !== undefined);
+  return conflicts.join(" and ");
+};
 
 /**
  * Derives one payload per `(type, typeVersion)` pair found in the given
@@ -346,11 +399,13 @@ export const deriveTypedEntryPayloads = (
       const existing = byIdentity.get(identity);
       if (existing) {
         // The CLI and API guarantee one Ledger Entry per (type, typeVersion), so
-        // two operations at one identity declare the same parameters. Differing
-        // sets mean the .graphql is stale relative to the Schema.
-        if (!sameParameters(existing.parameters, payload.parameters)) {
+        // two operations at one identity describe the same entry. Differing sets
+        // mean the .graphql is stale, or that two generations of it were fed in
+        // together — runtime-args operations bind fields the plain ones do not.
+        const conflict = describeConflict(existing, payload);
+        if (conflict) {
           warn(
-            `Operations \`${existing.operationName}\` and \`${payload.operationName}\` both describe \`${payload.entryType}\` (typeVersion ${payload.typeVersion}) but declare different parameters. Using \`${existing.operationName}\`; your operations may be stale relative to your Schema.`,
+            `Operations \`${existing.operationName}\` and \`${payload.operationName}\` both describe \`${payload.entryType}\` (typeVersion ${payload.typeVersion}) but declare different ${conflict}. Using \`${existing.operationName}\`; check that your operations are all generated from the same Schema.`,
           );
         }
         return;
@@ -432,6 +487,23 @@ export const collectScalarNames = (schema: DocumentNode): Set<string> => {
 const quote = (value: string): string =>
   `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 
+/** A value the operation fixed, as a TypeScript literal in the file's style. */
+const renderLiteral = (value: unknown): string => {
+  if (typeof value === "string") {
+    return quote(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(renderLiteral).join(", ")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value).map(
+      ([key, nested]) => `${renderPropertyKey(key)}: ${renderLiteral(nested)}`,
+    );
+    return entries.length > 0 ? `{ ${entries.join(", ")} }` : "{}";
+  }
+  return JSON.stringify(value) ?? "undefined";
+};
+
 const renderNamedType = (
   type: NamedTypeNode,
   scalars: ReadonlySet<string>,
@@ -465,7 +537,7 @@ const renderInnerType = (
  * carried by the optional marker instead: an unset field is omitted from the
  * request, never serialized as `null`.
  */
-export const renderVariableType = (
+const renderVariableType = (
   type: TypeNode,
   scalars: ReadonlySet<string>,
 ): string =>
@@ -491,7 +563,7 @@ const FIELD_DOCS: Record<string, string> = {
 };
 
 const renderField = (
-  field: TypedEntryField,
+  field: TypedEntryField & BoundValue,
   scalars: ReadonlySet<string>,
 ): string => {
   const optional = field.required ? "" : "?";
@@ -528,11 +600,16 @@ const renderParameters = (
       `  parameters${required}: ${type}${undefinable};`,
     ].join("\n");
   }
-  if (payload.parameters.length === 0) {
-    return "  parameters?: Record<string, never> | undefined;";
+  const bound = payload.parameters.filter(
+    (parameter): parameter is TypedEntryParameter & BoundValue =>
+      parameter.source === "variable",
+  );
+  if (bound.length === 0) {
+    // Every parameter is fixed by the operation, so there is nothing to set.
+    return undefined;
   }
 
-  const fields = payload.parameters.map((parameter) => {
+  const fields = bound.map((parameter) => {
     const optional = parameter.required ? "" : "?";
     const undefinable = parameter.required ? "" : " | undefined";
     return `    ${renderPropertyKey(parameter.wireName)}${optional}: ${renderVariableType(
@@ -540,9 +617,7 @@ const renderParameters = (
       scalars,
     )}${undefinable};`;
   });
-  const allOptional = payload.parameters.every(
-    (parameter) => !parameter.required,
-  );
+  const allOptional = bound.every((parameter) => !parameter.required);
   const marker = allOptional ? "?" : "";
   const trailer = allOptional ? " | undefined" : "";
 
@@ -575,6 +650,48 @@ const renderMember = ({
     : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
 });
 
+/**
+ * An `entry` key built from members that may each be absent — `parameters`, or a
+ * match object like `ledger`. When every member is optional the object is built
+ * first and spread only if it ended up with something in it, so an entry never
+ * carries an empty object the caller did not ask for.
+ */
+const renderObjectMember = ({
+  wireName,
+  members,
+  anyRequired,
+}: {
+  wireName: string;
+  /** Rendered member lines, without indentation. */
+  members: string[];
+  anyRequired: boolean;
+}): { member: EntryMember; prelude?: string } => {
+  if (anyRequired) {
+    return {
+      member: {
+        wireName,
+        code: [
+          `    ${wireName}: {`,
+          ...members.map((member) => `      ${member}`),
+          "    },",
+        ].join("\n"),
+      },
+    };
+  }
+
+  return {
+    prelude: [
+      `  const ${wireName} = {`,
+      ...members.map((member) => `    ${member}`),
+      "  };",
+    ].join("\n"),
+    member: {
+      wireName,
+      code: `    ...(Object.keys(${wireName}).length > 0 && { ${wireName} }),`,
+    },
+  };
+};
+
 /** The `parameters` key of the emitted `entry` literal, if the payload has one. */
 const renderParametersMember = (
   payload: NamedTypedEntryPayload,
@@ -592,61 +709,108 @@ const renderParametersMember = (
     };
   }
 
-  // A payload with a required parameter always takes a `parameters` object; one
-  // whose parameters are all optional may not, so it is read through `?.`.
-  const anyRequired = payload.parameters.some((parameter) => parameter.required);
-  const access = anyRequired ? "input.parameters" : "input.parameters?";
-  const members = payload.parameters.map((parameter) => {
-    const read = `${access}.${parameter.wireName}`;
-    const key = renderPropertyKey(parameter.wireName);
+  // A parameter that is required or fixed is always there, so `parameters` is
+  // too. When every one of them is optional it may be empty, and the caller may
+  // not have passed the object at all, so it is read through `?.`.
+  const alwaysPresent = payload.parameters.some(
+    (parameter) => parameter.source === "fixed" || parameter.required,
+  );
+  const access = alwaysPresent ? "input.parameters" : "input.parameters?";
+
+  return renderObjectMember({
+    wireName: "parameters",
+    anyRequired: alwaysPresent,
     // Parameters keep the order the source operation declares them in.
-    return parameter.required
-      ? `${key}: ${read},`
-      : `...(${read} !== undefined && { ${key}: ${read} }),`;
+    members: payload.parameters.map((parameter) => {
+      const key = renderPropertyKey(parameter.wireName);
+      if (parameter.source === "fixed") {
+        return `${key}: ${renderLiteral(parameter.value)},`;
+      }
+      const read = `${access}.${parameter.wireName}`;
+      return parameter.required
+        ? `${key}: ${read},`
+        : `...(${read} !== undefined && { ${key}: ${read} }),`;
+    }),
+  });
+};
+
+/**
+ * The `entry` keys the payload's own fields set. Fields are grouped by the
+ * `LedgerEntryInput` field they write, because a match object can be bound one
+ * key at a time — `ledger: { id: $id, ik: $ik }` is two payload fields writing
+ * one entry key, and they have to end up in one object rather than overwriting
+ * each other.
+ */
+const renderFieldMembers = (
+  payload: NamedTypedEntryPayload,
+): { members: EntryMember[]; preludes: string[] } => {
+  const groups = new Map<string, TypedEntryField[]>();
+  payload.fields.forEach((field) => {
+    groups.set(field.wireName, [...(groups.get(field.wireName) ?? []), field]);
   });
 
-  if (anyRequired) {
-    return {
-      member: {
-        wireName: "parameters",
-        code: [
-          "    parameters: {",
-          ...members.map((member) => `      ${member}`),
-          "    },",
-        ].join("\n"),
-      },
-    };
-  }
+  const members: EntryMember[] = [];
+  const preludes: string[] = [];
 
-  // Every parameter is optional, so `parameters` itself is omitted when the
-  // caller set none of them.
-  return {
-    prelude: [
-      "  const parameters = {",
-      ...members.map((member) => `    ${member}`),
-      "  };",
-    ].join("\n"),
-    member: {
-      wireName: "parameters",
-      code: "    ...(Object.keys(parameters).length > 0 && { parameters }),",
-    },
-  };
+  groups.forEach((fields, wireName) => {
+    if (fields.length === 1) {
+      const [field] = fields;
+      if (field.source === "fixed") {
+        const value = renderLiteral(field.value);
+        members.push({
+          wireName,
+          code: `    ${wireName}: ${
+            field.wireKey ? `{ ${field.wireKey}: ${value} }` : value
+          },`,
+        });
+        return;
+      }
+      members.push(
+        renderMember({
+          wireName,
+          required: field.required,
+          read: `input.${field.name}`,
+          value: field.wireKey
+            ? `{ ${field.wireKey}: input.${field.name} }`
+            : `input.${field.name}`,
+        }),
+      );
+      return;
+    }
+
+    const { member, prelude } = renderObjectMember({
+      wireName,
+      anyRequired: fields.some(
+        (field) => field.source === "fixed" || field.required,
+      ),
+      members: fields.map((field) => {
+        // Grouping only happens for match objects, so every field has a key.
+        const key = renderPropertyKey(field.wireKey ?? field.name);
+        if (field.source === "fixed") {
+          return `${key}: ${renderLiteral(field.value)},`;
+        }
+        const read = `input.${field.name}`;
+        return field.required
+          ? `${key}: ${read},`
+          : `...(${read} !== undefined && { ${key}: ${read} }),`;
+      }),
+    });
+    members.push(member);
+    if (prelude) {
+      preludes.push(prelude);
+    }
+  });
+
+  return { members, preludes };
 };
 
 const renderBuilderBody = (payload: NamedTypedEntryPayload): string => {
   const { member: parametersMember, prelude } = renderParametersMember(payload);
+  const fields = renderFieldMembers(payload);
+  const preludes = [...fields.preludes, ...(prelude ? [prelude] : [])];
 
   const members: EntryMember[] = [
-    ...payload.fields.map((field) =>
-      renderMember({
-        wireName: field.wireName,
-        required: field.required,
-        read: `input.${field.name}`,
-        value: field.wireKey
-          ? `{ ${field.wireKey}: input.${field.name} }`
-          : `input.${field.name}`,
-      }),
-    ),
+    ...fields.members,
     ...(parametersMember ? [parametersMember] : []),
     { wireName: "type", code: `    type: ${quote(payload.entryType)},` },
     { wireName: "typeVersion", code: `    typeVersion: ${payload.typeVersion},` },
@@ -672,10 +836,10 @@ const renderBuilderBody = (payload: NamedTypedEntryPayload): string => {
       `${indent}}`,
     ].join("\n");
 
-  // A payload whose parameters are all optional builds them first, so the block
-  // body is only used where it earns its keep.
-  return prelude
-    ? ` => {\n${prelude}\n  return ${literal("  ")};\n}`
+  // An object whose members are all optional is built first, so the block body
+  // is only used where it earns its keep.
+  return preludes.length > 0
+    ? ` => {\n${preludes.join("\n")}\n  return ${literal("  ")};\n}`
     : ` => (${literal("")})`;
 };
 
@@ -689,7 +853,11 @@ const renderPayload = (
     : "Scalars['SafeString']['input']";
   const members = [
     `  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */\n  ik: ${ikType};`,
-    ...payload.fields.map((field) => renderField(field, scalars)),
+    ...payload.fields
+      .filter((field): field is TypedEntryField & BoundValue =>
+        field.source === "variable",
+      )
+      .map((field) => renderField(field, scalars)),
     renderParameters(payload, scalars),
   ].filter((member): member is string => member !== undefined);
 

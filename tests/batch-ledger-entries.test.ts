@@ -14,6 +14,13 @@ import {
 // This entry type's operation binds tags, groups and conditions, so its payload
 // is the one that can exercise them.
 import { disputePayoutInitiateV1 } from "./fixtures/generated-template-runtime-args-client.js";
+import {
+  allOptionalV2,
+  eitherLedgerKeyV1,
+  fixedValuesV1,
+  runtimeLinesV1,
+  untypedParametersV1,
+} from "./fixtures/generated-edge-case-client.js";
 
 const API_URL = "https://fragment-api.example.com/graphql";
 const fragmentApi = graphql.link(API_URL);
@@ -416,5 +423,129 @@ describe("batch semantics", () => {
       }),
     ).rejects.toBeInstanceOf(AddLedgerEntriesError);
     expect(onRetry).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("payload shapes the Fragment CLI does not generate", () => {
+  // These come from tests/fixtures/edge-case-queries.graphql, hand-written to
+  // cover operation shapes the CLI has no reason to emit but a caller may write.
+
+  it("carries caller-supplied lines for an entry type the Schema does not fix", () => {
+    const built = runtimeLinesV1({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      lines: [
+        { account: { path: "asset-root" }, amount: "100", key: "asset-line" },
+        { account: { path: "liability-root" }, amount: "100", key: "liability-line" },
+      ],
+    });
+
+    expect(built.entry.lines).toHaveLength(2);
+    // `description` is bound by the operation but unset, so it stays off the wire.
+    expect("description" in built.entry).toBe(false);
+    expect("parameters" in built.entry).toBe(false);
+  });
+
+  it("passes an untyped parameters map straight through", () => {
+    const built = untypedParametersV1({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      parameters: { anything: "goes", nested: { deep: true } },
+    });
+
+    expect(built.entry.parameters).toEqual({
+      anything: "goes",
+      nested: { deep: true },
+    });
+  });
+
+  it("omits an all-optional parameters object the caller left empty", () => {
+    const empty = allOptionalV2({ ik: "entry-ik", ledgerIk: "ledger-ik" });
+    expect("parameters" in empty.entry).toBe(false);
+    // The version still reaches the wire.
+    expect(empty.entry.typeVersion).toEqual(2);
+
+    const partial = allOptionalV2({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      parameters: { note: "just this one" },
+    });
+    expect(partial.entry.parameters).toEqual({ note: "just this one" });
+  });
+
+  it("merges two payload fields that write one match object", () => {
+    // `ledger: { id: $ledgerId, ik: $ledgerIk }` is two payload fields writing
+    // one entry field, so setting both has to keep both.
+    const both = eitherLedgerKeyV1({
+      ik: "entry-ik",
+      ledgerId: "ledger-id",
+      ledgerIk: "ledger-ik",
+      parameters: { amount: "100" },
+    });
+    expect(both.entry.ledger).toEqual({ id: "ledger-id", ik: "ledger-ik" });
+
+    const byId = eitherLedgerKeyV1({
+      ik: "entry-ik",
+      ledgerId: "ledger-id",
+      parameters: { amount: "100" },
+    });
+    expect(byId.entry.ledger).toEqual({ id: "ledger-id" });
+
+    const neither = eitherLedgerKeyV1({
+      ik: "entry-ik",
+      parameters: { amount: "100" },
+    });
+    expect("ledger" in neither.entry).toBe(false);
+  });
+
+  it("sends an edge-case payload through a batch alongside a raw input", async () => {
+    await client.addLedgerEntries({
+      entries: [
+        runtimeLinesV1({
+          ik: "typed",
+          ledgerIk: "ledger-ik",
+          lines: [{ account: { path: "asset-root" }, amount: "100" }],
+        }),
+        {
+          ik: "raw",
+          entry: {
+            ledger: { ik: "ledger-ik" },
+            lines: [{ account: { path: "asset-root" }, amount: "100" }],
+          },
+        },
+      ],
+    });
+
+    expect(postedEntries().map((entry) => entry.ik)).toEqual(["typed", "raw"]);
+    expect(recorded?.body).not.toContain("null");
+  });
+});
+
+describe("values the operation fixes", () => {
+  it("posts them without offering them to the caller", () => {
+    const built = fixedValuesV1({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      parameters: { amount: "100" },
+    });
+
+    // The operation fixed these, so the batched entry carries them exactly as
+    // the single-entry mutation would.
+    expect(built.entry.description).toEqual("posted by the nightly sweep");
+    expect(built.entry.tags).toEqual([{ key: "source", value: "sweep" }]);
+    expect(built.entry.parameters).toEqual({ amount: "100", currency: "USD" });
+  });
+
+  it("keeps a fixed parameter in the order the operation declares it", () => {
+    const built = fixedValuesV1({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      parameters: { amount: "100" },
+    });
+
+    expect(Object.keys(built.entry.parameters ?? {})).toEqual([
+      "amount",
+      "currency",
+    ]);
   });
 });
