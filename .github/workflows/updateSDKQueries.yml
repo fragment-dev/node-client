@@ -53,6 +53,7 @@ jobs:
         working-directory: ./node-client
         run: |
           cp ../graphql-queries/queries.graphql src/queries/queries.graphql
+          cp ../graphql-queries/template-schema/schema.json ../graphql-queries/template-schema/*.graphql tests/template-schema/
 
       - name: Build
         working-directory: ./node-client

@@ -7,7 +7,13 @@ import {
 } from "../generated/generated.js";
 import { version } from "../generated/version.js";
 import { getToken } from "./getToken.js";
-import { BadRequestError, FragmentError, InternalError } from "./errors.js";
+import {
+  AddLedgerEntriesError,
+  BadRequestError,
+  FragmentError,
+  InternalError,
+  type LedgerEntryBatchError,
+} from "./errors.js";
 import { DEFAULT_RETRY_CONFIG, type RetryConfig } from "./retryConfig.js";
 
 type RetryableErrorObject<T extends object> = T & { retryable: boolean };
@@ -108,6 +114,25 @@ const createRequestWrapper =
             } else {
               throw err;
             }
+            break;
+          }
+          case "AddLedgerEntriesError": {
+            // The errors for each Ledger Entry responsible for the failure are
+            // what tell a caller which entries to fix, so they are surfaced
+            // rather than collapsed into the top-level message.
+            const err = new AddLedgerEntriesError({
+              code,
+              cause: (data as any)[graphQlOperationName],
+              message,
+              errors: ((data as any)[graphQlOperationName].errors ??
+                []) as LedgerEntryBatchError[],
+            });
+            if (!retryable) {
+              bail(err);
+            } else {
+              throw err;
+            }
+            break;
           }
           case "BadRequestError": {
             const err = new BadRequestError({
@@ -120,6 +145,7 @@ const createRequestWrapper =
             } else {
               throw err;
             }
+            break;
           }
           default:
             if (typeName.endsWith("Error")) {

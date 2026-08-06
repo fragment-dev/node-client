@@ -1,0 +1,1234 @@
+{
+  "key": "marketplace-template",
+  "name": "marketplace-template",
+  "chartOfAccounts": {
+    "defaultCurrencyMode": "multi",
+    "defaultConsistencyConfig": {
+      "lines": "eventual",
+      "totalBalanceUpdates": "strong",
+      "groups": []
+    },
+    "accounts": [
+      {
+        "key": "assets",
+        "type": "asset",
+        "name": "assets",
+        "currencyMode": "multi",
+        "consistencyConfig": {
+          "lines": "eventual",
+          "totalBalanceUpdates": "strong",
+          "groups": []
+        },
+        "children": [
+          {
+            "key": "cash",
+            "type": "asset",
+            "name": "cash",
+            "currencyMode": "multi",
+            "consistencyConfig": {
+              "lines": "eventual",
+              "totalBalanceUpdates": "strong",
+              "groups": []
+            },
+            "children": [],
+            "status": "active"
+          },
+          {
+            "key": "receivables",
+            "type": "asset",
+            "name": "receivables",
+            "currencyMode": "multi",
+            "consistencyConfig": {
+              "lines": "eventual",
+              "totalBalanceUpdates": "strong",
+              "groups": []
+            },
+            "children": [
+              {
+                "key": "user",
+                "type": "asset",
+                "name": "user",
+                "template": true,
+                "currencyMode": "multi",
+                "consistencyConfig": {
+                  "lines": "eventual",
+                  "totalBalanceUpdates": "strong",
+                  "groups": []
+                },
+                "children": [
+                  {
+                    "key": "order",
+                    "type": "asset",
+                    "name": "order",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [],
+                    "status": "active",
+                    "clearing": true
+                  }
+                ],
+                "status": "active"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "status": "active"
+      },
+      {
+        "key": "liabilities",
+        "type": "liability",
+        "name": "liabilities",
+        "currencyMode": "multi",
+        "consistencyConfig": {
+          "lines": "eventual",
+          "totalBalanceUpdates": "strong",
+          "groups": []
+        },
+        "children": [
+          {
+            "key": "payables",
+            "type": "liability",
+            "name": "payables",
+            "currencyMode": "multi",
+            "consistencyConfig": {
+              "lines": "eventual",
+              "totalBalanceUpdates": "strong",
+              "groups": []
+            },
+            "children": [
+              {
+                "key": "restaurant",
+                "type": "liability",
+                "name": "restaurant",
+                "template": true,
+                "currencyMode": "multi",
+                "consistencyConfig": {
+                  "lines": "eventual",
+                  "totalBalanceUpdates": "strong",
+                  "groups": []
+                },
+                "children": [
+                  {
+                    "key": "order",
+                    "type": "liability",
+                    "name": "order",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [],
+                    "status": "active",
+                    "clearing": true
+                  },
+                  {
+                    "key": "payout",
+                    "type": "liability",
+                    "name": "payout",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [],
+                    "status": "active",
+                    "clearing": true
+                  }
+                ],
+                "status": "active"
+              },
+              {
+                "key": "driver",
+                "type": "liability",
+                "name": "driver",
+                "template": true,
+                "currencyMode": "multi",
+                "consistencyConfig": {
+                  "lines": "eventual",
+                  "totalBalanceUpdates": "strong",
+                  "groups": []
+                },
+                "children": [
+                  {
+                    "key": "order",
+                    "type": "liability",
+                    "name": "order",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [],
+                    "status": "active",
+                    "clearing": true
+                  },
+                  {
+                    "key": "payout",
+                    "type": "liability",
+                    "name": "payout",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [],
+                    "status": "active",
+                    "clearing": true
+                  }
+                ],
+                "status": "active"
+              },
+              {
+                "key": "user",
+                "type": "liability",
+                "name": "user",
+                "template": true,
+                "currencyMode": "multi",
+                "consistencyConfig": {
+                  "lines": "eventual",
+                  "totalBalanceUpdates": "strong",
+                  "groups": []
+                },
+                "children": [
+                  {
+                    "key": "disputes",
+                    "type": "liability",
+                    "name": "disputes",
+                    "template": true,
+                    "currencyMode": "multi",
+                    "consistencyConfig": {
+                      "lines": "eventual",
+                      "totalBalanceUpdates": "strong",
+                      "groups": []
+                    },
+                    "children": [
+                      {
+                        "key": "payout",
+                        "type": "liability",
+                        "name": "payout",
+                        "template": true,
+                        "currencyMode": "multi",
+                        "consistencyConfig": {
+                          "lines": "eventual",
+                          "totalBalanceUpdates": "strong",
+                          "groups": []
+                        },
+                        "children": [],
+                        "status": "active",
+                        "clearing": true
+                      }
+                    ],
+                    "status": "active"
+                  }
+                ],
+                "status": "active"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "status": "active"
+      },
+      {
+        "key": "income",
+        "type": "income",
+        "name": "income",
+        "currencyMode": "multi",
+        "consistencyConfig": {
+          "lines": "eventual",
+          "totalBalanceUpdates": "strong",
+          "groups": []
+        },
+        "children": [
+          {
+            "key": "platform_fee",
+            "type": "income",
+            "name": "platform_fee",
+            "currencyMode": "multi",
+            "consistencyConfig": {
+              "lines": "eventual",
+              "totalBalanceUpdates": "strong",
+              "groups": []
+            },
+            "children": [],
+            "status": "active"
+          }
+        ],
+        "status": "active"
+      },
+      {
+        "key": "expenses",
+        "type": "expense",
+        "name": "expenses",
+        "currencyMode": "multi",
+        "consistencyConfig": {
+          "lines": "eventual",
+          "totalBalanceUpdates": "strong",
+          "groups": []
+        },
+        "children": [
+          {
+            "key": "disputes",
+            "type": "expense",
+            "name": "disputes",
+            "template": true,
+            "currencyMode": "multi",
+            "consistencyConfig": {
+              "lines": "eventual",
+              "totalBalanceUpdates": "strong",
+              "groups": []
+            },
+            "children": [
+              {
+                "key": "payout",
+                "type": "expense",
+                "name": "payout",
+                "template": true,
+                "currencyMode": "multi",
+                "consistencyConfig": {
+                  "lines": "eventual",
+                  "totalBalanceUpdates": "strong",
+                  "groups": []
+                },
+                "children": [],
+                "status": "active"
+              }
+            ],
+            "status": "active"
+          }
+        ],
+        "status": "active"
+      }
+    ]
+  },
+  "consistencyConfig": {
+    "entries": "eventual"
+  },
+  "ledgerEntries": {
+    "types": [
+      {
+        "conditions": [],
+        "description": "Buyer places a food order paid by card. The card charge is booked as a receivable from the card network; per-order payables are created for the restaurant and driver; platform fee is recognized as income.",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-aX9LiI8OYR1t",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{order_cost}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-awQYhSGjNrmz",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{platform_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-sH8INdJEcuJq",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{driver_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-RoE5jE2sZoSM",
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/order:{{order_id}}"
+            },
+            "amount": "{{order_cost}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-kYWR5qby88cZ",
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/order:{{order_id}}"
+            },
+            "amount": "{{driver_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-PdgTyZclO8T4",
+            "account": {
+              "path": "income/platform_fee"
+            },
+            "amount": "{{platform_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "net_amounts",
+        "status": "active",
+        "tags": [
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          }
+        ],
+        "type": "order_placed",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [],
+        "description": "v2: Buyer places a food order paid by card. Adds a separate service_fee charged to the buyer and recognized as platform income, alongside the existing platform_fee. Per-order payables are created for the restaurant and driver.",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-s6w7JEGShB4t",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{order_cost}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-BSMQeAXOR887",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{platform_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-ROgHdMAebwAu",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{service_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-ZfvhdcqpuoVP",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "{{driver_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-vGkJkALirzrn",
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/order:{{order_id}}"
+            },
+            "amount": "{{order_cost}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-L2Sl1bCNTT3P",
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/order:{{order_id}}"
+            },
+            "amount": "{{driver_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-SV8LS0hHPe9y",
+            "account": {
+              "path": "income/platform_fee"
+            },
+            "amount": "{{platform_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-jd1mtCc0XXPY",
+            "account": {
+              "path": "income/platform_fee"
+            },
+            "amount": "{{service_fee}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "net_amounts",
+        "status": "active",
+        "tags": [
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          },
+          {
+            "key": "restaurant_id",
+            "value": "{{restaurant_id}}"
+          }
+        ],
+        "type": "order_placed",
+        "typeVersion": 2
+      },
+      {
+        "conditions": [
+          {
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "currency": {
+              "code": "{{currency}}"
+            },
+            "postcondition": {
+              "totalBalance": {
+                "gte": "0"
+              }
+            }
+          }
+        ],
+        "description": "Card network settles a card charge: clears the order's card receivable and deposits funds into cash.",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-1MqNjwZV54G1",
+            "account": {
+              "path": "assets/receivables/user:{{user_id}}/order:{{order_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-n4tIH5XZep5f",
+            "account": {
+              "path": "assets/cash"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          }
+        ],
+        "type": "card_settle",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [
+          {
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/order:{{order_id}}"
+            },
+            "currency": {
+              "code": "{{currency}}"
+            },
+            "postcondition": {
+              "totalBalance": {
+                "gte": "0"
+              }
+            }
+          }
+        ],
+        "description": "Initiates an ACH payout to a restaurant: moves one or more order payables into a payout batch (payout_id).",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-v7RhhaV2D5LZ",
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/order:{{order_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-gLxqKai2j5LE",
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/payout:{{payout_id}}"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "restaurant_id",
+            "value": "{{restaurant_id}}"
+          },
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          },
+          {
+            "key": "payout_id",
+            "value": "{{payout_id}}"
+          }
+        ],
+        "type": "restaurant_payout_initiate",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [
+          {
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/payout:{{payout_id}}"
+            },
+            "currency": {
+              "code": "{{currency}}"
+            },
+            "postcondition": {
+              "totalBalance": {
+                "gte": "0"
+              }
+            }
+          }
+        ],
+        "description": "Settles an ACH payout batch to a restaurant: clears the payout balance and reduces cash.",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-tLx34nt5WFKC",
+            "account": {
+              "path": "liabilities/payables/restaurant:{{restaurant_id}}/payout:{{payout_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-p3ynuNKIF81K",
+            "account": {
+              "path": "assets/cash"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "restaurant_id",
+            "value": "{{restaurant_id}}"
+          },
+          {
+            "key": "payout_id",
+            "value": "{{payout_id}}"
+          }
+        ],
+        "type": "restaurant_payout_settle",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [
+          {
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/order:{{order_id}}"
+            },
+            "currency": {
+              "code": "{{currency}}"
+            },
+            "postcondition": {
+              "totalBalance": {
+                "gte": "0"
+              }
+            }
+          }
+        ],
+        "description": "Initiates an ACH payout to a driver: moves one or more order payables into a payout batch (payout_id).",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-FX7v2cZoKRn7",
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/order:{{order_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-18LThiLLNDW5",
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/payout:{{payout_id}}"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "driver_id",
+            "value": "{{driver_id}}"
+          },
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          },
+          {
+            "key": "payout_id",
+            "value": "{{payout_id}}"
+          }
+        ],
+        "type": "driver_payout_initiate",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [
+          {
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/payout:{{payout_id}}"
+            },
+            "currency": {
+              "code": "{{currency}}"
+            },
+            "postcondition": {
+              "totalBalance": {
+                "gte": "0"
+              }
+            }
+          }
+        ],
+        "description": "Settles an ACH payout batch to a driver: clears the payout balance and reduces cash.",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-ribhyxr21Qwa",
+            "account": {
+              "path": "liabilities/payables/driver:{{driver_id}}/payout:{{payout_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-UIcHoToL7HSt",
+            "account": {
+              "path": "assets/cash"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "driver_id",
+            "value": "{{driver_id}}"
+          },
+          {
+            "key": "payout_id",
+            "value": "{{payout_id}}"
+          }
+        ],
+        "type": "driver_payout_settle",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [],
+        "description": "User charge is disputed",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-WZ5Xt1114ub1",
+            "account": {
+              "path": "liabilities/payables/user:{{user_id}}/disputes:{{disputes_id}}"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-qS2ANgzPxGxG",
+            "account": {
+              "path": "expenses/disputes:{{disputes_id}}/payout:{{payout_id}}"
+            },
+            "amount": "{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "user_id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          }
+        ],
+        "type": "dispute_payout_initiate",
+        "typeVersion": 1
+      },
+      {
+        "conditions": [],
+        "description": "dispute paid out from cash, payable removed, transfer from held to paid",
+        "groups": [],
+        "lines": [
+          {
+            "key": "line-Zh7Qzh5ORaj1",
+            "account": {
+              "path": "liabilities/payables/user:{{user_id}}/disputes:{{disputes_id}}"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          },
+          {
+            "key": "line-8hREp3o0EnEL",
+            "account": {
+              "path": "assets/cash"
+            },
+            "amount": "-{{amount}}",
+            "currency": {
+              "code": "{{currency}}"
+            }
+          }
+        ],
+        "postLinesAs": "raw_lines",
+        "status": "active",
+        "tags": [
+          {
+            "key": "user_id",
+            "value": "{{user_id}}"
+          },
+          {
+            "key": "order_id",
+            "value": "{{order_id}}"
+          }
+        ],
+        "type": "dispute_payout_settle",
+        "typeVersion": 1
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "name": "Single order",
+      "events": [
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "order_placed",
+            "typeVersion": 1,
+            "parameters": {
+              "order_cost": "2000",
+              "platform_fee": "500",
+              "driver_fee": "500",
+              "restaurant_id": "Arbys",
+              "driver_id": "alice",
+              "order_id": "1",
+              "currency": "USD",
+              "user_id": "carol"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "card_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "order_id": "1",
+              "currency": "USD",
+              "user_id": "carol"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "2000",
+              "restaurant_id": "Arbys",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "alice",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "2000",
+              "restaurant_id": "Arbys",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "alice",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Multiple orders",
+      "events": [
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "order_placed",
+            "typeVersion": 1,
+            "parameters": {
+              "order_cost": "2000",
+              "platform_fee": "500",
+              "driver_fee": "500",
+              "restaurant_id": "Arbys",
+              "driver_id": "bob",
+              "order_id": "1",
+              "currency": "USD",
+              "user_id": "carol"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "order_placed",
+            "typeVersion": 1,
+            "parameters": {
+              "order_cost": "3000",
+              "platform_fee": "1000",
+              "driver_fee": "1000",
+              "restaurant_id": "Arbys",
+              "driver_id": "alice",
+              "order_id": "2",
+              "currency": "USD",
+              "user_id": "dave"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "card_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "order_id": "1",
+              "currency": "USD",
+              "user_id": "carol"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "card_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "5000",
+              "order_id": "2",
+              "currency": "USD",
+              "user_id": "dave"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "2000",
+              "restaurant_id": "Arbys",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "restaurant_id": "Arbys",
+              "order_id": "2",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "1000",
+              "driver_id": "alice",
+              "order_id": "2",
+              "currency": "USD",
+              "payout_id": "3"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "bob",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "5000",
+              "restaurant_id": "Arbys",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "bob",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "1000",
+              "driver_id": "alice",
+              "currency": "USD",
+              "payout_id": "3"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Charge Dispute",
+      "events": [
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "order_placed",
+            "typeVersion": 1,
+            "parameters": {
+              "order_cost": "2000",
+              "platform_fee": "500",
+              "driver_fee": "500",
+              "restaurant_id": "Arbys",
+              "driver_id": "alice",
+              "order_id": "1",
+              "user_id": "carol",
+              "currency": "USD"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "card_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "order_id": "1",
+              "user_id": "carol",
+              "currency": "USD"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "2000",
+              "restaurant_id": "Arbys",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "restaurant_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "2000",
+              "restaurant_id": "Arbys",
+              "currency": "USD",
+              "payout_id": "1"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "alice",
+              "order_id": "1",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "driver_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "500",
+              "driver_id": "alice",
+              "currency": "USD",
+              "payout_id": "2"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "dispute_payout_initiate",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "order_id": "1",
+              "user_id": "carol",
+              "currency": "USD",
+              "disputes_id": "123",
+              "payout_id": "tx_123"
+            }
+          }
+        },
+        {
+          "eventType": "entry",
+          "entry": {
+            "type": "dispute_payout_settle",
+            "typeVersion": 1,
+            "parameters": {
+              "amount": "3000",
+              "order_id": "1",
+              "user_id": "carol",
+              "currency": "USD",
+              "disputes_id": "123"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "groups": []
+}

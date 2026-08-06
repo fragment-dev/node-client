@@ -119,11 +119,41 @@ export type Scalars = {
         output: string;
     };
 };
-export type AddLedgerEntriesResponse = AddLedgerEntriesResult | BadRequestError | InternalError;
+/** One or more entries in the batch could not be committed, so none of them were */
+export type AddLedgerEntriesError = Error & {
+    __typename?: "AddLedgerEntriesError";
+    /** The status code of error. For example, 'ledger_entry_batch_operation_failed'. */
+    code: Scalars["String"]["output"];
+    /**
+     * Why each entry that was itself at fault could not be committed. An entry
+     * absent from this list was rolled back only because the batch is atomic.
+     */
+    errors: Array<AddLedgerEntryError>;
+    /** The error message */
+    message: Scalars["String"]["output"];
+    /** Whether or not the operation is retryable */
+    retryable: Scalars["Boolean"]["output"];
+};
+export type AddLedgerEntriesResponse = AddLedgerEntriesError | AddLedgerEntriesResult | BadRequestError | InternalError;
 export type AddLedgerEntriesResult = {
     __typename?: "AddLedgerEntriesResult";
     /** The committed entries, in the same order as the input entries */
     results: Array<AddLedgerEntryResult>;
+};
+/**
+ * Why one entry within a batch could not be committed. This appears inside
+ * AddLedgerEntriesError; it is not the error type of addLedgerEntry
+ */
+export type AddLedgerEntryError = Error & {
+    __typename?: "AddLedgerEntryError";
+    /** The status code of error. For example, 'ledger_entry_too_many_lines'. */
+    code: Scalars["String"]["output"];
+    /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) of the entry this error belongs to */
+    ik: Scalars["SafeString"]["output"];
+    /** The error message */
+    message: Scalars["String"]["output"];
+    /** Whether or not the operation is retryable */
+    retryable: Scalars["Boolean"]["output"];
 };
 export type AddLedgerEntryInput = {
     /** The [Ledger Entry](https://fragment.dev/api-reference/api-types#input-types-ledgerentryinput) to commit */
@@ -297,6 +327,7 @@ export type CreateLedgerResult = {
     /** The Ledger that was created */
     ledger: Ledger;
 };
+export type CreatePaymentResponse = BadRequestError | InternalError | Payment;
 export type Currency = {
     __typename?: "Currency";
     /** The currency code. This is an [enum type](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode) . */
@@ -2102,6 +2133,12 @@ export type Mutation = {
     createLedgerAccount: CreateLedgerAccountResponse;
     /** This API call is used to create Ledger Accounts. It is only used if you are not using a Schema. Unlike other mutations that take a single IK, 'createLedgerAccount' accepts an IK for each of the ledger accounts in the request payload. This is so you can recover in the case of a partial failure.  One API call can create up to 200 Ledger Accounts, up to 10 levels deep. */
     createLedgerAccounts: CreateLedgerAccountsResponse;
+    /**
+     * EXPERIMENTAL — subject to change.
+     *
+     * Create a Payment.
+     */
+    createPayment: CreatePaymentResponse;
     /** Delete Txs on a Custom Link. Once deleted, a Tx will not show up in listing queries, but can be resolved by if you lookup by its Fragment ID. */
     deleteCustomTxs: DeleteCustomTxsResponse;
     /**
@@ -2176,6 +2213,10 @@ export type MutationCreateLedgerAccountsArgs = {
     ledgerAccounts: Array<CreateLedgerAccountsInput>;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationCreatePaymentArgs = {
+    amount: Scalars["Int96"]["input"];
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteCustomTxsArgs = {
     txs: Array<Scalars["ID"]["input"]>;
 };
@@ -2245,6 +2286,11 @@ export type PageInfo = {
     hasNextPage: Scalars["Boolean"]["output"];
     hasPreviousPage: Scalars["Boolean"]["output"];
     startCursor?: Maybe<Scalars["String"]["output"]>;
+};
+export type Payment = {
+    __typename?: "Payment";
+    /** The secret handed to the payments SDK to render the payment method capture. */
+    clientSecret: Scalars["String"]["output"];
 };
 /**
  * Controls how lines are posted for a Ledger Entry.
@@ -3085,6 +3131,58 @@ export type DeleteLedgerMutation = {
     } | {
         __typename: "DeleteLedgerResult";
         success: boolean;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    };
+};
+export type AddLedgerEntriesMutationVariables = Exact<{
+    entries: Array<AddLedgerEntryInput> | AddLedgerEntryInput;
+}>;
+export type AddLedgerEntriesMutation = {
+    __typename?: "Mutation";
+    addLedgerEntries: {
+        __typename: "AddLedgerEntriesError";
+        code: string;
+        message: string;
+        retryable: boolean;
+        errors: Array<{
+            __typename?: "AddLedgerEntryError";
+            ik: string;
+            code: string;
+            message: string;
+            retryable: boolean;
+        }>;
+    } | {
+        __typename: "AddLedgerEntriesResult";
+        results: Array<{
+            __typename?: "AddLedgerEntryResult";
+            isIkReplay: boolean;
+            entry: {
+                __typename?: "LedgerEntry";
+                type?: string | null;
+                id: string;
+                ik: string;
+                posted: string;
+                created: string;
+            };
+            lines: Array<{
+                __typename?: "LedgerLine";
+                id: string;
+                amount: string;
+                account: {
+                    __typename?: "LedgerAccount";
+                    path: string;
+                };
+            }>;
+        }>;
+    } | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
     } | {
         __typename: "InternalError";
         code: string;
@@ -4245,6 +4343,7 @@ export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const DeleteSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
 export declare const DeleteLedgerDocument: import("graphql").DocumentNode;
+export declare const AddLedgerEntriesDocument: import("graphql").DocumentNode;
 export declare const AddLedgerEntryDocument: import("graphql").DocumentNode;
 export declare const ReverseLedgerEntryDocument: import("graphql").DocumentNode;
 export declare const MigrateLedgerEntryDocument: import("graphql").DocumentNode;
@@ -4279,6 +4378,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     deleteSchema(variables: DeleteSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeleteSchemaMutation>;
     createLedger(variables: CreateLedgerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateLedgerMutation>;
     deleteLedger(variables: DeleteLedgerMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeleteLedgerMutation>;
+    addLedgerEntries(variables: AddLedgerEntriesMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddLedgerEntriesMutation>;
     addLedgerEntry(variables: AddLedgerEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<AddLedgerEntryMutation>;
     reverseLedgerEntry(variables: ReverseLedgerEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ReverseLedgerEntryMutation>;
     migrateLedgerEntry(variables: MigrateLedgerEntryMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<MigrateLedgerEntryMutation>;

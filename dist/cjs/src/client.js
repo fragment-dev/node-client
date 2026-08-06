@@ -57,6 +57,7 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
         ["X-Fragment-Client"]: `node-client@${version_js_1.version}`,
     };
     return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
         if (operationType === "mutation") {
             const data = yield request(requestHeaders);
             const dataKeys = Object.keys(data);
@@ -82,6 +83,25 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
                     else {
                         throw err;
                     }
+                    break;
+                }
+                case "AddLedgerEntriesError": {
+                    // The errors for each Ledger Entry responsible for the failure are
+                    // what tell a caller which entries to fix, so they are surfaced
+                    // rather than collapsed into the top-level message.
+                    const err = new errors_js_1.AddLedgerEntriesError({
+                        code,
+                        cause: data[graphQlOperationName],
+                        message,
+                        errors: ((_a = data[graphQlOperationName].errors) !== null && _a !== void 0 ? _a : []),
+                    });
+                    if (!retryable) {
+                        bail(err);
+                    }
+                    else {
+                        throw err;
+                    }
+                    break;
                 }
                 case "BadRequestError": {
                     const err = new errors_js_1.BadRequestError({
@@ -95,6 +115,7 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
                     else {
                         throw err;
                     }
+                    break;
                 }
                 default:
                     if (typeName.endsWith("Error")) {

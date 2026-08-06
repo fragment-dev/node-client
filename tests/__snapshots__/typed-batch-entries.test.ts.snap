@@ -1,0 +1,155 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rendering > matches the committed snapshot of generated output 1`] = `
+"/**
+ * Typed payloads for batching Ledger Entries with \`addLedgerEntries\`.
+ *
+ * Each payload is derived from the single-entry \`addLedgerEntry\` operation for
+ * one \`(type, typeVersion)\` pair, and builds an \`AddLedgerEntryInput\` you can
+ * mix freely with raw, untyped entry inputs in the same batch:
+ *
+ * \`\`\`ts
+ * await client.addLedgerEntries({
+ *   entries: [userFundsAccountV1({ ik, ledgerIk, parameters: { ... } })],
+ * });
+ * \`\`\`
+ *
+ * A payload takes exactly what its source operation binds, so what you can set
+ * here is what that entry type accepts — no more.
+ */
+
+/**
+ * Builds the \`AddLedgerEntryInput\` a typed payload posts as part of an
+ * \`addLedgerEntries\` batch. Fields the caller did not set are omitted rather
+ * than sent as \`null\`, and parameter names reach the wire verbatim.
+ *
+ * \`entryFields\` maps each payload field to the \`LedgerEntryInput\` field it sets.
+ * A third element means the value is nested under that key, so \`ledgerIk\` sets
+ * \`ledger: { ik }\`.
+ */
+const buildTypedLedgerEntry = (
+  type: string,
+  typeVersion: number,
+  entryFields: ReadonlyArray<readonly [string, string] | readonly [string, string, string]>,
+  parameterKeys: ReadonlyArray<string> | null,
+  input: Record<string, unknown>,
+): AddLedgerEntryInput => {
+  const entry: Record<string, unknown> = { type, typeVersion };
+
+  entryFields.forEach(([name, wireName, wireKey]) => {
+    const value = input[name];
+    if (value === undefined) {
+      return;
+    }
+    entry[wireName] = wireKey ? { [wireKey]: value } : value;
+  });
+
+  if (parameterKeys === null) {
+    // An untyped payload passes its parameters straight through.
+    if (input.parameters !== undefined) {
+      entry.parameters = input.parameters;
+    }
+  } else if (parameterKeys.length > 0) {
+    const provided = input.parameters as Record<string, unknown> | undefined;
+    const parameters: Record<string, unknown> = {};
+    parameterKeys.forEach((key) => {
+      const value = provided?.[key];
+      if (value !== undefined) {
+        parameters[key] = value;
+      }
+    });
+    if (Object.keys(parameters).length > 0) {
+      entry.parameters = parameters;
+    }
+  }
+
+  return {
+    // Keys are emitted in lexicographic order; \`parameters\` keeps source order.
+    entry: Object.fromEntries(
+      Object.entries(entry).sort(([a], [b]) => (a < b ? -1 : 1)),
+    ) as LedgerEntryInput,
+    ik: input.ik as AddLedgerEntryInput['ik'],
+  };
+};
+
+/**
+ * Payload for the \`user-funds-account\` (typeVersion 1) Ledger Entry, for use with \`addLedgerEntries\`.
+ *
+ * Derived from the \`PostUserFundsAccount\` operation, which is what a caller
+ * may set: these are exactly the fields that operation binds.
+ */
+export type UserFundsAccountV1 = {
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
+  ik: Scalars['SafeString']['input'];
+  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
+  ledgerIk: Scalars['SafeString']['input'];
+  parameters: {
+    amount: Scalars['String']['input'];
+  };
+};
+
+/** Builds an \`addLedgerEntries\` entry for \`user-funds-account\` (typeVersion 1). */
+export const userFundsAccountV1 = (
+  input: UserFundsAccountV1,
+): AddLedgerEntryInput =>
+  buildTypedLedgerEntry('user-funds-account', 1, [['ledgerIk', 'ledger', 'ik']], ['amount'], input);
+
+/**
+ * Payload for the \`user-funds-account\` (typeVersion 2) Ledger Entry, for use with \`addLedgerEntries\`.
+ *
+ * Derived from the \`PostUserFundsAccount_v2\` operation, which is what a caller
+ * may set: these are exactly the fields that operation binds.
+ */
+export type UserFundsAccountV2 = {
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
+  ik: Scalars['SafeString']['input'];
+  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
+  ledgerIk: Scalars['SafeString']['input'];
+  parameters: {
+    amount: Scalars['String']['input'];
+    feeAmount: Scalars['Int64']['input'];
+    memo?: Scalars['String']['input'] | undefined;
+  };
+};
+
+/** Builds an \`addLedgerEntries\` entry for \`user-funds-account\` (typeVersion 2). */
+export const userFundsAccountV2 = (
+  input: UserFundsAccountV2,
+): AddLedgerEntryInput =>
+  buildTypedLedgerEntry('user-funds-account', 2, [['ledgerIk', 'ledger', 'ik']], ['amount', 'feeAmount', 'memo'], input);
+
+/**
+ * Payload for the \`runtime-thing\` (typeVersion 1) Ledger Entry, for use with \`addLedgerEntries\`.
+ *
+ * Derived from the \`PostRuntimeThing\` operation, which is what a caller
+ * may set: these are exactly the fields that operation binds.
+ */
+export type RuntimeThingV1 = {
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
+  ik: Scalars['SafeString']['input'];
+  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
+  ledgerIk: Scalars['SafeString']['input'];
+  /**
+   * This entry type's operation does not bind its parameters to typed
+   * variables, so they cannot be typed individually.
+   */
+  parameters: Scalars['JSON']['input'];
+};
+
+/** Builds an \`addLedgerEntries\` entry for \`runtime-thing\` (typeVersion 1). */
+export const runtimeThingV1 = (
+  input: RuntimeThingV1,
+): AddLedgerEntryInput =>
+  buildTypedLedgerEntry('runtime-thing', 1, [['ledgerIk', 'ledger', 'ik']], null, input);
+
+/**
+ * Every typed payload builder, keyed by \`"<entry type>@<typeVersion>"\`. Useful
+ * when the entry type is only known at runtime.
+ */
+export const typedLedgerEntryBuilders = {
+  'user-funds-account@1': userFundsAccountV1,
+  'user-funds-account@2': userFundsAccountV2,
+  'runtime-thing@1': runtimeThingV1,
+} as const;
+"
+`;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BadRequestError = exports.InternalError = exports.FragmentError = void 0;
+exports.AddLedgerEntriesError = exports.BadRequestError = exports.InternalError = exports.FragmentError = void 0;
 const graphql_request_1 = require("graphql-request");
 class FragmentError extends Error {
     constructor({ cause, code, message: messageParam }) {
@@ -36,3 +36,22 @@ class BadRequestError extends FragmentError {
     }
 }
 exports.BadRequestError = BadRequestError;
+/**
+ * Thrown when one or more Ledger Entries in an `addLedgerEntries` batch could
+ * not be added.
+ *
+ * `addLedgerEntries` adds a batch of Ledger Entries in one synchronous and
+ * atomic transaction, so either every entry was added or none were. Nothing was
+ * written when this is thrown.
+ */
+class AddLedgerEntriesError extends FragmentError {
+    constructor({ cause, message, code, errors }) {
+        super({
+            cause,
+            message,
+            code: code !== null && code !== void 0 ? code : "ledger_entry_batch_operation_failed",
+        });
+        this.errors = errors !== null && errors !== void 0 ? errors : [];
+    }
+}
+exports.AddLedgerEntriesError = AddLedgerEntriesError;

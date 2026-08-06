@@ -459,6 +459,53 @@ export const DeleteLedgerDocument = gql `
     }
   }
 `;
+export const AddLedgerEntriesDocument = gql `
+  mutation addLedgerEntries($entries: [AddLedgerEntryInput!]!) {
+    addLedgerEntries(entries: $entries) {
+      __typename
+      ... on AddLedgerEntriesResult {
+        results {
+          isIkReplay
+          entry {
+            type
+            id
+            ik
+            posted
+            created
+          }
+          lines {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      ... on AddLedgerEntriesError {
+        code
+        message
+        retryable
+        errors {
+          ik
+          code
+          message
+          retryable
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const AddLedgerEntryDocument = gql `
   mutation addLedgerEntry(
     $ik: SafeString!
@@ -1607,6 +1654,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         deleteLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(DeleteLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteLedger", "mutation", variables);
+        },
+        addLedgerEntries(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntries", "mutation", variables);
         },
         addLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntry", "mutation", variables);
