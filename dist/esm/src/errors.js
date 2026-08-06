@@ -32,3 +32,23 @@ export class BadRequestError extends FragmentError {
         super({ cause, message, code: code ?? "bad_request_error" });
     }
 }
+/**
+ * Thrown when one or more Ledger Entries in an `addLedgerEntries` batch could
+ * not be added.
+ *
+ * `addLedgerEntries` adds a batch of Ledger Entries in one synchronous and
+ * atomic transaction, so either every entry was added or none were. Nothing was
+ * written when this is thrown.
+ */
+export class AddLedgerEntriesError extends FragmentError {
+    /** The list of errors for each Ledger Entry that was responsible for the batch's failure. */
+    errors;
+    constructor({ cause, message, code, errors }) {
+        super({
+            cause,
+            message,
+            code: code ?? "ledger_entry_batch_operation_failed",
+        });
+        this.errors = errors ?? [];
+    }
+}

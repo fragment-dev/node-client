@@ -92,3 +92,12 @@ jobs:
           yarn fragment-node-client-codegen -i tests/fixtures/test-schema-queries.graphql -o tests/fixtures/generated-test-client.ts
           git diff --exit-code tests/fixtures/test-schema-queries.graphql tests/fixtures/generated-test-client.ts
           exit $?
+
+      # tests/template-schema/*.graphql are vendored from fragment-dev/graphql-queries,
+      # so only the clients generated from them are regenerated here.
+      - name: Verify template schema generated clients are up-to-date
+        run: |
+          yarn fragment-node-client-codegen -i tests/template-schema/queries.graphql -o tests/fixtures/generated-template-client.ts
+          yarn fragment-node-client-codegen -i tests/template-schema/queries.runtime-args.graphql -o tests/fixtures/generated-template-runtime-args-client.ts
+          git diff --exit-code tests/fixtures/generated-template-client.ts tests/fixtures/generated-template-runtime-args-client.ts
+          exit $?
