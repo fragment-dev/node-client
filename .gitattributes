@@ -5,3 +5,10 @@ docs/* linguist-generated=true
 docs/**/* linguist-generated=true
 generated/* linguist-generated=true
 generated/**/* linguist-generated=true
+
+# Vendored from fragment-dev/graphql-queries -- see tests/template-schema/README.md.
+# Marking these as generated collapses them by default in diffs and pull requests
+# and excludes them from language statistics.
+tests/template-schema/schema.json linguist-generated=true
+tests/template-schema/queries.graphql linguist-generated=true
+tests/template-schema/queries.runtime-args.graphql linguist-generated=true

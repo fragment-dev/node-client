@@ -148,13 +148,18 @@ const getTypedEntryField = (operation: OperationDefinitionNode) => {
   if (!typeField || typeField.value.kind !== Kind.STRING) {
     return undefined;
   }
-  return { field: selection, entry: entryArgument.value };
+  // The entry type comes back narrowed, so no caller has to re-check it.
+  return {
+    field: selection,
+    entry: entryArgument.value,
+    entryType: typeField.value.value,
+  };
 };
 
 /**
- * The `typeVersion` the operation resolves to. An operation that pins no
- * version, or pins one dynamically, resolves to version 1 server-side, so it is
- * normalised to 1 here — for the payload's identity, its name and its wire
+ * The `typeVersion` the operation pins. `typeVersion` defaults to 1 when it is
+ * not set, so an operation that pins no version — or pins one dynamically — is
+ * normalised to 1 here: for the payload's identity, its name and its wire
  * payload alike.
  */
 const getTypeVersion = (entry: ObjectValueNode): number => {
@@ -316,11 +321,7 @@ export const deriveTypedEntryPayloads = (
       if (!recognised) {
         return;
       }
-      const { field, entry } = recognised;
-      const typeField = findObjectField(entry, "type");
-      // Guaranteed a string literal by getTypedEntryField.
-      const entryType =
-        typeField?.value.kind === Kind.STRING ? typeField.value.value : "";
+      const { field, entry, entryType } = recognised;
 
       // `ik` is an argument of `addLedgerEntry`, not a field of `entry`. Every
       // entry in a batch needs its own, so a payload always takes one.
@@ -481,60 +482,6 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const renderPropertyKey = (name: string): string =>
   IDENTIFIER.test(name) ? name : quote(name);
 
-const RUNTIME = `/**
- * Builds the \`AddLedgerEntryInput\` a typed payload posts as part of an
- * \`addLedgerEntries\` batch. Fields the caller did not set are omitted rather
- * than sent as \`null\`, and parameter names reach the wire verbatim.
- *
- * \`entryFields\` maps each payload field to the \`LedgerEntryInput\` field it sets.
- * A third element means the value is nested under that key, so \`ledgerIk\` sets
- * \`ledger: { ik }\`.
- */
-const buildTypedLedgerEntry = (
-  type: string,
-  typeVersion: number,
-  entryFields: ReadonlyArray<readonly [string, string] | readonly [string, string, string]>,
-  parameterKeys: ReadonlyArray<string> | null,
-  input: Record<string, unknown>,
-): AddLedgerEntryInput => {
-  const entry: Record<string, unknown> = { type, typeVersion };
-
-  entryFields.forEach(([name, wireName, wireKey]) => {
-    const value = input[name];
-    if (value === undefined) {
-      return;
-    }
-    entry[wireName] = wireKey ? { [wireKey]: value } : value;
-  });
-
-  if (parameterKeys === null) {
-    // An untyped payload passes its parameters straight through.
-    if (input.parameters !== undefined) {
-      entry.parameters = input.parameters;
-    }
-  } else if (parameterKeys.length > 0) {
-    const provided = input.parameters as Record<string, unknown> | undefined;
-    const parameters: Record<string, unknown> = {};
-    parameterKeys.forEach((key) => {
-      const value = provided?.[key];
-      if (value !== undefined) {
-        parameters[key] = value;
-      }
-    });
-    if (Object.keys(parameters).length > 0) {
-      entry.parameters = parameters;
-    }
-  }
-
-  return {
-    // Keys are emitted in lexicographic order; \`parameters\` keeps source order.
-    entry: Object.fromEntries(
-      Object.entries(entry).sort(([a], [b]) => (a < b ? -1 : 1)),
-    ) as LedgerEntryInput,
-    ik: input.ik as AddLedgerEntryInput['ik'],
-  };
-};`;
-
 const FIELD_DOCS: Record<string, string> = {
   ledgerIk:
     "The Idempotency Key of the Ledger to add this Ledger Entry to.",
@@ -602,6 +549,136 @@ const renderParameters = (
   return [`  parameters${marker}: {`, ...fields, `  }${trailer};`].join("\n");
 };
 
+/** One key of the emitted `entry` literal, with the wire name it sorts by. */
+type EntryMember = { wireName: string; code: string };
+
+/**
+ * `value` when the caller must set it, and a conditional spread when they may
+ * not: an unset field is left out of the object rather than sent as `null`.
+ */
+const renderMember = ({
+  wireName,
+  required,
+  read,
+  value = read,
+}: {
+  wireName: string;
+  required: boolean;
+  /** The expression that is checked for `undefined`. */
+  read: string;
+  /** The expression that is assigned, if it differs from `read`. */
+  value?: string;
+}): EntryMember => ({
+  wireName,
+  code: required
+    ? `    ${wireName}: ${value},`
+    : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
+});
+
+/** The `parameters` key of the emitted `entry` literal, if the payload has one. */
+const renderParametersMember = (
+  payload: NamedTypedEntryPayload,
+): { member?: EntryMember; prelude?: string } => {
+  if (payload.parametersMode === "absent") {
+    return {};
+  }
+  if (payload.parametersMode === "untyped") {
+    return {
+      member: renderMember({
+        wireName: "parameters",
+        required: payload.parametersType?.kind === Kind.NON_NULL_TYPE,
+        read: "input.parameters",
+      }),
+    };
+  }
+
+  // A payload with a required parameter always takes a `parameters` object; one
+  // whose parameters are all optional may not, so it is read through `?.`.
+  const anyRequired = payload.parameters.some((parameter) => parameter.required);
+  const access = anyRequired ? "input.parameters" : "input.parameters?";
+  const members = payload.parameters.map((parameter) => {
+    const read = `${access}.${parameter.wireName}`;
+    const key = renderPropertyKey(parameter.wireName);
+    // Parameters keep the order the source operation declares them in.
+    return parameter.required
+      ? `${key}: ${read},`
+      : `...(${read} !== undefined && { ${key}: ${read} }),`;
+  });
+
+  if (anyRequired) {
+    return {
+      member: {
+        wireName: "parameters",
+        code: [
+          "    parameters: {",
+          ...members.map((member) => `      ${member}`),
+          "    },",
+        ].join("\n"),
+      },
+    };
+  }
+
+  // Every parameter is optional, so `parameters` itself is omitted when the
+  // caller set none of them.
+  return {
+    prelude: [
+      "  const parameters = {",
+      ...members.map((member) => `    ${member}`),
+      "  };",
+    ].join("\n"),
+    member: {
+      wireName: "parameters",
+      code: "    ...(Object.keys(parameters).length > 0 && { parameters }),",
+    },
+  };
+};
+
+const renderBuilderBody = (payload: NamedTypedEntryPayload): string => {
+  const { member: parametersMember, prelude } = renderParametersMember(payload);
+
+  const members: EntryMember[] = [
+    ...payload.fields.map((field) =>
+      renderMember({
+        wireName: field.wireName,
+        required: field.required,
+        read: `input.${field.name}`,
+        value: field.wireKey
+          ? `{ ${field.wireKey}: input.${field.name} }`
+          : `input.${field.name}`,
+      }),
+    ),
+    ...(parametersMember ? [parametersMember] : []),
+    { wireName: "type", code: `    type: ${quote(payload.entryType)},` },
+    { wireName: "typeVersion", code: `    typeVersion: ${payload.typeVersion},` },
+  ];
+
+  // Keys are emitted in lexicographic order, which costs nothing to do here and
+  // makes two SDKs' requests comparable byte for byte.
+  const entry = members
+    .sort((a, b) => (a.wireName < b.wireName ? -1 : 1))
+    .map((member) => member.code)
+    .join("\n");
+
+  const literal = (indent: string) =>
+    [
+      "{",
+      `${indent}  entry: {`,
+      entry
+        .split("\n")
+        .map((line) => `${indent}${line}`)
+        .join("\n"),
+      `${indent}  },`,
+      `${indent}  ik: input.ik,`,
+      `${indent}}`,
+    ].join("\n");
+
+  // A payload whose parameters are all optional builds them first, so the block
+  // body is only used where it earns its keep.
+  return prelude
+    ? ` => {\n${prelude}\n  return ${literal("  ")};\n}`
+    : ` => (${literal("")})`;
+};
+
 const renderPayload = (
   payload: NamedTypedEntryPayload,
   scalars: ReadonlySet<string>,
@@ -616,18 +693,6 @@ const renderPayload = (
     renderParameters(payload, scalars),
   ].filter((member): member is string => member !== undefined);
 
-  const entryFields = payload.fields.map(
-    (field) =>
-      `[${[field.name, field.wireName, field.wireKey]
-        .filter((part): part is string => part !== undefined)
-        .map(quote)
-        .join(", ")}]`,
-  );
-  const parameterKeys =
-    payload.parametersMode === "untyped"
-      ? "null"
-      : `[${payload.parameters.map((parameter) => quote(parameter.wireName)).join(", ")}]`;
-
   return `/**
  * Payload for the ${description} Ledger Entry, for use with \`addLedgerEntries\`.
  *
@@ -641,8 +706,7 @@ ${members.join("\n")}
 /** Builds an \`addLedgerEntries\` entry for ${description}. */
 export const ${payload.builderName} = (
   input: ${payload.typeName},
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry(${quote(payload.entryType)}, ${payload.typeVersion}, [${entryFields.join(", ")}], ${parameterKeys}, input);`;
+): AddLedgerEntryInput${renderBuilderBody(payload)};`;
 };
 
 const renderRegistry = (
@@ -688,9 +752,9 @@ export const renderTypedEntryPayloads = (
  * \`\`\`
  *
  * A payload takes exactly what its source operation binds, so what you can set
- * here is what that entry type accepts — no more.
+ * here is what that entry type accepts — no more. A field you do not set is
+ * left out of the request rather than sent as \`null\`.
  */`,
-    RUNTIME,
     ...payloads.map((payload) => renderPayload(payload, scalars)),
     renderRegistry(payloads),
   ];

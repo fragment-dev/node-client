@@ -4016,62 +4016,9 @@ export type Sdk = ReturnType<typeof getSdk>;
  * ```
  *
  * A payload takes exactly what its source operation binds, so what you can set
- * here is what that entry type accepts — no more.
+ * here is what that entry type accepts — no more. A field you do not set is
+ * left out of the request rather than sent as `null`.
  */
-
-/**
- * Builds the `AddLedgerEntryInput` a typed payload posts as part of an
- * `addLedgerEntries` batch. Fields the caller did not set are omitted rather
- * than sent as `null`, and parameter names reach the wire verbatim.
- *
- * `entryFields` maps each payload field to the `LedgerEntryInput` field it sets.
- * A third element means the value is nested under that key, so `ledgerIk` sets
- * `ledger: { ik }`.
- */
-const buildTypedLedgerEntry = (
-  type: string,
-  typeVersion: number,
-  entryFields: ReadonlyArray<readonly [string, string] | readonly [string, string, string]>,
-  parameterKeys: ReadonlyArray<string> | null,
-  input: Record<string, unknown>,
-): AddLedgerEntryInput => {
-  const entry: Record<string, unknown> = { type, typeVersion };
-
-  entryFields.forEach(([name, wireName, wireKey]) => {
-    const value = input[name];
-    if (value === undefined) {
-      return;
-    }
-    entry[wireName] = wireKey ? { [wireKey]: value } : value;
-  });
-
-  if (parameterKeys === null) {
-    // An untyped payload passes its parameters straight through.
-    if (input.parameters !== undefined) {
-      entry.parameters = input.parameters;
-    }
-  } else if (parameterKeys.length > 0) {
-    const provided = input.parameters as Record<string, unknown> | undefined;
-    const parameters: Record<string, unknown> = {};
-    parameterKeys.forEach((key) => {
-      const value = provided?.[key];
-      if (value !== undefined) {
-        parameters[key] = value;
-      }
-    });
-    if (Object.keys(parameters).length > 0) {
-      entry.parameters = parameters;
-    }
-  }
-
-  return {
-    // Keys are emitted in lexicographic order; `parameters` keeps source order.
-    entry: Object.fromEntries(
-      Object.entries(entry).sort(([a], [b]) => (a < b ? -1 : 1)),
-    ) as LedgerEntryInput,
-    ik: input.ik as AddLedgerEntryInput['ik'],
-  };
-};
 
 /**
  * Payload for the `order_placed` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4104,8 +4051,28 @@ export type OrderPlacedV1 = {
 /** Builds an `addLedgerEntries` entry for `order_placed` (typeVersion 1). */
 export const orderPlacedV1 = (
   input: OrderPlacedV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('order_placed', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups'], ['conditions', 'conditions']], ['user_id', 'order_id', 'order_cost', 'currency', 'platform_fee', 'driver_fee', 'restaurant_id', 'driver_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      user_id: input.parameters.user_id,
+      order_id: input.parameters.order_id,
+      order_cost: input.parameters.order_cost,
+      currency: input.parameters.currency,
+      platform_fee: input.parameters.platform_fee,
+      driver_fee: input.parameters.driver_fee,
+      restaurant_id: input.parameters.restaurant_id,
+      driver_id: input.parameters.driver_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'order_placed',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `order_placed` (typeVersion 2) Ledger Entry, for use with `addLedgerEntries`.
@@ -4139,8 +4106,29 @@ export type OrderPlacedV2 = {
 /** Builds an `addLedgerEntries` entry for `order_placed` (typeVersion 2). */
 export const orderPlacedV2 = (
   input: OrderPlacedV2,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('order_placed', 2, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups'], ['conditions', 'conditions']], ['user_id', 'order_id', 'order_cost', 'currency', 'platform_fee', 'service_fee', 'driver_fee', 'restaurant_id', 'driver_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      user_id: input.parameters.user_id,
+      order_id: input.parameters.order_id,
+      order_cost: input.parameters.order_cost,
+      currency: input.parameters.currency,
+      platform_fee: input.parameters.platform_fee,
+      service_fee: input.parameters.service_fee,
+      driver_fee: input.parameters.driver_fee,
+      restaurant_id: input.parameters.restaurant_id,
+      driver_id: input.parameters.driver_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'order_placed',
+    typeVersion: 2,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `card_settle` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4168,8 +4156,23 @@ export type CardSettleV1 = {
 /** Builds an `addLedgerEntries` entry for `card_settle` (typeVersion 1). */
 export const cardSettleV1 = (
   input: CardSettleV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('card_settle', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups']], ['user_id', 'order_id', 'currency', 'amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      user_id: input.parameters.user_id,
+      order_id: input.parameters.order_id,
+      currency: input.parameters.currency,
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'card_settle',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `restaurant_payout_initiate` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4198,8 +4201,24 @@ export type RestaurantPayoutInitiateV1 = {
 /** Builds an `addLedgerEntries` entry for `restaurant_payout_initiate` (typeVersion 1). */
 export const restaurantPayoutInitiateV1 = (
   input: RestaurantPayoutInitiateV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('restaurant_payout_initiate', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups']], ['restaurant_id', 'order_id', 'currency', 'amount', 'payout_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      restaurant_id: input.parameters.restaurant_id,
+      order_id: input.parameters.order_id,
+      currency: input.parameters.currency,
+      amount: input.parameters.amount,
+      payout_id: input.parameters.payout_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'restaurant_payout_initiate',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `restaurant_payout_settle` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4227,8 +4246,23 @@ export type RestaurantPayoutSettleV1 = {
 /** Builds an `addLedgerEntries` entry for `restaurant_payout_settle` (typeVersion 1). */
 export const restaurantPayoutSettleV1 = (
   input: RestaurantPayoutSettleV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('restaurant_payout_settle', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups']], ['restaurant_id', 'payout_id', 'currency', 'amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      restaurant_id: input.parameters.restaurant_id,
+      payout_id: input.parameters.payout_id,
+      currency: input.parameters.currency,
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'restaurant_payout_settle',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `driver_payout_initiate` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4257,8 +4291,24 @@ export type DriverPayoutInitiateV1 = {
 /** Builds an `addLedgerEntries` entry for `driver_payout_initiate` (typeVersion 1). */
 export const driverPayoutInitiateV1 = (
   input: DriverPayoutInitiateV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('driver_payout_initiate', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups']], ['driver_id', 'order_id', 'currency', 'amount', 'payout_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      driver_id: input.parameters.driver_id,
+      order_id: input.parameters.order_id,
+      currency: input.parameters.currency,
+      amount: input.parameters.amount,
+      payout_id: input.parameters.payout_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'driver_payout_initiate',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `driver_payout_settle` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4286,8 +4336,23 @@ export type DriverPayoutSettleV1 = {
 /** Builds an `addLedgerEntries` entry for `driver_payout_settle` (typeVersion 1). */
 export const driverPayoutSettleV1 = (
   input: DriverPayoutSettleV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('driver_payout_settle', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups']], ['driver_id', 'payout_id', 'currency', 'amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      driver_id: input.parameters.driver_id,
+      payout_id: input.parameters.payout_id,
+      currency: input.parameters.currency,
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'driver_payout_settle',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `dispute_payout_initiate` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4318,8 +4383,26 @@ export type DisputePayoutInitiateV1 = {
 /** Builds an `addLedgerEntries` entry for `dispute_payout_initiate` (typeVersion 1). */
 export const disputePayoutInitiateV1 = (
   input: DisputePayoutInitiateV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('dispute_payout_initiate', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups'], ['conditions', 'conditions']], ['user_id', 'disputes_id', 'amount', 'currency', 'payout_id', 'order_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      user_id: input.parameters.user_id,
+      disputes_id: input.parameters.disputes_id,
+      amount: input.parameters.amount,
+      currency: input.parameters.currency,
+      payout_id: input.parameters.payout_id,
+      order_id: input.parameters.order_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'dispute_payout_initiate',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `dispute_payout_settle` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -4349,8 +4432,25 @@ export type DisputePayoutSettleV1 = {
 /** Builds an `addLedgerEntries` entry for `dispute_payout_settle` (typeVersion 1). */
 export const disputePayoutSettleV1 = (
   input: DisputePayoutSettleV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('dispute_payout_settle', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted'], ['tags', 'tags'], ['groups', 'groups'], ['conditions', 'conditions']], ['user_id', 'disputes_id', 'amount', 'currency', 'order_id'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      user_id: input.parameters.user_id,
+      disputes_id: input.parameters.disputes_id,
+      amount: input.parameters.amount,
+      currency: input.parameters.currency,
+      order_id: input.parameters.order_id,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'dispute_payout_settle',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Every typed payload builder, keyed by `"<entry type>@<typeVersion>"`. Useful

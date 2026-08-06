@@ -290,7 +290,7 @@ describe("generated template client", () => {
     );
   });
 
-  it("posts an unpinned entry type at the version it resolves to", () => {
+  it("posts an unpinned entry type at its default version", () => {
     const built = orderPlacedV1({
       ik: "order-1",
       ledgerIk: "marketplace",

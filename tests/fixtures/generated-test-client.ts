@@ -3624,62 +3624,9 @@ export type Sdk = ReturnType<typeof getSdk>;
  * ```
  *
  * A payload takes exactly what its source operation binds, so what you can set
- * here is what that entry type accepts — no more.
+ * here is what that entry type accepts — no more. A field you do not set is
+ * left out of the request rather than sent as `null`.
  */
-
-/**
- * Builds the `AddLedgerEntryInput` a typed payload posts as part of an
- * `addLedgerEntries` batch. Fields the caller did not set are omitted rather
- * than sent as `null`, and parameter names reach the wire verbatim.
- *
- * `entryFields` maps each payload field to the `LedgerEntryInput` field it sets.
- * A third element means the value is nested under that key, so `ledgerIk` sets
- * `ledger: { ik }`.
- */
-const buildTypedLedgerEntry = (
-  type: string,
-  typeVersion: number,
-  entryFields: ReadonlyArray<readonly [string, string] | readonly [string, string, string]>,
-  parameterKeys: ReadonlyArray<string> | null,
-  input: Record<string, unknown>,
-): AddLedgerEntryInput => {
-  const entry: Record<string, unknown> = { type, typeVersion };
-
-  entryFields.forEach(([name, wireName, wireKey]) => {
-    const value = input[name];
-    if (value === undefined) {
-      return;
-    }
-    entry[wireName] = wireKey ? { [wireKey]: value } : value;
-  });
-
-  if (parameterKeys === null) {
-    // An untyped payload passes its parameters straight through.
-    if (input.parameters !== undefined) {
-      entry.parameters = input.parameters;
-    }
-  } else if (parameterKeys.length > 0) {
-    const provided = input.parameters as Record<string, unknown> | undefined;
-    const parameters: Record<string, unknown> = {};
-    parameterKeys.forEach((key) => {
-      const value = provided?.[key];
-      if (value !== undefined) {
-        parameters[key] = value;
-      }
-    });
-    if (Object.keys(parameters).length > 0) {
-      entry.parameters = parameters;
-    }
-  }
-
-  return {
-    // Keys are emitted in lexicographic order; `parameters` keeps source order.
-    entry: Object.fromEntries(
-      Object.entries(entry).sort(([a], [b]) => (a < b ? -1 : 1)),
-    ) as LedgerEntryInput,
-    ik: input.ik as AddLedgerEntryInput['ik'],
-  };
-};
 
 /**
  * Payload for the `user-funds-account` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -3702,8 +3649,18 @@ export type UserFundsAccountV1 = {
 /** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 1). */
 export const userFundsAccountV1 = (
   input: UserFundsAccountV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('user-funds-account', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted']], ['amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    type: 'user-funds-account',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `user-funds-account` (typeVersion 2) Ledger Entry, for use with `addLedgerEntries`.
@@ -3727,8 +3684,19 @@ export type UserFundsAccountV2 = {
 /** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 2). */
 export const userFundsAccountV2 = (
   input: UserFundsAccountV2,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('user-funds-account', 2, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted']], ['amount', 'feeAmount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      amount: input.parameters.amount,
+      feeAmount: input.parameters.feeAmount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    type: 'user-funds-account',
+    typeVersion: 2,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `fundingSettlement` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -3751,8 +3719,18 @@ export type FundingSettlementV1 = {
 /** Builds an `addLedgerEntries` entry for `fundingSettlement` (typeVersion 1). */
 export const fundingSettlementV1 = (
   input: FundingSettlementV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('fundingSettlement', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted']], ['amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    type: 'fundingSettlement',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Payload for the `payment_processing` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -3775,8 +3753,18 @@ export type PaymentProcessingV1 = {
 /** Builds an `addLedgerEntries` entry for `payment_processing` (typeVersion 1). */
 export const paymentProcessingV1 = (
   input: PaymentProcessingV1,
-): AddLedgerEntryInput =>
-  buildTypedLedgerEntry('payment_processing', 1, [['ledgerIk', 'ledger', 'ik'], ['posted', 'posted']], ['amount'], input);
+): AddLedgerEntryInput => ({
+  entry: {
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      amount: input.parameters.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    type: 'payment_processing',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
 
 /**
  * Every typed payload builder, keyed by `"<entry type>@<typeVersion>"`. Useful
