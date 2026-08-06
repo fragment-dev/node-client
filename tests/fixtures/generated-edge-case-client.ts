@@ -3493,6 +3493,9 @@ export type RuntimeLinesV1 = {
   description?: Scalars['String']['input'] | undefined;
   /** The Ledger Lines to create, for entry types whose lines the Schema does not fix. */
   lines: Array<LedgerLineInput>;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
 };
 
 /** Builds an `addLedgerEntries` entry for `runtime_lines` (typeVersion 1). */
@@ -3500,10 +3503,13 @@ export const runtimeLinesV1 = (
   input: RuntimeLinesV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
     ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     lines: input.lines,
     ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'runtime_lines',
     typeVersion: 1,
   },
@@ -3521,6 +3527,12 @@ export type UntypedParametersV1 = {
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
   ledgerIk: Scalars['SafeString']['input'];
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   /**
    * This entry type's operation does not bind its parameters to typed
    * variables, so they cannot be typed individually.
@@ -3533,8 +3545,13 @@ export const untypedParametersV1 = (
   input: UntypedParametersV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: input.parameters,
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'untyped_parameters',
     typeVersion: 1,
   },
@@ -3552,6 +3569,12 @@ export type AllOptionalV2 = {
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
   ledgerIk: Scalars['SafeString']['input'];
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters?: {
     memo?: Scalars['String']['input'] | undefined;
     note?: Scalars['String']['input'] | undefined;
@@ -3568,8 +3591,13 @@ export const allOptionalV2 = (
   };
   return {
     entry: {
+      ...(input.conditions !== undefined && { conditions: input.conditions }),
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.groups !== undefined && { groups: input.groups }),
       ledger: { ik: input.ledgerIk },
       ...(Object.keys(parameters).length > 0 && { parameters }),
+      ...(input.posted !== undefined && { posted: input.posted }),
+      ...(input.tags !== undefined && { tags: input.tags }),
       type: 'all_optional',
       typeVersion: 2,
     },
@@ -3589,6 +3617,12 @@ export type EitherLedgerKeyV1 = {
   ledgerId?: Scalars['ID']['input'] | undefined;
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
   ledgerIk?: Scalars['SafeString']['input'] | undefined;
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
   };
@@ -3604,10 +3638,15 @@ export const eitherLedgerKeyV1 = (
   };
   return {
     entry: {
+      ...(input.conditions !== undefined && { conditions: input.conditions }),
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.groups !== undefined && { groups: input.groups }),
       ...(Object.keys(ledger).length > 0 && { ledger }),
       parameters: {
         amount: input.parameters.amount,
       },
+      ...(input.posted !== undefined && { posted: input.posted }),
+      ...(input.tags !== undefined && { tags: input.tags }),
       type: 'either_ledger_key',
       typeVersion: 1,
     },
@@ -3626,6 +3665,10 @@ export type FixedValuesV1 = {
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
   ledgerIk: Scalars['SafeString']['input'];
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
   };
@@ -3636,12 +3679,15 @@ export const fixedValuesV1 = (
   input: FixedValuesV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
     description: 'posted by the nightly sweep',
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
       currency: 'USD',
     },
+    ...(input.posted !== undefined && { posted: input.posted }),
     tags: [{ key: 'source', value: 'sweep' }],
     type: 'fixed_values',
     typeVersion: 1,

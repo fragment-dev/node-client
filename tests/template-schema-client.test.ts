@@ -58,42 +58,44 @@ const generatedRuntimeArgsClient = read(
 );
 
 describe("generated template client", () => {
-  it("exposes the fields each operation set binds, and no others", () => {
+  it("exposes the same common fields whichever operation set generated it", () => {
     const plain = payloadType(generatedClient, "DisputePayoutInitiateV1");
     const runtimeArgs = payloadType(
       generatedRuntimeArgsClient,
       "DisputePayoutInitiateV1",
     );
 
-    // Both operations bind the entry's Ledger and `posted`.
+    // These two operation sets come from different CLI generations and bind
+    // different entry fields -- the runtime-args one binds tags, groups and
+    // conditions, the plain one does not. Spec 2.3a is what makes that invisible
+    // to a caller: the common fields are fixed by `LedgerEntryInput`, so
+    // regenerating with a different CLI cannot move a payload's surface.
     [plain, runtimeArgs].forEach((payload) => {
       expect(payload).toContain("ledgerIk: Scalars['SafeString']['input'];");
       expect(payload).toContain("posted?: Scalars['DateTime']['input'] | undefined;");
+      expect(payload).toContain("description?: Scalars['String']['input'] | undefined;");
+      expect(payload).toContain("tags?: Array<LedgerEntryTagInput> | undefined;");
+      expect(payload).toContain("groups?: Array<LedgerEntryGroupInput> | undefined;");
+      expect(payload).toContain(
+        "conditions?: Array<LedgerEntryConditionInput> | undefined;",
+      );
+
+      // `lines` is the one field a payload never offers: it cannot be combined
+      // with an entry that has a `type`.
+      expect(payload).not.toContain("lines");
     });
-
-    // Only the runtime-args operation binds tags, groups and conditions, so only
-    // its payload lets a caller set them.
-    expect(runtimeArgs).toContain("tags?: Array<LedgerEntryTagInput> | undefined;");
-    expect(runtimeArgs).toContain("groups?: Array<LedgerEntryGroupInput> | undefined;");
-    expect(runtimeArgs).toContain(
-      "conditions?: Array<LedgerEntryConditionInput> | undefined;",
-    );
-    expect(plain).not.toContain("tags");
-    expect(plain).not.toContain("groups");
-    expect(plain).not.toContain("conditions");
-
-    // Neither binds lines for this entry type, whose lines the Schema fixes.
-    expect(plain).not.toContain("lines");
-    expect(runtimeArgs).not.toContain("lines");
   });
 
-  it("binds different fields per entry type within one operation set", () => {
-    // `card_settle` binds tags and groups but no conditions; the payload says so.
+  it("gives every entry type in a set the same common fields", () => {
+    // `card_settle` binds tags and groups but not conditions. Before spec 2.3a
+    // that made its payload differ from its siblings'; now it does not.
     const cardSettle = payloadType(generatedRuntimeArgsClient, "CardSettleV1");
 
     expect(cardSettle).toContain("tags?: Array<LedgerEntryTagInput> | undefined;");
     expect(cardSettle).toContain("groups?: Array<LedgerEntryGroupInput> | undefined;");
-    expect(cardSettle).not.toContain("conditions");
+    expect(cardSettle).toContain(
+      "conditions?: Array<LedgerEntryConditionInput> | undefined;",
+    );
   });
 
   it("matches the payload surface derived from the template Schema", () => {
