@@ -139,6 +139,9 @@ describe("recognition", () => {
   });
 });
 
+/** Spec 2.3a: on every payload, whatever its operation binds. */
+const COMMON_FIELD_NAMES = ["posted", "description", "tags", "groups", "conditions"];
+
 describe("identity", () => {
   it("keeps two versions of one entry type apart", () => {
     const payloads = derive(
@@ -212,7 +215,10 @@ describe("identity", () => {
     );
 
     expect(payloads).toHaveLength(1);
-    expect(payloads[0].fields.map((field) => field.name)).toEqual(["ledgerIk"]);
+    expect(payloads[0].fields.map((field) => field.name)).toEqual([
+      "ledgerIk",
+      ...COMMON_FIELD_NAMES,
+    ]);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain("different entry fields");
   });
@@ -504,7 +510,7 @@ describe("rendering", () => {
     );
   });
 
-  it("exposes exactly the entry fields the operation binds", () => {
+  it("exposes the entry fields the operation binds", () => {
     const output = generate(
       entryOperation({
         parameters: "posted: $posted, tags: $tags, parameters: {amount: $amount}",
@@ -518,10 +524,31 @@ describe("rendering", () => {
     expect(payload).toContain("ledgerIk: Scalars['SafeString']['input'];");
     expect(payload).toContain("posted?: Scalars['DateTime']['input'] | undefined;");
     expect(payload).toContain("tags?: Array<LedgerEntryTagInput> | undefined;");
-    // Nothing the operation leaves out is offered to the caller.
-    expect(payload).not.toContain("groups");
-    expect(payload).not.toContain("conditions");
-    expect(payload).not.toContain("description");
+    // `lines` cannot be combined with an entry that has a `type`, so it is the
+    // one LedgerEntryInput field a payload never offers unasked.
+    expect(payload).not.toContain("lines");
+  });
+
+  it("exposes every common field even when the operation binds none of them", () => {
+    // Spec 2.3a: the common fields are fixed by `LedgerEntryInput`, not derived
+    // from the operation. A CLI that stops binding `tags` must not silently
+    // remove `tags` from the payload, and no CLI generation binds `description`
+    // at all -- so deriving the set would leave it permanently unreachable.
+    const output = generate(
+      entryOperation({
+        parameters: "parameters: {amount: $amount}",
+        variables: "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!",
+      }),
+    );
+
+    const payload = payloadType(output, "ThingV1");
+    expect(payload).toContain("posted?: Scalars['DateTime']['input'] | undefined;");
+    expect(payload).toContain("description?: Scalars['String']['input'] | undefined;");
+    expect(payload).toContain("tags?: Array<LedgerEntryTagInput> | undefined;");
+    expect(payload).toContain("groups?: Array<LedgerEntryGroupInput> | undefined;");
+    expect(payload).toContain(
+      "conditions?: Array<LedgerEntryConditionInput> | undefined;",
+    );
     expect(payload).not.toContain("lines");
   });
 
