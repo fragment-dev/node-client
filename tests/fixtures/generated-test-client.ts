@@ -3641,6 +3641,10 @@ export type UserFundsAccountV1 = {
   ledgerIk: Scalars['SafeString']['input'];
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
   };
@@ -3651,11 +3655,15 @@ export const userFundsAccountV1 = (
   input: UserFundsAccountV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'user-funds-account',
     typeVersion: 1,
   },
@@ -3675,6 +3683,10 @@ export type UserFundsAccountV2 = {
   ledgerIk: Scalars['SafeString']['input'];
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
     feeAmount: Scalars['String']['input'];
@@ -3686,12 +3698,16 @@ export const userFundsAccountV2 = (
   input: UserFundsAccountV2,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
       feeAmount: input.parameters.feeAmount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'user-funds-account',
     typeVersion: 2,
   },
@@ -3711,6 +3727,10 @@ export type FundingSettlementV1 = {
   ledgerIk: Scalars['SafeString']['input'];
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
   };
@@ -3721,11 +3741,15 @@ export const fundingSettlementV1 = (
   input: FundingSettlementV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'fundingSettlement',
     typeVersion: 1,
   },
@@ -3745,6 +3769,10 @@ export type PaymentProcessingV1 = {
   ledgerIk: Scalars['SafeString']['input'];
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     amount: Scalars['String']['input'];
   };
@@ -3755,11 +3783,15 @@ export const paymentProcessingV1 = (
   input: PaymentProcessingV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'payment_processing',
     typeVersion: 1,
   },

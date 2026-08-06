@@ -4036,6 +4036,7 @@ export type OrderPlacedV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
   parameters: {
     user_id: Scalars['String']['input'];
     order_id: Scalars['String']['input'];
@@ -4054,6 +4055,7 @@ export const orderPlacedV1 = (
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4090,6 +4092,7 @@ export type OrderPlacedV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
   parameters: {
     user_id: Scalars['String']['input'];
     order_id: Scalars['String']['input'];
@@ -4109,6 +4112,7 @@ export const orderPlacedV2 = (
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4145,6 +4149,8 @@ export type CardSettleV1 = {
   posted?: Scalars['DateTime']['input'] | undefined;
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     user_id: Scalars['String']['input'];
     order_id: Scalars['String']['input'];
@@ -4158,6 +4164,8 @@ export const cardSettleV1 = (
   input: CardSettleV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4189,6 +4197,8 @@ export type RestaurantPayoutInitiateV1 = {
   posted?: Scalars['DateTime']['input'] | undefined;
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     restaurant_id: Scalars['String']['input'];
     order_id: Scalars['String']['input'];
@@ -4203,6 +4213,8 @@ export const restaurantPayoutInitiateV1 = (
   input: RestaurantPayoutInitiateV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4235,6 +4247,8 @@ export type RestaurantPayoutSettleV1 = {
   posted?: Scalars['DateTime']['input'] | undefined;
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     restaurant_id: Scalars['String']['input'];
     payout_id: Scalars['String']['input'];
@@ -4248,6 +4262,8 @@ export const restaurantPayoutSettleV1 = (
   input: RestaurantPayoutSettleV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4279,6 +4295,8 @@ export type DriverPayoutInitiateV1 = {
   posted?: Scalars['DateTime']['input'] | undefined;
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     driver_id: Scalars['String']['input'];
     order_id: Scalars['String']['input'];
@@ -4293,6 +4311,8 @@ export const driverPayoutInitiateV1 = (
   input: DriverPayoutInitiateV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4325,6 +4345,8 @@ export type DriverPayoutSettleV1 = {
   posted?: Scalars['DateTime']['input'] | undefined;
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
     driver_id: Scalars['String']['input'];
     payout_id: Scalars['String']['input'];
@@ -4338,6 +4360,8 @@ export const driverPayoutSettleV1 = (
   input: DriverPayoutSettleV1,
 ): AddLedgerEntryInput => ({
   entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4370,6 +4394,7 @@ export type DisputePayoutInitiateV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
   parameters: {
     user_id: Scalars['String']['input'];
     disputes_id: Scalars['String']['input'];
@@ -4386,6 +4411,7 @@ export const disputePayoutInitiateV1 = (
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
@@ -4420,6 +4446,7 @@ export type DisputePayoutSettleV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
+  description?: Scalars['String']['input'] | undefined;
   parameters: {
     user_id: Scalars['String']['input'];
     disputes_id: Scalars['String']['input'];
@@ -4435,6 +4462,7 @@ export const disputePayoutSettleV1 = (
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
