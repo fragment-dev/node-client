@@ -16,34 +16,41 @@
  * and nothing else. Anything the operation fixes is not the caller's to set.
  */
 import { type DocumentNode, type TypeNode } from "graphql";
-/** A single caller-supplied parameter of a typed entry payload. */
-export type TypedEntryParameter = {
-    /** The parameter name from the Schema. Goes on the wire verbatim. */
-    wireName: string;
-    /** The operation variable the parameter is bound to. */
-    variableName: string;
+/** A value the source operation fixes, which the caller cannot set. */
+export type FixedValue = {
+    /** Fixed by the operation, so it is posted as written rather than exposed. */
+    source: "fixed";
+    /** The value itself, already reduced from its AST node. */
+    value: unknown;
+};
+/** A value the caller supplies, typed by the variable the operation binds. */
+export type BoundValue = {
+    source: "variable";
     /** The variable's declared type, which is where the payload's type comes from. */
     type: TypeNode;
     /** True when the variable's type is non-null. */
     required: boolean;
 };
+/** A single parameter of a typed entry payload. */
+export type TypedEntryParameter = {
+    /** The parameter name from the Schema. Goes on the wire verbatim. */
+    wireName: string;
+} & (BoundValue | FixedValue);
 /**
  * An entry field a typed payload lets the caller set, derived from the source
  * operation binding it to a variable.
  */
 export type TypedEntryField = {
-    /** The field name on the generated payload. */
+    /** The field name on the generated payload, for a value the caller supplies. */
     name: string;
     /** The `LedgerEntryInput` field it sets. */
     wireName: string;
     /**
-     * Set when the caller's value is a match key nested inside the wire field —
-     * `ledgerIk` sets `ledger: { ik }`, so this is `"ik"` there.
+     * Set when the value is a match key nested inside the wire field — `ledgerIk`
+     * sets `ledger: { ik }`, so this is `"ik"` there.
      */
     wireKey?: string;
-    type: TypeNode;
-    required: boolean;
-};
+} & (BoundValue | FixedValue);
 /** How the source operation exposes `parameters`, if at all. */
 export type ParametersMode = 
 /** An inline object literal, so each parameter is typed individually. */
@@ -94,12 +101,6 @@ export declare const nameTypedEntryPayloads: (payloads: ReadonlyArray<TypedEntry
 }) => NamedTypedEntryPayload[];
 /** The names of every scalar in a schema, including the built-in ones. */
 export declare const collectScalarNames: (schema: DocumentNode) => Set<string>;
-/**
- * The TypeScript type of a value bound to a variable. Top-level nullability is
- * carried by the optional marker instead: an unset field is omitted from the
- * request, never serialized as `null`.
- */
-export declare const renderVariableType: (type: TypeNode, scalars: ReadonlySet<string>) => string;
 /**
  * Renders the typed batch entry section of a generated client. Returns an empty
  * string when the input documents contain no typed entry operations.

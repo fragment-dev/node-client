@@ -90,7 +90,8 @@ jobs:
         run: |
           /home/linuxbrew/.linuxbrew/bin/fragment gen-graphql --path tests/fixtures/test-schema.json --output tests/fixtures/test-schema-queries.graphql
           yarn fragment-node-client-codegen -i tests/fixtures/test-schema-queries.graphql -o tests/fixtures/generated-test-client.ts
-          git diff --exit-code tests/fixtures/test-schema-queries.graphql tests/fixtures/generated-test-client.ts
+          yarn fragment-node-client-codegen -i tests/fixtures/edge-case-queries.graphql -o tests/fixtures/generated-edge-case-client.ts
+          git diff --exit-code tests/fixtures/test-schema-queries.graphql tests/fixtures/generated-test-client.ts tests/fixtures/generated-edge-case-client.ts
           exit $?
 
       # tests/template-schema/*.graphql are vendored from fragment-dev/graphql-queries,

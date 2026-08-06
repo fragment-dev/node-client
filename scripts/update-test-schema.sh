@@ -26,4 +26,10 @@ yarn fragment-node-client-codegen \
   -i tests/template-schema/queries.runtime-args.graphql \
   -o tests/fixtures/generated-template-runtime-args-client.ts
 
+# Hand-written operations covering shapes the CLI does not generate.
+echo "Generating SDK from the edge case queries..."
+yarn fragment-node-client-codegen \
+  -i tests/fixtures/edge-case-queries.graphql \
+  -o tests/fixtures/generated-edge-case-client.ts
+
 echo "Done! Don't forget to commit the updated files."
