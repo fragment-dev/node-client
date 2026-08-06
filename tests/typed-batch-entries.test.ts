@@ -39,11 +39,11 @@ const payloadType = (output: string, name: string) => {
   return output.slice(start, output.indexOf("\n};", start));
 };
 
-/** The `buildTypedLedgerEntry(...)` call of a payload's builder. */
-const builderCall = (output: string, name: string) => {
-  const start = output.indexOf(`  buildTypedLedgerEntry(${name}`);
+/** The body of a payload's builder — the `AddLedgerEntryInput` it constructs. */
+const builderBody = (output: string, name: string) => {
+  const start = output.indexOf(`export const ${name} = (`);
   expect(start).toBeGreaterThan(-1);
-  return output.slice(start, output.indexOf("\n", start));
+  return output.slice(start, output.indexOf("\n});", start));
 };
 
 const entryOperation = ({
@@ -404,8 +404,16 @@ describe("rendering", () => {
     expect(payload).toContain("function: Scalars['String']['input'];");
     expect(payload).toContain("user_id: Scalars['String']['input'];");
     expect(payload).toContain("userId: Scalars['String']['input'];");
-    expect(builderCall(output, "'thing'")).toContain(
-      "['class', 'function', 'user_id', 'userId'], input);",
+    // Wire names reach the built entry verbatim, in source order.
+    expect(builderBody(output, "thingV1")).toContain(
+      [
+        "    parameters: {",
+        "      class: input.parameters.class,",
+        "      function: input.parameters.function,",
+        "      user_id: input.parameters.user_id,",
+        "      userId: input.parameters.userId,",
+        "    },",
+      ].join("\n"),
     );
   });
 
@@ -488,7 +496,8 @@ describe("rendering", () => {
     // caller's to set.
     expect(payload).not.toContain("description");
     // The version still reaches the wire, from the operation rather than the caller.
-    expect(builderCall(output, "'thing'")).toContain("'thing', 3,");
+    expect(builderBody(output, "thingV3")).toContain("    typeVersion: 3,");
+    expect(builderBody(output, "thingV3")).toContain("    type: 'thing',");
   });
 
   it("exposes a whole-object ledger binding as ledger", () => {
@@ -506,7 +515,9 @@ describe("rendering", () => {
     expect(payloadType(output, "ThingV1")).toContain(
       "ledger?: LedgerMatchInput | undefined;",
     );
-    expect(builderCall(output, "'thing'")).toContain("[['ledger', 'ledger']]");
+    expect(builderBody(output, "thingV1")).toContain(
+      "    ...(input.ledger !== undefined && { ledger: input.ledger }),",
+    );
   });
 
   it("matches the committed snapshot of generated output", () => {
