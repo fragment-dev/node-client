@@ -63,14 +63,16 @@ export type TypedEntryField = {
   wireKey?: string;
 } & BoundValue;
 
-/** How the source operation exposes `parameters`, if at all. */
-export type ParametersMode =
-  /** An inline object literal, so each parameter is typed individually. */
-  | "typed"
-  /** Bound to a variable, so the payload falls back to an untyped map. */
-  | "untyped"
-  /** Not in the operation at all, so the caller cannot set parameters. */
-  | "absent";
+/**
+ * How the source operation exposes `parameters`, if at all: as an inline object
+ * literal, so each parameter is typed individually; bound to a variable, so the
+ * payload falls back to an untyped map; or not at all, so the caller cannot set
+ * parameters. Each carries only what that case has.
+ */
+export type PayloadParameters =
+  | { parametersMode: "typed"; parameters: TypedEntryParameter[] }
+  | { parametersMode: "untyped"; parametersType: TypeNode | undefined }
+  | { parametersMode: "absent" };
 
 /** A typed payload for one `(entry type, typeVersion)` pair. */
 export type TypedEntryPayload = {
@@ -80,14 +82,9 @@ export type TypedEntryPayload = {
   operationName: string;
   /** Entry fields the caller may set, in the operation's source order. */
   fields: TypedEntryField[];
-  parametersMode: ParametersMode;
-  /** Typed parameters in source order. Empty unless `parametersMode` is `typed`. */
-  parameters: TypedEntryParameter[];
-  /** The declared type of `parameters` when `parametersMode` is `untyped`. */
-  parametersType?: TypeNode;
   /** The declared type of the entry's own `ik`, when bound to a variable. */
   ikType?: TypeNode;
-};
+} & PayloadParameters;
 
 /** A payload with its generated TypeScript identifiers assigned. */
 export type NamedTypedEntryPayload = TypedEntryPayload & {
@@ -193,17 +190,24 @@ const getTypedEntryField = (operation: OperationDefinitionNode) => {
 };
 
 /**
- * The `typeVersion` the operation pins. `typeVersion` defaults to 1 when it is
- * not set, so an operation that pins no version — or pins one dynamically — is
- * normalised to 1 here: for the payload's identity, its name and its wire
- * payload alike.
+ * The `typeVersion` the operation pins, or undefined when it pins one
+ * dynamically. `typeVersion` defaults to 1 when it is not set, so an operation
+ * that pins no version is normalised to 1 — for the payload's identity, its name
+ * and its wire payload alike.
+ *
+ * A version bound to a variable is different: the caller of the single-entry
+ * operation chooses it, and a payload — whose name states one version and whose
+ * builder posts it — cannot. Those get no payload rather than a silent 1.
  */
-const getTypeVersion = (entry: ObjectValueNode): number => {
+const getTypeVersion = (entry: ObjectValueNode): number | undefined => {
   const field = findObjectField(entry, "typeVersion");
-  if (field?.value.kind === Kind.INT) {
+  if (!field || field.value.kind === Kind.NULL) {
+    return 1;
+  }
+  if (field.value.kind === Kind.INT) {
     return Number.parseInt(field.value.value, 10);
   }
-  return 1;
+  return undefined;
 };
 
 /**
@@ -298,28 +302,21 @@ const getParameters = (
   entry: ObjectValueNode,
   operation: OperationDefinitionNode,
   warn: Warn,
-): Pick<
-  TypedEntryPayload,
-  "parameters" | "parametersMode" | "parametersType"
-> => {
+): PayloadParameters => {
   const parametersField = findObjectField(entry, "parameters");
   if (!parametersField) {
     // The operation posts no parameters, so neither may the caller.
-    return { parameters: [], parametersMode: "absent" };
+    return { parametersMode: "absent" };
   }
   if (parametersField.value.kind === Kind.VARIABLE) {
     const definition = findVariableDefinition(
       operation,
       parametersField.value.name.value,
     );
-    return {
-      parameters: [],
-      parametersMode: "untyped",
-      parametersType: definition?.type,
-    };
+    return { parametersMode: "untyped", parametersType: definition?.type };
   }
   if (parametersField.value.kind !== Kind.OBJECT) {
-    return { parameters: [], parametersMode: "absent" };
+    return { parametersMode: "absent" };
   }
 
   const parameters: TypedEntryParameter[] = [];
@@ -347,20 +344,23 @@ const getParameters = (
 
   if (parameters.length === 0) {
     // An empty object posts nothing, so the payload takes no parameters.
-    return { parameters: [], parametersMode: "absent" };
+    return { parametersMode: "absent" };
   }
 
-  return { parameters, parametersMode: "typed" };
+  return { parametersMode: "typed", parameters };
 };
 
 const identityOf = (
   payload: Pick<TypedEntryPayload, "entryType" | "typeVersion">,
 ) => JSON.stringify([payload.entryType, payload.typeVersion]);
 
-const sameNames = (
-  a: ReadonlyArray<{ wireName: string }>,
-  b: ReadonlyArray<{ wireName: string }>,
-) => a.length === b.length && a.every(({ wireName }, i) => wireName === b[i].wireName);
+const sameList = (a: ReadonlyArray<string>, b: ReadonlyArray<string>) =>
+  a.length === b.length && a.every((name, index) => name === b[index]);
+
+const parameterNames = (payload: TypedEntryPayload) =>
+  payload.parametersMode === "typed"
+    ? payload.parameters.map((parameter) => parameter.wireName)
+    : [];
 
 /**
  * What the two operations disagree about, if anything. Both halves matter: the
@@ -369,8 +369,17 @@ const sameNames = (
  */
 const describeConflict = (a: TypedEntryPayload, b: TypedEntryPayload) => {
   const conflicts = [
-    !sameNames(a.parameters, b.parameters) ? "parameters" : undefined,
-    !sameNames(a.fields, b.fields) ? "entry fields" : undefined,
+    !sameList(parameterNames(a), parameterNames(b))
+      ? "parameters"
+      : undefined,
+    // Compare the name the caller writes: `ledger: { ik }` and `ledger: { id }`
+    // both set `ledger`, but they expose `ledgerIk` and `ledgerId`.
+    !sameList(
+      a.fields.map((field) => field.name),
+      b.fields.map((field) => field.name),
+    )
+      ? "entry fields"
+      : undefined,
   ].filter((conflict): conflict is string => conflict !== undefined);
   return conflicts.join(" and ");
 };
@@ -416,9 +425,17 @@ export const deriveTypedEntryPayloads = (
           ? findVariableDefinition(definition, ikArgument.value.name.value)
           : undefined;
 
+      const typeVersion = getTypeVersion(entry);
+      if (typeVersion === undefined) {
+        warn(
+          `Operation \`${definition.name?.value}\` binds \`typeVersion\` to a variable, so its version is the caller's to choose. A typed payload names one version and posts it, so none is generated for \`${entryType}\` — post it with a raw \`AddLedgerEntryInput\`, which \`addLedgerEntries\` accepts alongside typed payloads.`,
+        );
+        return;
+      }
+
       const payload: TypedEntryPayload = {
         entryType,
-        typeVersion: getTypeVersion(entry),
+        typeVersion,
         operationName: definition.name?.value ?? "",
         fields: getFields(entry, definition, warn),
         ...getParameters(entry, definition, warn),
@@ -599,11 +616,11 @@ const renderParameters = (
     return undefined;
   }
   if (payload.parametersMode === "untyped") {
-    const type = payload.parametersType
-      ? renderVariableType(payload.parametersType, scalars)
+    const { parametersType } = payload;
+    const type = parametersType
+      ? renderVariableType(parametersType, scalars)
       : "Scalars['JSON']['input']";
-    const required =
-      payload.parametersType?.kind === Kind.NON_NULL_TYPE ? "" : "?";
+    const required = parametersType?.kind === Kind.NON_NULL_TYPE ? "" : "?";
     const undefinable = required ? " | undefined" : "";
     return [
       "  /**",
@@ -634,8 +651,12 @@ const renderParameters = (
   return [`  parameters${marker}: {`, ...fields, `  }${trailer};`].join("\n");
 };
 
-/** One key of the emitted `entry` literal, with the wire name it sorts by. */
-type EntryMember = { wireName: string; code: string };
+/**
+ * One key of the emitted `entry` literal, as the lines it occupies, with the
+ * wire name it sorts by. Lines stay a list until the whole body is joined, so
+ * nothing has to be re-split to indent it.
+ */
+type EntryMember = { wireName: string; code: string[] };
 
 /**
  * `value` when the caller must set it, and a conditional spread when they may
@@ -655,9 +676,11 @@ const renderMember = ({
   value?: string;
 }): EntryMember => ({
   wireName,
-  code: required
-    ? `    ${wireName}: ${value},`
-    : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
+  code: [
+    required
+      ? `    ${wireName}: ${value},`
+      : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
+  ],
 });
 
 /**
@@ -684,7 +707,7 @@ const renderObjectMember = ({
           `    ${wireName}: {`,
           ...members.map((member) => `      ${member}`),
           "    },",
-        ].join("\n"),
+        ],
       },
     };
   }
@@ -697,7 +720,7 @@ const renderObjectMember = ({
     ].join("\n"),
     member: {
       wireName,
-      code: `    ...(Object.keys(${wireName}).length > 0 && { ${wireName} }),`,
+      code: [`    ...(Object.keys(${wireName}).length > 0 && { ${wireName} }),`],
     },
   };
 };
@@ -801,29 +824,27 @@ const renderBuilderBody = (payload: NamedTypedEntryPayload): string => {
   const members: EntryMember[] = [
     ...fields.members,
     ...(parametersMember ? [parametersMember] : []),
-    { wireName: "type", code: `    type: ${quote(payload.entryType)},` },
-    { wireName: "typeVersion", code: `    typeVersion: ${payload.typeVersion},` },
+    { wireName: "type", code: [`    type: ${quote(payload.entryType)},`] },
+    { wireName: "typeVersion", code: [`    typeVersion: ${payload.typeVersion},`] },
   ];
 
   // Keys are emitted in lexicographic order, which costs nothing to do here and
   // makes two SDKs' requests comparable byte for byte.
-  const entry = members
-    .sort((a, b) => (a.wireName < b.wireName ? -1 : 1))
-    .map((member) => member.code)
-    .join("\n");
+  const entry = [...members]
+    .sort((a, b) => a.wireName.localeCompare(b.wireName))
+    .flatMap((member) => member.code);
 
   const literal = (indent: string) =>
     [
       "{",
-      `${indent}  entry: {`,
-      entry
-        .split("\n")
-        .map((line) => `${indent}${line}`)
-        .join("\n"),
-      `${indent}  },`,
-      `${indent}  ik: input.ik,`,
-      `${indent}}`,
-    ].join("\n");
+      "  entry: {",
+      ...entry,
+      "  },",
+      "  ik: input.ik,",
+      "}",
+    ]
+      .map((line, index) => (index === 0 ? line : `${indent}${line}`))
+      .join("\n");
 
   // An object whose members are all optional is built first, so the block body
   // is only used where it earns its keep.

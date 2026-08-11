@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { parse } from "graphql";
 
+import type { TypedEntryPayload } from "../src/typedBatchEntries.js";
 import {
   collectScalarNames,
   deriveTypedEntryPayloads,
@@ -17,6 +18,10 @@ const SCHEMA = parse(`
 `);
 
 const scalars = collectScalarNames(SCHEMA);
+
+/** A payload's typed parameters, or none when it takes no typed parameters. */
+const parametersOf = (payload: TypedEntryPayload) =>
+  payload.parametersMode === "typed" ? payload.parameters : [];
 
 const derive = (source: string, warn = vi.fn()) =>
   deriveTypedEntryPayloads([parse(source)], { warn });
@@ -39,30 +44,39 @@ const payloadType = (output: string, name: string) => {
   return output.slice(start, output.indexOf("\n};", start));
 };
 
-/** The body of a payload's builder — the `AddLedgerEntryInput` it constructs. */
+/**
+ * The body of a payload's builder — the `AddLedgerEntryInput` it constructs.
+ * A builder ends `\n});` in its expression form and `\n};` in its block form,
+ * so take whichever terminator comes first rather than assuming one.
+ */
 const builderBody = (output: string, name: string) => {
   const start = output.indexOf(`export const ${name} = (`);
   expect(start).toBeGreaterThan(-1);
-  return output.slice(start, output.indexOf("\n});", start));
+  const ends = ["\n});", "\n};"]
+    .map((terminator) => output.indexOf(terminator, start))
+    .filter((end) => end > -1);
+  expect(ends.length).toBeGreaterThan(0);
+  return output.slice(start, Math.min(...ends));
 };
 
 const entryOperation = ({
   name = "PostThing",
   type = `"thing"`,
   typeVersion = "",
-  parameters = "parameters: {amount: $amount}",
+  entryFields = "parameters: {amount: $amount}",
   variables = "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!",
 }: {
   name?: string;
   type?: string;
   typeVersion?: string;
-  parameters?: string;
+  /** Any further fields of the `entry` object, as written in the operation. */
+  entryFields?: string;
   variables?: string;
 } = {}) => `
   mutation ${name}(${variables}) {
     addLedgerEntry(
       ik: $ik
-      entry: {ledger: {ik: $ledgerIk}, type: ${type}${typeVersion ? `, typeVersion: ${typeVersion}` : ""}${parameters ? `, ${parameters}` : ""}}
+      entry: {ledger: {ik: $ledgerIk}, type: ${type}${typeVersion ? `, typeVersion: ${typeVersion}` : ""}${entryFields ? `, ${entryFields}` : ""}}
     ) {
       __typename
     }
@@ -150,7 +164,7 @@ describe("identity", () => {
         entryOperation({
           name: "PostThing_v2",
           typeVersion: "2",
-          parameters: "parameters: {amount: $amount, fee: $fee}",
+          entryFields: "parameters: {amount: $amount, fee: $fee}",
           variables:
             "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!, $fee: String!",
         }),
@@ -158,10 +172,29 @@ describe("identity", () => {
     );
 
     expect(payloads.map((payload) => payload.typeVersion)).toEqual([1, 2]);
-    expect(payloads[1].parameters.map((parameter) => parameter.wireName)).toEqual([
+    expect(parametersOf(payloads[1]).map((parameter) => parameter.wireName)).toEqual([
       "amount",
       "fee",
     ]);
+  });
+
+  it("generates no payload when the version is the caller's to choose", () => {
+    const warn = vi.fn();
+    const payloads = derive(
+      `mutation PostThing($ik: SafeString!, $ledgerIk: SafeString!, $version: Int, $amount: String!) {
+        addLedgerEntry(
+          ik: $ik
+          entry: {ledger: {ik: $ledgerIk}, type: "thing", typeVersion: $version, parameters: {amount: $amount}}
+        ) { __typename }
+      }`,
+      warn,
+    );
+
+    // A payload names one version and posts it, so a version bound to a variable
+    // cannot be honoured — silently posting 1 would discard the caller's value.
+    expect(payloads).toEqual([]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("typeVersion");
   });
 
   it("normalises an unpinned typeVersion to 1", () => {
@@ -195,6 +228,28 @@ describe("identity", () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it("notices two operations matching the Ledger by different keys", () => {
+    const warn = vi.fn();
+    // Both set `ledger`, but one exposes `ledgerIk` and the other `ledgerId`, so
+    // comparing the entry field they write would miss it.
+    const payloads = derive(
+      [
+        entryOperation({ name: "PostThing" }),
+        `mutation PostThingById($ik: SafeString!, $ledgerId: ID, $amount: String!) {
+          addLedgerEntry(
+            ik: $ik
+            entry: {ledger: {id: $ledgerId}, type: "thing", parameters: {amount: $amount}}
+          ) { __typename }
+        }`,
+      ].join("\n"),
+      warn,
+    );
+
+    expect(payloads).toHaveLength(1);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("different entry fields");
+  });
+
   it("warns when two operations at one identity bind different entry fields", () => {
     const warn = vi.fn();
     // Feeding both the plain and the runtime-args generation of one Schema in
@@ -205,7 +260,7 @@ describe("identity", () => {
         entryOperation({ name: "PostThing" }),
         entryOperation({
           name: "PostThingRuntimeArgs",
-          parameters:
+          entryFields:
             "tags: $tags, parameters: {amount: $amount}",
           variables:
             "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!, $tags: [LedgerEntryTagInput!]",
@@ -230,7 +285,7 @@ describe("identity", () => {
         entryOperation({ name: "PostThing" }),
         entryOperation({
           name: "PostThingStale",
-          parameters: "parameters: {somethingElse: $amount}",
+          entryFields: "parameters: {somethingElse: $amount}",
         }),
       ].join("\n"),
       warn,
@@ -247,14 +302,14 @@ describe("parameters", () => {
   it("takes required-ness from the variable definition, not the field name", () => {
     const payloads = derive(
       entryOperation({
-        parameters: "parameters: {amount: $amount, memo: $memo}",
+        entryFields: "parameters: {amount: $amount, memo: $memo}",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $amount: Int64!, $memo: String",
       }),
     );
 
     expect(
-      payloads[0].parameters.map((parameter) => ({
+      parametersOf(payloads[0]).map((parameter) => ({
         wireName: parameter.wireName,
         required: parameter.required,
       })),
@@ -267,14 +322,14 @@ describe("parameters", () => {
   it("preserves source order rather than sorting or putting required first", () => {
     const payloads = derive(
       entryOperation({
-        parameters:
+        entryFields:
           "parameters: {zebra: $zebra, apple: $apple, middle: $middle}",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $zebra: String, $apple: String!, $middle: String",
       }),
     );
 
-    expect(payloads[0].parameters.map((parameter) => parameter.wireName)).toEqual([
+    expect(parametersOf(payloads[0]).map((parameter) => parameter.wireName)).toEqual([
       "zebra",
       "apple",
       "middle",
@@ -284,13 +339,13 @@ describe("parameters", () => {
   it("leaves a parameter the operation fixes to the API", () => {
     const payloads = derive(
       entryOperation({
-        parameters: `parameters: {amount: $amount, currency: "USD", nested: {a: 1}}`,
+        entryFields: `parameters: {amount: $amount, currency: "USD", nested: {a: 1}}`,
       }),
     );
 
     // A fixed value is encoded in the Schema, so the API derives it from there:
     // the payload neither exposes it nor re-posts it.
-    expect(payloads[0].parameters.map((parameter) => parameter.wireName)).toEqual([
+    expect(parametersOf(payloads[0]).map((parameter) => parameter.wireName)).toEqual([
       "amount",
     ]);
   });
@@ -298,7 +353,7 @@ describe("parameters", () => {
   it("falls back to an untyped map when parameters is a variable", () => {
     const payloads = derive(
       entryOperation({
-        parameters: "parameters: $parameters",
+        entryFields: "parameters: $parameters",
         variables: "$ik: SafeString!, $ledgerIk: SafeString!, $parameters: JSON!",
       }),
     );
@@ -306,24 +361,23 @@ describe("parameters", () => {
     expect(payloads[0]).toMatchObject({
       entryType: "thing",
       parametersMode: "untyped",
-      parameters: [],
     });
+    // An untyped payload carries the variable's type, not a parameter list.
+    expect(parametersOf(payloads[0])).toEqual([]);
   });
 
   it("takes no parameters at all when the operation posts none", () => {
-    const payloads = derive(entryOperation({ parameters: "" }));
+    const payloads = derive(entryOperation({ entryFields: "" }));
 
-    expect(payloads[0]).toMatchObject({
-      parametersMode: "absent",
-      parameters: [],
-    });
+    expect(payloads[0]).toMatchObject({ parametersMode: "absent" });
+    expect(parametersOf(payloads[0])).toEqual([]);
   });
 
   it("leaves values the operation fixes to the API", () => {
     const warn = vi.fn();
     const output = generate(
       entryOperation({
-        parameters: `posted: "2024-01-01", parameters: {amount: $amount, currency: "USD"}`,
+        entryFields: `posted: "2024-01-01", parameters: {amount: $amount, currency: "USD"}`,
       }),
       warn,
     );
@@ -336,7 +390,7 @@ describe("parameters", () => {
   });
   it("takes no parameters when the operation fixes all of them", () => {
     const output = generate(
-      entryOperation({ parameters: `parameters: {currency: "USD"}` }),
+      entryOperation({ entryFields: `parameters: {currency: "USD"}` }),
     );
 
     expect(builderBody(output, "thingV1")).not.toContain("USD");
@@ -346,12 +400,12 @@ describe("parameters", () => {
     const warn = vi.fn();
     const payloads = derive(
       entryOperation({
-        parameters: "parameters: {amount: $amount, mystery: $mystery}",
+        entryFields: "parameters: {amount: $amount, mystery: $mystery}",
       }),
       warn,
     );
 
-    expect(payloads[0].parameters.map((parameter) => parameter.wireName)).toEqual([
+    expect(parametersOf(payloads[0]).map((parameter) => parameter.wireName)).toEqual([
       "amount",
     ]);
     expect(warn).toHaveBeenCalledTimes(1);
@@ -427,7 +481,7 @@ describe("rendering", () => {
   it("types a required parameter from its variable and an optional one as optional", () => {
     const output = generate(
       entryOperation({
-        parameters: "parameters: {amount: $amount, memo: $memo, tag: $tag}",
+        entryFields: "parameters: {amount: $amount, memo: $memo, tag: $tag}",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $amount: Int64!, $memo: String, $tag: LedgerEntryTagInput",
       }),
@@ -446,7 +500,7 @@ describe("rendering", () => {
   it("keeps a wire name verbatim even when it is a reserved word", () => {
     const output = generate(
       entryOperation({
-        parameters:
+        entryFields:
           "parameters: {class: $reserved, function: $fn, user_id: $userId, userId: $userIdCamel}",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $reserved: String!, $fn: String!, $userId: String!, $userIdCamel: String!",
@@ -478,13 +532,13 @@ describe("rendering", () => {
       [
         entryOperation({
           name: "PostThing",
-          parameters: "parameters: {amounts: $amounts}",
+          entryFields: "parameters: {amounts: $amounts}",
           variables: "$ik: SafeString!, $ledgerIk: SafeString!, $amounts: [Int64!]!",
         }),
         entryOperation({
           name: "PostRuntime",
           type: `"runtime"`,
-          parameters: "parameters: $parameters",
+          entryFields: "parameters: $parameters",
           variables: "$ik: SafeString!, $ledgerIk: SafeString!, $parameters: JSON!",
         }),
       ].join("\n"),
@@ -502,7 +556,7 @@ describe("rendering", () => {
   it("exposes the entry fields the operation binds", () => {
     const output = generate(
       entryOperation({
-        parameters: "posted: $posted, tags: $tags, parameters: {amount: $amount}",
+        entryFields: "posted: $posted, tags: $tags, parameters: {amount: $amount}",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $tags: [LedgerEntryTagInput!], $amount: String!",
       }),
@@ -525,7 +579,7 @@ describe("rendering", () => {
     // at all -- so deriving the set would leave it permanently unreachable.
     const output = generate(
       entryOperation({
-        parameters: "parameters: {amount: $amount}",
+        entryFields: "parameters: {amount: $amount}",
         variables: "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!",
       }),
     );
@@ -545,7 +599,7 @@ describe("rendering", () => {
     const warn = vi.fn();
     const output = generate(
       entryOperation({
-        parameters: "lines: $lines",
+        entryFields: "lines: $lines",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $lines: [LedgerLineInput!]!",
       }),
@@ -562,7 +616,7 @@ describe("rendering", () => {
     const output = generate(
       entryOperation({
         typeVersion: "3",
-        parameters: `parameters: {amount: $amount}`,
+        entryFields: `parameters: {amount: $amount}`,
       }),
     );
 
@@ -607,7 +661,7 @@ describe("rendering", () => {
             name: "PostUserFundsAccount_v2",
             type: `"user-funds-account"`,
             typeVersion: "2",
-            parameters:
+            entryFields:
               "parameters: {amount: $amount, feeAmount: $feeAmount, memo: $memo}",
             variables:
               "$ik: SafeString!, $ledgerIk: SafeString!, $amount: String!, $feeAmount: Int64!, $memo: String",
@@ -615,7 +669,7 @@ describe("rendering", () => {
           entryOperation({
             name: "PostRuntimeThing",
             type: `"runtime-thing"`,
-            parameters: "parameters: $parameters",
+            entryFields: "parameters: $parameters",
             variables:
               "$ik: SafeString!, $ledgerIk: SafeString!, $parameters: JSON!",
           }),

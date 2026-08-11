@@ -47,7 +47,10 @@ const surfaceOf = (file: string) =>
     name: payload.builderName,
     type: payload.entryType,
     version: payload.typeVersion,
-    parameters: payload.parameters.map((parameter) => parameter.wireName),
+    parameters:
+      payload.parametersMode === "typed"
+        ? payload.parameters.map((parameter) => parameter.wireName)
+        : [],
   }));
 
 const generatedClient = read(

@@ -48,14 +48,21 @@ export type TypedEntryField = {
      */
     wireKey?: string;
 } & BoundValue;
-/** How the source operation exposes `parameters`, if at all. */
-export type ParametersMode = 
-/** An inline object literal, so each parameter is typed individually. */
-"typed"
-/** Bound to a variable, so the payload falls back to an untyped map. */
- | "untyped"
-/** Not in the operation at all, so the caller cannot set parameters. */
- | "absent";
+/**
+ * How the source operation exposes `parameters`, if at all: as an inline object
+ * literal, so each parameter is typed individually; bound to a variable, so the
+ * payload falls back to an untyped map; or not at all, so the caller cannot set
+ * parameters. Each carries only what that case has.
+ */
+export type PayloadParameters = {
+    parametersMode: "typed";
+    parameters: TypedEntryParameter[];
+} | {
+    parametersMode: "untyped";
+    parametersType: TypeNode | undefined;
+} | {
+    parametersMode: "absent";
+};
 /** A typed payload for one `(entry type, typeVersion)` pair. */
 export type TypedEntryPayload = {
     entryType: string;
@@ -64,14 +71,9 @@ export type TypedEntryPayload = {
     operationName: string;
     /** Entry fields the caller may set, in the operation's source order. */
     fields: TypedEntryField[];
-    parametersMode: ParametersMode;
-    /** Typed parameters in source order. Empty unless `parametersMode` is `typed`. */
-    parameters: TypedEntryParameter[];
-    /** The declared type of `parameters` when `parametersMode` is `untyped`. */
-    parametersType?: TypeNode;
     /** The declared type of the entry's own `ik`, when bound to a variable. */
     ikType?: TypeNode;
-};
+} & PayloadParameters;
 /** A payload with its generated TypeScript identifiers assigned. */
 export type NamedTypedEntryPayload = TypedEntryPayload & {
     /** Name of the exported payload type, e.g. `UserFundsAccountV1`. */

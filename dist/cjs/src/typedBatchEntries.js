@@ -105,17 +105,24 @@ const getTypedEntryField = (operation) => {
     };
 };
 /**
- * The `typeVersion` the operation pins. `typeVersion` defaults to 1 when it is
- * not set, so an operation that pins no version — or pins one dynamically — is
- * normalised to 1 here: for the payload's identity, its name and its wire
- * payload alike.
+ * The `typeVersion` the operation pins, or undefined when it pins one
+ * dynamically. `typeVersion` defaults to 1 when it is not set, so an operation
+ * that pins no version is normalised to 1 — for the payload's identity, its name
+ * and its wire payload alike.
+ *
+ * A version bound to a variable is different: the caller of the single-entry
+ * operation chooses it, and a payload — whose name states one version and whose
+ * builder posts it — cannot. Those get no payload rather than a silent 1.
  */
 const getTypeVersion = (entry) => {
     const field = findObjectField(entry, "typeVersion");
-    if ((field === null || field === void 0 ? void 0 : field.value.kind) === graphql_1.Kind.INT) {
+    if (!field || field.value.kind === graphql_1.Kind.NULL) {
+        return 1;
+    }
+    if (field.value.kind === graphql_1.Kind.INT) {
         return Number.parseInt(field.value.value, 10);
     }
-    return 1;
+    return undefined;
 };
 /**
  * The entry fields the operation lets the caller set, in source order. A field
@@ -188,18 +195,14 @@ const getParameters = (entry, operation, warn) => {
     const parametersField = findObjectField(entry, "parameters");
     if (!parametersField) {
         // The operation posts no parameters, so neither may the caller.
-        return { parameters: [], parametersMode: "absent" };
+        return { parametersMode: "absent" };
     }
     if (parametersField.value.kind === graphql_1.Kind.VARIABLE) {
         const definition = findVariableDefinition(operation, parametersField.value.name.value);
-        return {
-            parameters: [],
-            parametersMode: "untyped",
-            parametersType: definition === null || definition === void 0 ? void 0 : definition.type,
-        };
+        return { parametersMode: "untyped", parametersType: definition === null || definition === void 0 ? void 0 : definition.type };
     }
     if (parametersField.value.kind !== graphql_1.Kind.OBJECT) {
-        return { parameters: [], parametersMode: "absent" };
+        return { parametersMode: "absent" };
     }
     const parameters = [];
     // Source order is the only ordering all SDKs can agree on, so it is preserved.
@@ -224,12 +227,15 @@ const getParameters = (entry, operation, warn) => {
     });
     if (parameters.length === 0) {
         // An empty object posts nothing, so the payload takes no parameters.
-        return { parameters: [], parametersMode: "absent" };
+        return { parametersMode: "absent" };
     }
-    return { parameters, parametersMode: "typed" };
+    return { parametersMode: "typed", parameters };
 };
 const identityOf = (payload) => JSON.stringify([payload.entryType, payload.typeVersion]);
-const sameNames = (a, b) => a.length === b.length && a.every(({ wireName }, i) => wireName === b[i].wireName);
+const sameList = (a, b) => a.length === b.length && a.every((name, index) => name === b[index]);
+const parameterNames = (payload) => payload.parametersMode === "typed"
+    ? payload.parameters.map((parameter) => parameter.wireName)
+    : [];
 /**
  * What the two operations disagree about, if anything. Both halves matter: the
  * winning operation decides the payload's parameters *and* which entry fields a
@@ -237,8 +243,14 @@ const sameNames = (a, b) => a.length === b.length && a.every(({ wireName }, i) =
  */
 const describeConflict = (a, b) => {
     const conflicts = [
-        !sameNames(a.parameters, b.parameters) ? "parameters" : undefined,
-        !sameNames(a.fields, b.fields) ? "entry fields" : undefined,
+        !sameList(parameterNames(a), parameterNames(b))
+            ? "parameters"
+            : undefined,
+        // Compare the name the caller writes: `ledger: { ik }` and `ledger: { id }`
+        // both set `ledger`, but they expose `ledgerIk` and `ledgerId`.
+        !sameList(a.fields.map((field) => field.name), b.fields.map((field) => field.name))
+            ? "entry fields"
+            : undefined,
     ].filter((conflict) => conflict !== undefined);
     return conflicts.join(" and ");
 };
@@ -251,7 +263,7 @@ const deriveTypedEntryPayloads = (documents, { warn = defaultWarn } = {}) => {
     const byIdentity = new Map();
     documents.forEach((document) => {
         document.definitions.forEach((definition) => {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e;
             if (definition.kind !== graphql_1.Kind.OPERATION_DEFINITION) {
                 return;
             }
@@ -272,7 +284,13 @@ const deriveTypedEntryPayloads = (documents, { warn = defaultWarn } = {}) => {
             const ikDefinition = (ikArgument === null || ikArgument === void 0 ? void 0 : ikArgument.value.kind) === graphql_1.Kind.VARIABLE
                 ? findVariableDefinition(definition, ikArgument.value.name.value)
                 : undefined;
-            const payload = Object.assign(Object.assign({ entryType, typeVersion: getTypeVersion(entry), operationName: (_d = (_c = definition.name) === null || _c === void 0 ? void 0 : _c.value) !== null && _d !== void 0 ? _d : "", fields: getFields(entry, definition, warn) }, getParameters(entry, definition, warn)), { ikType: ikDefinition === null || ikDefinition === void 0 ? void 0 : ikDefinition.type });
+            const typeVersion = getTypeVersion(entry);
+            if (typeVersion === undefined) {
+                warn(`Operation \`${(_c = definition.name) === null || _c === void 0 ? void 0 : _c.value}\` binds \`typeVersion\` to a variable, so its version is the caller's to choose. A typed payload names one version and posts it, so none is generated for \`${entryType}\` — post it with a raw \`AddLedgerEntryInput\`, which \`addLedgerEntries\` accepts alongside typed payloads.`);
+                return;
+            }
+            const payload = Object.assign(Object.assign({ entryType,
+                typeVersion, operationName: (_e = (_d = definition.name) === null || _d === void 0 ? void 0 : _d.value) !== null && _e !== void 0 ? _e : "", fields: getFields(entry, definition, warn) }, getParameters(entry, definition, warn)), { ikType: ikDefinition === null || ikDefinition === void 0 ? void 0 : ikDefinition.type });
             const identity = identityOf(payload);
             const existing = byIdentity.get(identity);
             if (existing) {
@@ -385,16 +403,16 @@ const renderField = (field, scalars) => {
     return `${docs}  ${renderPropertyKey(field.name)}${optional}: ${renderVariableType(field.type, scalars)}${undefinable};`;
 };
 const renderParameters = (payload, scalars) => {
-    var _a;
     if (payload.parametersMode === "absent") {
         // The operation posts no parameters, so the payload does not take any.
         return undefined;
     }
     if (payload.parametersMode === "untyped") {
-        const type = payload.parametersType
-            ? renderVariableType(payload.parametersType, scalars)
+        const { parametersType } = payload;
+        const type = parametersType
+            ? renderVariableType(parametersType, scalars)
             : "Scalars['JSON']['input']";
-        const required = ((_a = payload.parametersType) === null || _a === void 0 ? void 0 : _a.kind) === graphql_1.Kind.NON_NULL_TYPE ? "" : "?";
+        const required = (parametersType === null || parametersType === void 0 ? void 0 : parametersType.kind) === graphql_1.Kind.NON_NULL_TYPE ? "" : "?";
         const undefinable = required ? " | undefined" : "";
         return [
             "  /**",
@@ -425,9 +443,11 @@ const renderParameters = (payload, scalars) => {
  */
 const renderMember = ({ wireName, required, read, value = read, }) => ({
     wireName,
-    code: required
-        ? `    ${wireName}: ${value},`
-        : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
+    code: [
+        required
+            ? `    ${wireName}: ${value},`
+            : `    ...(${read} !== undefined && { ${wireName}: ${value} }),`,
+    ],
 });
 /**
  * An `entry` key built from members that may each be absent — `parameters`, or a
@@ -444,7 +464,7 @@ const renderObjectMember = ({ wireName, members, anyRequired, }) => {
                     `    ${wireName}: {`,
                     ...members.map((member) => `      ${member}`),
                     "    },",
-                ].join("\n"),
+                ],
             },
         };
     }
@@ -456,7 +476,7 @@ const renderObjectMember = ({ wireName, members, anyRequired, }) => {
         ].join("\n"),
         member: {
             wireName,
-            code: `    ...(Object.keys(${wireName}).length > 0 && { ${wireName} }),`,
+            code: [`    ...(Object.keys(${wireName}).length > 0 && { ${wireName} }),`],
         },
     };
 };
@@ -547,26 +567,24 @@ const renderBuilderBody = (payload) => {
     const members = [
         ...fields.members,
         ...(parametersMember ? [parametersMember] : []),
-        { wireName: "type", code: `    type: ${quote(payload.entryType)},` },
-        { wireName: "typeVersion", code: `    typeVersion: ${payload.typeVersion},` },
+        { wireName: "type", code: [`    type: ${quote(payload.entryType)},`] },
+        { wireName: "typeVersion", code: [`    typeVersion: ${payload.typeVersion},`] },
     ];
     // Keys are emitted in lexicographic order, which costs nothing to do here and
     // makes two SDKs' requests comparable byte for byte.
-    const entry = members
-        .sort((a, b) => (a.wireName < b.wireName ? -1 : 1))
-        .map((member) => member.code)
-        .join("\n");
+    const entry = [...members]
+        .sort((a, b) => a.wireName.localeCompare(b.wireName))
+        .flatMap((member) => member.code);
     const literal = (indent) => [
         "{",
-        `${indent}  entry: {`,
-        entry
-            .split("\n")
-            .map((line) => `${indent}${line}`)
-            .join("\n"),
-        `${indent}  },`,
-        `${indent}  ik: input.ik,`,
-        `${indent}}`,
-    ].join("\n");
+        "  entry: {",
+        ...entry,
+        "  },",
+        "  ik: input.ik,",
+        "}",
+    ]
+        .map((line, index) => (index === 0 ? line : `${indent}${line}`))
+        .join("\n");
     // An object whose members are all optional is built first, so the block body
     // is only used where it earns its keep.
     return preludes.length > 0
