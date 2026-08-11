@@ -15,7 +15,7 @@
  * including `lines`, for entry types whose lines are not fixed by the Schema —
  * and nothing else. Anything the operation fixes is not the caller's to set.
  */
-import { Kind, valueFromASTUntyped, } from "graphql";
+import { Kind, parseType, valueFromASTUntyped, } from "graphql";
 const defaultWarn = (message) => {
     // eslint-disable-next-line no-console
     console.warn(`[@fragment-dev/node-client] ${message}`);
@@ -25,6 +25,27 @@ const defaultWarn = (message) => {
  * payload, so none of the three is the caller's to set.
  */
 const DERIVED_ENTRY_FIELDS = ["type", "typeVersion", "parameters"];
+/**
+ * The `LedgerEntryInput` fields every payload exposes, whatever its operation
+ * binds, with their declared types (spec 2.3a).
+ *
+ * Deliberately not derived from the operation. An operation binds only the entry
+ * fields the CLI version that generated it chose to expose, and that choice has
+ * already changed between versions -- so deriving the set would invent a
+ * restriction the API does not have, and would move a payload's surface whenever
+ * the CLI changed. A payload travels as an `AddLedgerEntryInput`, so what the
+ * operation binds places no limit on what the payload may carry.
+ *
+ * `ik` and `ledgerIk` are always present already. `lines` is excluded: it cannot
+ * be combined with an entry that has a `type`.
+ */
+const COMMON_ENTRY_FIELDS = [
+    { name: "posted", type: "DateTime" },
+    { name: "description", type: "String" },
+    { name: "tags", type: "[LedgerEntryTagInput!]" },
+    { name: "groups", type: "[LedgerEntryGroupInput!]" },
+    { name: "conditions", type: "[LedgerEntryConditionInput!]" },
+];
 const findObjectField = (object, name) => object.fields.find((field) => field.name.value === name);
 const findVariableDefinition = (operation, variableName) => operation.variableDefinitions?.find((candidate) => candidate.variable.name.value === variableName);
 /**
@@ -139,6 +160,21 @@ const getFields = (entry, operation, warn) => {
             wireName,
             source: "fixed",
             value: valueFromASTUntyped(entryField.value),
+        });
+    });
+    // Spec 2.3a: every payload carries these, whether or not its operation binds
+    // them. Appended rather than interleaved, so the operation's own fields keep
+    // their source order.
+    COMMON_ENTRY_FIELDS.forEach(({ name, type }) => {
+        if (fields.some((field) => field.name === name)) {
+            return;
+        }
+        fields.push({
+            name,
+            wireName: name,
+            source: "variable",
+            type: parseType(type),
+            required: false,
         });
     });
     return fields;

@@ -62,15 +62,12 @@ export type Scalars = {
   UTCOffset: { input: string; output: string };
 };
 
-/** One or more entries in the batch could not be committed, so none of them were */
+/** Error returned when one or more Ledger Entries in the batch could not be added. */
 export type AddLedgerEntriesError = Error & {
   __typename?: "AddLedgerEntriesError";
   /** The status code of error. For example, 'ledger_entry_batch_operation_failed'. */
   code: Scalars["String"]["output"];
-  /**
-   * Why each entry that was itself at fault could not be committed. An entry
-   * absent from this list was rolled back only because the batch is atomic.
-   */
+  /** The list of errors for each Ledger Entry that was responsible for the batch's failure. */
   errors: Array<AddLedgerEntryError>;
   /** The error message */
   message: Scalars["String"]["output"];
@@ -86,19 +83,16 @@ export type AddLedgerEntriesResponse =
 
 export type AddLedgerEntriesResult = {
   __typename?: "AddLedgerEntriesResult";
-  /** The committed entries, in the same order as the input entries */
+  /** The added Ledger Entries, in the same order as the input */
   results: Array<AddLedgerEntryResult>;
 };
 
-/**
- * Why one entry within a batch could not be committed. This appears inside
- * AddLedgerEntriesError; it is not the error type of addLedgerEntry
- */
+/** Error details for a single Ledger Entry that was responsible for the batch's failure. */
 export type AddLedgerEntryError = Error & {
   __typename?: "AddLedgerEntryError";
   /** The status code of error. For example, 'ledger_entry_too_many_lines'. */
   code: Scalars["String"]["output"];
-  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) of the entry this error belongs to */
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) of the Ledger Entry */
   ik: Scalars["SafeString"]["output"];
   /** The error message */
   message: Scalars["String"]["output"];
@@ -107,9 +101,9 @@ export type AddLedgerEntryError = Error & {
 };
 
 export type AddLedgerEntryInput = {
-  /** The [Ledger Entry](https://fragment.dev/api-reference/api-types#input-types-ledgerentryinput) to commit */
+  /** The [Ledger Entry](https://fragment.dev/api-reference/api-types#input-types-ledgerentryinput) to add */
   entry: LedgerEntryInput;
-  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this entry */
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry */
   ik: Scalars["SafeString"]["input"];
 };
 
@@ -2277,9 +2271,9 @@ export type Mutation = {
   __typename?: "Mutation";
   _empty?: Maybe<Scalars["String"]["output"]>;
   /**
-   * Batch version of addLedgerEntry: commits every entry in one atomic,
-   * strongly-consistent transaction. Either every entry is committed or none
-   * are.
+   * Batch version of [addLedgerEntry](http://localhost:3001/api-reference/ledger-mutations#addledgerentry).
+   *
+   * Adds a batch of Ledger Entries in one synchronous and atomic transaction. Either every entry is added or none are.
    */
   addLedgerEntries: AddLedgerEntriesResponse;
   /** Adds a Ledger Entry to a Ledger. This Ledger Entry cannot be into a Linked Ledger Account. For that, use [reconcileTx](https://fragment.dev/api-reference/api-mutations#reconciletx) */
@@ -2383,6 +2377,8 @@ export type MutationCreateLedgerAccountsArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreatePaymentArgs = {
   amount: Scalars["Int96"]["input"];
+  ik: Scalars["SafeString"]["input"];
+  ledger: LedgerMatchInput;
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
@@ -2474,7 +2470,20 @@ export type Payment = {
   __typename?: "Payment";
   /** The secret handed to the payments SDK to render the payment method capture. */
   clientSecret: Scalars["String"]["output"];
+  /** The status of this Payment. */
+  status: PaymentStatus;
 };
+
+/**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+export enum PaymentStatus {
+  Processing = "processing",
+  RequiresConfirmation = "requires_confirmation",
+  Settled = "settled",
+}
 
 /**
  * Controls how lines are posted for a Ledger Entry.
