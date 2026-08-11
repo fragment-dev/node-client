@@ -10,22 +10,19 @@
  * reads those operations and emits a typed payload per `(type, typeVersion)`
  * pair, each of which builds an `AddLedgerEntryInput` for `addLedgerEntries`.
  *
- * The source operation is the source of truth for what a caller may provide. A
- * payload exposes exactly the entry fields its operation binds to a variable —
- * including `lines`, for entry types whose lines are not fixed by the Schema —
- * and nothing else. Anything the operation fixes is not the caller's to set.
+ * What a payload exposes is fixed by `LedgerEntryInput`, not derived from the
+ * operation: every payload carries the same common fields (§2.3a), so the CLI
+ * changing which fields it binds never moves a payload's surface.
+ *
+ * Two things follow. A value the operation fixes to a literal is encoded in the
+ * Schema, so the API derives it and the payload neither exposes nor re-posts it.
+ * And an entry type whose Ledger Lines the caller supplies gets no payload at
+ * all, since `lines` is not a common field — post those with a raw
+ * `AddLedgerEntryInput`, which `addLedgerEntries` accepts in the same batch.
  */
 import { type DocumentNode, type TypeNode } from "graphql";
-/** A value the source operation fixes, which the caller cannot set. */
-export type FixedValue = {
-    /** Fixed by the operation, so it is posted as written rather than exposed. */
-    source: "fixed";
-    /** The value itself, already reduced from its AST node. */
-    value: unknown;
-};
 /** A value the caller supplies, typed by the variable the operation binds. */
 export type BoundValue = {
-    source: "variable";
     /** The variable's declared type, which is where the payload's type comes from. */
     type: TypeNode;
     /** True when the variable's type is non-null. */
@@ -35,7 +32,7 @@ export type BoundValue = {
 export type TypedEntryParameter = {
     /** The parameter name from the Schema. Goes on the wire verbatim. */
     wireName: string;
-} & (BoundValue | FixedValue);
+} & BoundValue;
 /**
  * An entry field a typed payload lets the caller set, derived from the source
  * operation binding it to a variable.
@@ -50,7 +47,7 @@ export type TypedEntryField = {
      * sets `ledger: { ik }`, so this is `"ik"` there.
      */
     wireKey?: string;
-} & (BoundValue | FixedValue);
+} & BoundValue;
 /** How the source operation exposes `parameters`, if at all. */
 export type ParametersMode = 
 /** An inline object literal, so each parameter is typed individually. */

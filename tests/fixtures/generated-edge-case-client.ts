@@ -3477,7 +3477,7 @@ export type Sdk = ReturnType<typeof getSdk>;
  *
  * ```ts
  * await client.addLedgerEntries({
- *   entries: [runtimeLinesV1({ ik, ledgerIk, parameters: { ... } })],
+ *   entries: [untypedParametersV1({ ik, ledgerIk, parameters: { ... } })],
  * });
  * ```
  *
@@ -3485,45 +3485,6 @@ export type Sdk = ReturnType<typeof getSdk>;
  * here is what that entry type accepts — no more. A field you do not set is
  * left out of the request rather than sent as `null`.
  */
-
-/**
- * Payload for the `runtime_lines` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
- *
- * Derived from the `PostRuntimeLines` operation, which is what a caller
- * may set: these are exactly the fields that operation binds.
- */
-export type RuntimeLinesV1 = {
-  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
-  ik: Scalars['SafeString']['input'];
-  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
-  ledgerIk: Scalars['SafeString']['input'];
-  /** ISO 8601 timestamp to post this Ledger Entry at. */
-  posted?: Scalars['DateTime']['input'] | undefined;
-  description?: Scalars['String']['input'] | undefined;
-  /** The Ledger Lines to create, for entry types whose lines the Schema does not fix. */
-  lines: Array<LedgerLineInput>;
-  tags?: Array<LedgerEntryTagInput> | undefined;
-  groups?: Array<LedgerEntryGroupInput> | undefined;
-  conditions?: Array<LedgerEntryConditionInput> | undefined;
-};
-
-/** Builds an `addLedgerEntries` entry for `runtime_lines` (typeVersion 1). */
-export const runtimeLinesV1 = (
-  input: RuntimeLinesV1,
-): AddLedgerEntryInput => ({
-  entry: {
-    ...(input.conditions !== undefined && { conditions: input.conditions }),
-    ...(input.description !== undefined && { description: input.description }),
-    ...(input.groups !== undefined && { groups: input.groups }),
-    ledger: { ik: input.ledgerIk },
-    lines: input.lines,
-    ...(input.posted !== undefined && { posted: input.posted }),
-    ...(input.tags !== undefined && { tags: input.tags }),
-    type: 'runtime_lines',
-    typeVersion: 1,
-  },
-  ik: input.ik,
-});
 
 /**
  * Payload for the `untyped_parameters` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
@@ -3676,6 +3637,8 @@ export type FixedValuesV1 = {
   ledgerIk: Scalars['SafeString']['input'];
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
   parameters: {
@@ -3689,15 +3652,14 @@ export const fixedValuesV1 = (
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
-    description: 'posted by the nightly sweep',
+    ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
       amount: input.parameters.amount,
-      currency: 'USD',
     },
     ...(input.posted !== undefined && { posted: input.posted }),
-    tags: [{ key: 'source', value: 'sweep' }],
+    ...(input.tags !== undefined && { tags: input.tags }),
     type: 'fixed_values',
     typeVersion: 1,
   },
@@ -3709,7 +3671,6 @@ export const fixedValuesV1 = (
  * when the entry type is only known at runtime.
  */
 export const typedLedgerEntryBuilders = {
-  'runtime_lines@1': runtimeLinesV1,
   'untyped_parameters@1': untypedParametersV1,
   'all_optional@2': allOptionalV2,
   'either_ledger_key@1': eitherLedgerKeyV1,

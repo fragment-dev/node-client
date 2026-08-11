@@ -10,12 +10,17 @@
  * reads those operations and emits a typed payload per `(type, typeVersion)`
  * pair, each of which builds an `AddLedgerEntryInput` for `addLedgerEntries`.
  *
- * The source operation is the source of truth for what a caller may provide. A
- * payload exposes exactly the entry fields its operation binds to a variable —
- * including `lines`, for entry types whose lines are not fixed by the Schema —
- * and nothing else. Anything the operation fixes is not the caller's to set.
+ * What a payload exposes is fixed by `LedgerEntryInput`, not derived from the
+ * operation: every payload carries the same common fields (§2.3a), so the CLI
+ * changing which fields it binds never moves a payload's surface.
+ *
+ * Two things follow. A value the operation fixes to a literal is encoded in the
+ * Schema, so the API derives it and the payload neither exposes nor re-posts it.
+ * And an entry type whose Ledger Lines the caller supplies gets no payload at
+ * all, since `lines` is not a common field — post those with a raw
+ * `AddLedgerEntryInput`, which `addLedgerEntries` accepts in the same batch.
  */
-import { Kind, parseType, valueFromASTUntyped, } from "graphql";
+import { Kind, parseType, } from "graphql";
 const defaultWarn = (message) => {
     // eslint-disable-next-line no-console
     console.warn(`[@fragment-dev/node-client] ${message}`);
@@ -83,6 +88,13 @@ const getTypedEntryField = (operation) => {
         field: selection,
         entry: entryArgument.value,
         entryType: typeField.value.value,
+        /**
+         * An entry type whose Lines the Schema does not fix takes them from the
+         * caller, and a payload cannot carry them: `lines` is not a common field.
+         * Generating one anyway would hand the caller something that always posts
+         * an entry with no Lines, so no payload is generated at all.
+         */
+        hasLines: !!findObjectField(entryArgument.value, "lines"),
     };
 };
 /**
@@ -121,7 +133,6 @@ const getFields = (entry, operation, warn) => {
                 name,
                 wireName,
                 wireKey,
-                source: "variable",
                 type: definition.type,
                 required: definition.type.kind === Kind.NON_NULL_TYPE,
             });
@@ -143,24 +154,11 @@ const getFields = (entry, operation, warn) => {
                     });
                     return;
                 }
-                fields.push({
-                    name: key,
-                    wireName,
-                    wireKey: key,
-                    source: "fixed",
-                    value: valueFromASTUntyped(matchField.value),
-                });
+                // Fixed by the operation, so encoded in the Schema: the API derives it.
             });
             return;
         }
-        // The operation fixes this field, so the caller cannot set it — but it is
-        // still part of the entry the operation describes, so it is still posted.
-        fields.push({
-            name: wireName,
-            wireName,
-            source: "fixed",
-            value: valueFromASTUntyped(entryField.value),
-        });
+        // Fixed by the operation, so encoded in the Schema: the API derives it.
     });
     // Spec 2.3a: every payload carries these, whether or not its operation binds
     // them. Appended rather than interleaved, so the operation's own fields keep
@@ -172,7 +170,6 @@ const getFields = (entry, operation, warn) => {
         fields.push({
             name,
             wireName: name,
-            source: "variable",
             type: parseType(type),
             required: false,
         });
@@ -200,12 +197,8 @@ const getParameters = (entry, operation, warn) => {
     // Source order is the only ordering all SDKs can agree on, so it is preserved.
     parametersField.value.fields.forEach((field) => {
         if (field.value.kind !== Kind.VARIABLE) {
-            // Fixed by the operation: not the caller's to set, but still posted.
-            parameters.push({
-                wireName: field.name.value,
-                source: "fixed",
-                value: valueFromASTUntyped(field.value),
-            });
+            // Fixed by the operation, so encoded in the Schema: the API derives it
+            // from there and the payload neither exposes nor re-posts it.
             return;
         }
         const variableName = field.value.name.value;
@@ -216,7 +209,6 @@ const getParameters = (entry, operation, warn) => {
         }
         parameters.push({
             wireName: field.name.value,
-            source: "variable",
             type: definition.type,
             required: definition.type.kind === Kind.NON_NULL_TYPE,
         });
@@ -257,7 +249,13 @@ export const deriveTypedEntryPayloads = (documents, { warn = defaultWarn } = {})
             if (!recognised) {
                 return;
             }
-            const { field, entry, entryType } = recognised;
+            const { field, entry, entryType, hasLines } = recognised;
+            if (hasLines) {
+                // Not silent: the payload a caller would reach for is the one that is
+                // missing, so say which entry type it was and what to reach for instead.
+                warn(`Operation \`${definition.name?.value}\` posts \`${entryType}\` with Ledger Lines, which a typed payload cannot carry. No payload is generated for it — post it with a raw \`AddLedgerEntryInput\`, which \`addLedgerEntries\` accepts alongside typed payloads.`);
+                return;
+            }
             // `ik` is an argument of `addLedgerEntry`, not a field of `entry`. Every
             // entry in a batch needs its own, so a payload always takes one.
             const ikArgument = field.arguments?.find((argument) => argument.name.value === "ik");
@@ -342,20 +340,6 @@ export const collectScalarNames = (schema) => {
 };
 /** A single-quoted TypeScript string literal, matching the codegen output style. */
 const quote = (value) => `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
-/** A value the operation fixed, as a TypeScript literal in the file's style. */
-const renderLiteral = (value) => {
-    if (typeof value === "string") {
-        return quote(value);
-    }
-    if (Array.isArray(value)) {
-        return `[${value.map(renderLiteral).join(", ")}]`;
-    }
-    if (value !== null && typeof value === "object") {
-        const entries = Object.entries(value).map(([key, nested]) => `${renderPropertyKey(key)}: ${renderLiteral(nested)}`);
-        return entries.length > 0 ? `{ ${entries.join(", ")} }` : "{}";
-    }
-    return JSON.stringify(value) ?? "undefined";
-};
 const renderNamedType = (type, scalars) => {
     const { value } = type.name;
     // Anything that is not a scalar is an enum or an input object, both of which
@@ -417,7 +401,7 @@ const renderParameters = (payload, scalars) => {
             `  parameters${required}: ${type}${undefinable};`,
         ].join("\n");
     }
-    const bound = payload.parameters.filter((parameter) => parameter.source === "variable");
+    const bound = payload.parameters;
     if (bound.length === 0) {
         // Every parameter is fixed by the operation, so there is nothing to set.
         return undefined;
@@ -487,10 +471,9 @@ const renderParametersMember = (payload) => {
             }),
         };
     }
-    // A parameter that is required or fixed is always there, so `parameters` is
-    // too. When every one of them is optional it may be empty, and the caller may
-    // not have passed the object at all, so it is read through `?.`.
-    const alwaysPresent = payload.parameters.some((parameter) => parameter.source === "fixed" || parameter.required);
+    // A payload with a required parameter always takes a `parameters` object; one
+    // whose parameters are all optional may not, so it is read through `?.`.
+    const alwaysPresent = payload.parameters.some((parameter) => parameter.required);
     const access = alwaysPresent ? "input.parameters" : "input.parameters?";
     return renderObjectMember({
         wireName: "parameters",
@@ -498,9 +481,6 @@ const renderParametersMember = (payload) => {
         // Parameters keep the order the source operation declares them in.
         members: payload.parameters.map((parameter) => {
             const key = renderPropertyKey(parameter.wireName);
-            if (parameter.source === "fixed") {
-                return `${key}: ${renderLiteral(parameter.value)},`;
-            }
             const read = `${access}.${parameter.wireName}`;
             return parameter.required
                 ? `${key}: ${read},`
@@ -525,14 +505,6 @@ const renderFieldMembers = (payload) => {
     groups.forEach((fields, wireName) => {
         if (fields.length === 1) {
             const [field] = fields;
-            if (field.source === "fixed") {
-                const value = renderLiteral(field.value);
-                members.push({
-                    wireName,
-                    code: `    ${wireName}: ${field.wireKey ? `{ ${field.wireKey}: ${value} }` : value},`,
-                });
-                return;
-            }
             members.push(renderMember({
                 wireName,
                 required: field.required,
@@ -545,13 +517,10 @@ const renderFieldMembers = (payload) => {
         }
         const { member, prelude } = renderObjectMember({
             wireName,
-            anyRequired: fields.some((field) => field.source === "fixed" || field.required),
+            anyRequired: fields.some((field) => field.required),
             members: fields.map((field) => {
                 // Grouping only happens for match objects, so every field has a key.
                 const key = renderPropertyKey(field.wireKey ?? field.name);
-                if (field.source === "fixed") {
-                    return `${key}: ${renderLiteral(field.value)},`;
-                }
                 const read = `input.${field.name}`;
                 return field.required
                     ? `${key}: ${read},`
@@ -605,9 +574,7 @@ const renderPayload = (payload, scalars) => {
         : "Scalars['SafeString']['input']";
     const members = [
         `  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */\n  ik: ${ikType};`,
-        ...payload.fields
-            .filter((field) => field.source === "variable")
-            .map((field) => renderField(field, scalars)),
+        ...payload.fields.map((field) => renderField(field, scalars)),
         renderParameters(payload, scalars),
     ].filter((member) => member !== undefined);
     return `/**

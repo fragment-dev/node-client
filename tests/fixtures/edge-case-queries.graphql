@@ -2,7 +2,10 @@
 # generate, but that a caller may write by hand and that the derivation supports.
 # Unlike the other fixtures, this file is not generated -- edit it directly.
 
-# An entry type whose lines the Schema does not fix, so the caller supplies them.
+# An entry type whose Lines the Schema does not fix, so the caller supplies them.
+# No payload is generated for it: `lines` is not a common field, so a payload
+# could only ever post an entry with no Lines. Post these with a raw
+# `AddLedgerEntryInput` instead.
 mutation PostRuntimeLines(
   $ik: SafeString!
   $ledgerIk: SafeString!
@@ -78,8 +81,9 @@ mutation PostEitherLedgerKey(
   }
 }
 
-# Values the operation fixes: the caller cannot set them, but the entry still
-# posts them, the same way the single-entry mutation would.
+# Values the operation fixes. They are encoded in the Schema the operation was
+# generated from, so the API derives them: the payload neither exposes nor
+# re-posts them.
 mutation PostFixedValues(
   $ik: SafeString!
   $ledgerIk: SafeString!

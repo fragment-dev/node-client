@@ -18,7 +18,6 @@ import {
   allOptionalV2,
   eitherLedgerKeyV1,
   fixedValuesV1,
-  runtimeLinesV1,
   untypedParametersV1,
 } from "./fixtures/generated-edge-case-client.js";
 
@@ -430,22 +429,16 @@ describe("payload shapes the Fragment CLI does not generate", () => {
   // These come from tests/fixtures/edge-case-queries.graphql, hand-written to
   // cover operation shapes the CLI has no reason to emit but a caller may write.
 
-  it("carries caller-supplied lines for an entry type the Schema does not fix", () => {
-    const built = runtimeLinesV1({
-      ik: "entry-ik",
-      ledgerIk: "ledger-ik",
-      lines: [
-        { account: { path: "asset-root" }, amount: "100", key: "asset-line" },
-        { account: { path: "liability-root" }, amount: "100", key: "liability-line" },
-      ],
-    });
+  it("generates no payload for an entry type that takes Ledger Lines", async () => {
+    const client = await import("./fixtures/generated-edge-case-client.js");
 
-    expect(built.entry.lines).toHaveLength(2);
-    // `description` is bound by the operation but unset, so it stays off the wire.
-    expect("description" in built.entry).toBe(false);
-    expect("parameters" in built.entry).toBe(false);
+    // `runtime_lines` binds `lines`, which no payload can carry, so the codegen
+    // leaves it out rather than generating one that always posts without Lines.
+    expect("runtimeLinesV1" in client).toBe(false);
+    expect(Object.keys(client.typedLedgerEntryBuilders)).not.toContain(
+      "runtime_lines@1",
+    );
   });
-
   it("passes an untyped parameters map straight through", () => {
     const built = untypedParametersV1({
       ik: "entry-ik",
@@ -501,10 +494,10 @@ describe("payload shapes the Fragment CLI does not generate", () => {
   it("sends an edge-case payload through a batch alongside a raw input", async () => {
     await client.addLedgerEntries({
       entries: [
-        runtimeLinesV1({
+        fixedValuesV1({
           ik: "typed",
           ledgerIk: "ledger-ik",
-          lines: [{ account: { path: "asset-root" }, amount: "100" }],
+          parameters: { amount: "100" },
         }),
         {
           ik: "raw",
@@ -522,30 +515,30 @@ describe("payload shapes the Fragment CLI does not generate", () => {
 });
 
 describe("values the operation fixes", () => {
-  it("posts them without offering them to the caller", () => {
+  it("leaves them to the API rather than re-posting them", () => {
     const built = fixedValuesV1({
       ik: "entry-ik",
       ledgerIk: "ledger-ik",
       parameters: { amount: "100" },
     });
 
-    // The operation fixed these, so the batched entry carries them exactly as
-    // the single-entry mutation would.
-    expect(built.entry.description).toEqual("posted by the nightly sweep");
-    expect(built.entry.tags).toEqual([{ key: "source", value: "sweep" }]);
-    expect(built.entry.parameters).toEqual({ amount: "100", currency: "USD" });
+    // `description`, `tags` and the `currency` parameter are fixed in the source
+    // operation, so they are encoded in the Schema and the API derives them.
+    expect("description" in built.entry).toBe(false);
+    expect("tags" in built.entry).toBe(false);
+    expect(built.entry.parameters).toEqual({ amount: "100" });
   });
 
-  it("keeps a fixed parameter in the order the operation declares it", () => {
+  it("still lets the caller set a common field the operation fixed", () => {
+    // A fixed value never blocks the caller: every common field is settable.
     const built = fixedValuesV1({
       ik: "entry-ik",
       ledgerIk: "ledger-ik",
+      description: "set by the caller",
       parameters: { amount: "100" },
     });
 
-    expect(Object.keys(built.entry.parameters ?? {})).toEqual([
-      "amount",
-      "currency",
-    ]);
+    expect(built.entry.description).toEqual("set by the caller");
   });
+
 });

@@ -256,7 +256,7 @@ describe("parameters", () => {
     expect(
       payloads[0].parameters.map((parameter) => ({
         wireName: parameter.wireName,
-        required: parameter.source === "variable" && parameter.required,
+        required: parameter.required,
       })),
     ).toEqual([
       { wireName: "amount", required: true },
@@ -281,23 +281,17 @@ describe("parameters", () => {
     ]);
   });
 
-  it("marks a parameter fixed by the operation rather than caller-supplied", () => {
+  it("leaves a parameter the operation fixes to the API", () => {
     const payloads = derive(
       entryOperation({
         parameters: `parameters: {amount: $amount, currency: "USD", nested: {a: 1}}`,
       }),
     );
 
-    // All three are posted, in source order; only `amount` comes from the caller.
-    expect(
-      payloads[0].parameters.map((parameter) => [
-        parameter.wireName,
-        parameter.source,
-      ]),
-    ).toEqual([
-      ["amount", "variable"],
-      ["currency", "fixed"],
-      ["nested", "fixed"],
+    // A fixed value is encoded in the Schema, so the API derives it from there:
+    // the payload neither exposes it nor re-posts it.
+    expect(payloads[0].parameters.map((parameter) => parameter.wireName)).toEqual([
+      "amount",
     ]);
   });
 
@@ -325,7 +319,7 @@ describe("parameters", () => {
     });
   });
 
-  it("keeps a value the operation fixes, without offering it to the caller", () => {
+  it("leaves values the operation fixes to the API", () => {
     const warn = vi.fn();
     const output = generate(
       entryOperation({
@@ -334,25 +328,20 @@ describe("parameters", () => {
       warn,
     );
 
-    // The operation fixed these, so the entry still posts them — the caller just
-    // has no say in them. This is normal, so it is not warned about.
-    expect(builderBody(output, "thingV1")).toContain("    posted: '2024-01-01',");
-    expect(builderBody(output, "thingV1")).toContain("      currency: 'USD',");
-    expect(payloadType(output, "ThingV1")).not.toContain("posted");
-    expect(payloadType(output, "ThingV1")).not.toContain("currency");
+    // Both are encoded in the Schema the operation was generated from, so the
+    // API derives them: the payload neither exposes nor re-posts either one.
+    expect(builderBody(output, "thingV1")).not.toContain("2024-01-01");
+    expect(builderBody(output, "thingV1")).not.toContain("USD");
     expect(warn).not.toHaveBeenCalled();
   });
-
-  it("posts fixed parameters even when the caller can set none of them", () => {
+  it("takes no parameters when the operation fixes all of them", () => {
     const output = generate(
       entryOperation({ parameters: `parameters: {currency: "USD"}` }),
     );
 
-    expect(builderBody(output, "thingV1")).toContain("      currency: 'USD',");
-    // Nothing is caller-settable, so the payload has no `parameters` field.
+    expect(builderBody(output, "thingV1")).not.toContain("USD");
     expect(payloadType(output, "ThingV1")).not.toContain("parameters");
   });
-
   it("warns and skips a parameter bound to an undeclared variable", () => {
     const warn = vi.fn();
     const payloads = derive(
@@ -552,42 +541,38 @@ describe("rendering", () => {
     expect(payload).not.toContain("lines");
   });
 
-  it("exposes lines when the operation binds them", () => {
+  it("generates no payload for an entry type that takes Ledger Lines", () => {
+    const warn = vi.fn();
     const output = generate(
       entryOperation({
         parameters: "lines: $lines",
         variables:
           "$ik: SafeString!, $ledgerIk: SafeString!, $lines: [LedgerLineInput!]!",
       }),
+      warn,
     );
 
-    // An entry type whose lines the Schema does not fix takes them from the
-    // caller, and the operation is what says so.
-    const payload = payloadType(output, "ThingV1");
-    expect(payload).toContain("lines: Array<LedgerLineInput>;");
-    // With no `parameters` in the operation, the payload takes none.
-    expect(payload).not.toContain("parameters");
+    // `lines` is not a common field, so a payload for this entry type could only
+    // ever post an entry with no Lines. Better to have none, and say why.
+    expect(output).toEqual("");
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("raw `AddLedgerEntryInput`");
   });
-
-  it("never lets the caller set type, typeVersion or a fixed field", () => {
+  it("never lets the caller set type or typeVersion", () => {
     const output = generate(
       entryOperation({
         typeVersion: "3",
-        parameters: `description: "fixed by the operation", parameters: {amount: $amount}`,
+        parameters: `parameters: {amount: $amount}`,
       }),
     );
 
     const payload = payloadType(output, "ThingV3");
     expect(payload).not.toContain("  type");
     expect(payload).not.toContain("  typeVersion");
-    // A field bound to a literal is fixed by the operation, so it is not the
-    // caller's to set.
-    expect(payload).not.toContain("description");
     // The version still reaches the wire, from the operation rather than the caller.
     expect(builderBody(output, "thingV3")).toContain("    typeVersion: 3,");
     expect(builderBody(output, "thingV3")).toContain("    type: 'thing',");
   });
-
   it("exposes a whole-object ledger binding as ledger", () => {
     const output = generate(`
       mutation PostThing($ik: SafeString!, $ledger: LedgerMatchInput, $amount: String!) {
