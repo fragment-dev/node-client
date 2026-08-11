@@ -481,12 +481,13 @@ test("addLedgerEntries commits a batch of typed payloads", async () => {
     userFundsAccountV1({
       ik: firstIk,
       ledgerIk,
-      parameters: { amount: "200" },
+      amount: "200",
     }),
     userFundsAccountV2({
       ik: secondIk,
       ledgerIk,
-      parameters: { amount: "300", feeAmount: "10" },
+      amount: "300",
+      feeAmount: "10",
     }),
   ];
 

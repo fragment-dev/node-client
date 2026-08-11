@@ -245,18 +245,16 @@ describe("generated template client", () => {
     const built = orderPlacedV2({
       ik: "order-1",
       ledgerIk: "marketplace",
-      parameters: {
-        // Given in a different order than the operation declares them.
-        driver_id: "driver-1",
-        user_id: "user-1",
-        order_id: "order-1",
-        order_cost: "2000",
-        currency: "USD",
-        platform_fee: "200",
-        service_fee: "100",
-        driver_fee: "300",
-        restaurant_id: "restaurant-1",
-      },
+      // Given in a different order than the operation declares them.
+      driver_id: "driver-1",
+      user_id: "user-1",
+      order_id: "order-1",
+      order_cost: "2000",
+      currency: "USD",
+      platform_fee: "200",
+      service_fee: "100",
+      driver_fee: "300",
+      restaurant_id: "restaurant-1",
     });
 
     expect(Object.keys(built.entry.parameters ?? {})).toEqual([
@@ -277,17 +275,15 @@ describe("generated template client", () => {
     const input = {
       ik: "order-1",
       ledgerIk: "marketplace",
-      parameters: {
-        user_id: "user-1",
-        order_id: "order-1",
-        order_cost: "2000",
-        currency: "USD",
-        platform_fee: "200",
-        service_fee: "100",
-        driver_fee: "300",
-        restaurant_id: "restaurant-1",
-        driver_id: "driver-1",
-      },
+      user_id: "user-1",
+      order_id: "order-1",
+      order_cost: "2000",
+      currency: "USD",
+      platform_fee: "200",
+      service_fee: "100",
+      driver_fee: "300",
+      restaurant_id: "restaurant-1",
+      driver_id: "driver-1",
     };
 
     expect(JSON.stringify(orderPlacedV2RuntimeArgs(input))).toEqual(
@@ -299,16 +295,14 @@ describe("generated template client", () => {
     const built = orderPlacedV1({
       ik: "order-1",
       ledgerIk: "marketplace",
-      parameters: {
-        user_id: "user-1",
-        order_id: "order-1",
-        order_cost: "2000",
-        currency: "USD",
-        platform_fee: "200",
-        driver_fee: "300",
-        restaurant_id: "restaurant-1",
-        driver_id: "driver-1",
-      },
+      user_id: "user-1",
+      order_id: "order-1",
+      order_cost: "2000",
+      currency: "USD",
+      platform_fee: "200",
+      driver_fee: "300",
+      restaurant_id: "restaurant-1",
+      driver_id: "driver-1",
     });
 
     expect(built.entry.type).toEqual("order_placed");
@@ -330,13 +324,11 @@ describe("generated template client", () => {
       // @ts-expect-error this entry type's lines are fixed by the Schema, so its
       // operation does not bind them and the payload does not accept them.
       lines: [],
-      parameters: {
-        user_id: "user-1",
-        disputes_id: "dispute-1",
-        amount: "500",
-        currency: "USD",
-        order_id: "order-1",
-      },
+      user_id: "user-1",
+      disputes_id: "dispute-1",
+      amount: "500",
+      currency: "USD",
+      order_id: "order-1",
     });
 
     expect("lines" in built.entry).toBe(false);

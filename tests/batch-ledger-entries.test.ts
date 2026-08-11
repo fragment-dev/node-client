@@ -100,14 +100,12 @@ describe("wire contract", () => {
               precondition: { ownBalance: { gte: "0" } },
             },
           ],
-          parameters: {
-            user_id: "user-1",
-            disputes_id: "dispute-1",
-            amount: "500",
-            currency: "USD",
-            payout_id: "payout-1",
-            order_id: "order-1",
-          },
+          user_id: "user-1",
+          disputes_id: "dispute-1",
+          amount: "500",
+          currency: "USD",
+          payout_id: "payout-1",
+          order_id: "order-1",
         }),
       ],
     });
@@ -120,6 +118,7 @@ describe("wire contract", () => {
           type: "dispute_payout_initiate",
           typeVersion: 1,
           posted: "2024-01-01T00:00:00Z",
+          // Flat on the payload, nested on the wire.
           parameters: {
             user_id: "user-1",
             disputes_id: "dispute-1",
@@ -146,7 +145,7 @@ describe("wire contract", () => {
           ledgerIk: "ledger-ik",
           // `posted` is the only other field this entry type's operation binds,
           // and it is unset.
-          parameters: { amount: "200" },
+          amount: "200",
         }),
       ],
     });
@@ -169,7 +168,7 @@ describe("wire contract", () => {
           ik: "entry-ik",
           ledgerIk: "ledger-ik",
           posted: undefined,
-          parameters: { amount: "200" },
+          amount: "200",
         }),
       ],
     });
@@ -185,7 +184,7 @@ describe("wire contract", () => {
         paymentProcessingV1({
           ik: "entry-ik",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "400" },
+          amount: "400",
         }),
       ],
     });
@@ -199,7 +198,7 @@ describe("wire contract", () => {
         userFundsAccountV1({
           ik: "entry-ik",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "200" },
+          amount: "200",
         }),
       ],
     });
@@ -214,12 +213,13 @@ describe("wire contract", () => {
           ik: "second-shaped-first",
           ledgerIk: "ledger-ik",
           // Given out of source order by the caller...
-          parameters: { feeAmount: "10", amount: "200" },
+          feeAmount: "10",
+          amount: "200",
         }),
         userFundsAccountV1({
           ik: "then-this-one",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "1" },
+          amount: "1",
         }),
       ],
     });
@@ -242,7 +242,7 @@ describe("wire contract", () => {
         userFundsAccountV1({
           ik: "entry-ik",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "café — 元气 🎉" },
+          amount: "café — 元气 🎉",
         }),
       ],
     });
@@ -257,7 +257,7 @@ describe("wire contract", () => {
     const build = typedLedgerEntryBuilders["fundingSettlement@1"];
     await client.addLedgerEntries({
       entries: [
-        build({ ik: "entry-ik", ledgerIk: "ledger-ik", parameters: { amount: "5" } }),
+        build({ ik: "entry-ik", ledgerIk: "ledger-ik", amount: "5", }),
       ],
     });
 
@@ -270,7 +270,7 @@ describe("wire contract", () => {
         userFundsAccountV1({
           ik: "typed",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "200" },
+          amount: "200",
         }),
         {
           ik: "raw",
@@ -316,7 +316,7 @@ describe("batch semantics", () => {
         userFundsAccountV1({
           ik: "entry-ik",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "200" },
+          amount: "200",
         }),
       ],
     });
@@ -366,7 +366,7 @@ describe("batch semantics", () => {
           userFundsAccountV1({
             ik: "first",
             ledgerIk: "ledger-ik",
-            parameters: { amount: "200" },
+            amount: "200",
           }),
         ],
       });
@@ -416,7 +416,7 @@ describe("batch semantics", () => {
           userFundsAccountV1({
             ik: "first",
             ledgerIk: "ledger-ik",
-            parameters: { amount: "200" },
+            amount: "200",
           }),
         ],
       }),
@@ -461,7 +461,7 @@ describe("payload shapes the Fragment CLI does not generate", () => {
     const partial = allOptionalV2({
       ik: "entry-ik",
       ledgerIk: "ledger-ik",
-      parameters: { note: "just this one" },
+      note: "just this one",
     });
     expect(partial.entry.parameters).toEqual({ note: "just this one" });
   });
@@ -473,20 +473,20 @@ describe("payload shapes the Fragment CLI does not generate", () => {
       ik: "entry-ik",
       ledgerId: "ledger-id",
       ledgerIk: "ledger-ik",
-      parameters: { amount: "100" },
+      amount: "100",
     });
     expect(both.entry.ledger).toEqual({ id: "ledger-id", ik: "ledger-ik" });
 
     const byId = eitherLedgerKeyV1({
       ik: "entry-ik",
       ledgerId: "ledger-id",
-      parameters: { amount: "100" },
+      amount: "100",
     });
     expect(byId.entry.ledger).toEqual({ id: "ledger-id" });
 
     const neither = eitherLedgerKeyV1({
       ik: "entry-ik",
-      parameters: { amount: "100" },
+      amount: "100",
     });
     expect("ledger" in neither.entry).toBe(false);
   });
@@ -497,7 +497,7 @@ describe("payload shapes the Fragment CLI does not generate", () => {
         fixedValuesV1({
           ik: "typed",
           ledgerIk: "ledger-ik",
-          parameters: { amount: "100" },
+          amount: "100",
         }),
         {
           ik: "raw",
@@ -519,7 +519,7 @@ describe("values the operation fixes", () => {
     const built = fixedValuesV1({
       ik: "entry-ik",
       ledgerIk: "ledger-ik",
-      parameters: { amount: "100" },
+      amount: "100",
     });
 
     // `description`, `tags` and the `currency` parameter are fixed in the source
@@ -535,7 +535,7 @@ describe("values the operation fixes", () => {
       ik: "entry-ik",
       ledgerIk: "ledger-ik",
       description: "set by the caller",
-      parameters: { amount: "100" },
+      amount: "100",
     });
 
     expect(built.entry.description).toEqual("set by the caller");

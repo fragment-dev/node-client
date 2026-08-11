@@ -3545,10 +3545,8 @@ export type AllOptionalV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters?: {
-    memo?: Scalars['String']['input'] | undefined;
-    note?: Scalars['String']['input'] | undefined;
-  } | undefined;
+  memo?: Scalars['String']['input'] | undefined;
+  note?: Scalars['String']['input'] | undefined;
 };
 
 /** Builds an `addLedgerEntries` entry for `all_optional` (typeVersion 2). */
@@ -3556,8 +3554,8 @@ export const allOptionalV2 = (
   input: AllOptionalV2,
 ): AddLedgerEntryInput => {
   const parameters = {
-    ...(input.parameters?.memo !== undefined && { memo: input.parameters?.memo }),
-    ...(input.parameters?.note !== undefined && { note: input.parameters?.note }),
+    ...(input.memo !== undefined && { memo: input.memo }),
+    ...(input.note !== undefined && { note: input.note }),
   };
   return {
     entry: {
@@ -3593,9 +3591,7 @@ export type EitherLedgerKeyV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `either_ledger_key` (typeVersion 1). */
@@ -3613,7 +3609,7 @@ export const eitherLedgerKeyV1 = (
       ...(input.groups !== undefined && { groups: input.groups }),
       ...(Object.keys(ledger).length > 0 && { ledger }),
       parameters: {
-        amount: input.parameters.amount,
+        amount: input.amount,
       },
       ...(input.posted !== undefined && { posted: input.posted }),
       ...(input.tags !== undefined && { tags: input.tags }),
@@ -3641,9 +3637,7 @@ export type FixedValuesV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `fixed_values` (typeVersion 1). */
@@ -3656,7 +3650,7 @@ export const fixedValuesV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),

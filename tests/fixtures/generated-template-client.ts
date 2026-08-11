@@ -4024,16 +4024,14 @@ export type OrderPlacedV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    user_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-    order_cost: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    platform_fee: Scalars['String']['input'];
-    driver_fee: Scalars['String']['input'];
-    restaurant_id: Scalars['String']['input'];
-    driver_id: Scalars['String']['input'];
-  };
+  user_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
+  order_cost: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  platform_fee: Scalars['String']['input'];
+  driver_fee: Scalars['String']['input'];
+  restaurant_id: Scalars['String']['input'];
+  driver_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `order_placed` (typeVersion 1). */
@@ -4046,14 +4044,14 @@ export const orderPlacedV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      user_id: input.parameters.user_id,
-      order_id: input.parameters.order_id,
-      order_cost: input.parameters.order_cost,
-      currency: input.parameters.currency,
-      platform_fee: input.parameters.platform_fee,
-      driver_fee: input.parameters.driver_fee,
-      restaurant_id: input.parameters.restaurant_id,
-      driver_id: input.parameters.driver_id,
+      user_id: input.user_id,
+      order_id: input.order_id,
+      order_cost: input.order_cost,
+      currency: input.currency,
+      platform_fee: input.platform_fee,
+      driver_fee: input.driver_fee,
+      restaurant_id: input.restaurant_id,
+      driver_id: input.driver_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4080,17 +4078,15 @@ export type OrderPlacedV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    user_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-    order_cost: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    platform_fee: Scalars['String']['input'];
-    service_fee: Scalars['String']['input'];
-    driver_fee: Scalars['String']['input'];
-    restaurant_id: Scalars['String']['input'];
-    driver_id: Scalars['String']['input'];
-  };
+  user_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
+  order_cost: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  platform_fee: Scalars['String']['input'];
+  service_fee: Scalars['String']['input'];
+  driver_fee: Scalars['String']['input'];
+  restaurant_id: Scalars['String']['input'];
+  driver_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `order_placed` (typeVersion 2). */
@@ -4103,15 +4099,15 @@ export const orderPlacedV2 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      user_id: input.parameters.user_id,
-      order_id: input.parameters.order_id,
-      order_cost: input.parameters.order_cost,
-      currency: input.parameters.currency,
-      platform_fee: input.parameters.platform_fee,
-      service_fee: input.parameters.service_fee,
-      driver_fee: input.parameters.driver_fee,
-      restaurant_id: input.parameters.restaurant_id,
-      driver_id: input.parameters.driver_id,
+      user_id: input.user_id,
+      order_id: input.order_id,
+      order_cost: input.order_cost,
+      currency: input.currency,
+      platform_fee: input.platform_fee,
+      service_fee: input.service_fee,
+      driver_fee: input.driver_fee,
+      restaurant_id: input.restaurant_id,
+      driver_id: input.driver_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4138,12 +4134,10 @@ export type CardSettleV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    user_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-  };
+  user_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `card_settle` (typeVersion 1). */
@@ -4156,10 +4150,10 @@ export const cardSettleV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      user_id: input.parameters.user_id,
-      order_id: input.parameters.order_id,
-      currency: input.parameters.currency,
-      amount: input.parameters.amount,
+      user_id: input.user_id,
+      order_id: input.order_id,
+      currency: input.currency,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4186,13 +4180,11 @@ export type RestaurantPayoutInitiateV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    restaurant_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-    payout_id: Scalars['String']['input'];
-  };
+  restaurant_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+  payout_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `restaurant_payout_initiate` (typeVersion 1). */
@@ -4205,11 +4197,11 @@ export const restaurantPayoutInitiateV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      restaurant_id: input.parameters.restaurant_id,
-      order_id: input.parameters.order_id,
-      currency: input.parameters.currency,
-      amount: input.parameters.amount,
-      payout_id: input.parameters.payout_id,
+      restaurant_id: input.restaurant_id,
+      order_id: input.order_id,
+      currency: input.currency,
+      amount: input.amount,
+      payout_id: input.payout_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4236,12 +4228,10 @@ export type RestaurantPayoutSettleV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    restaurant_id: Scalars['String']['input'];
-    payout_id: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-  };
+  restaurant_id: Scalars['String']['input'];
+  payout_id: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `restaurant_payout_settle` (typeVersion 1). */
@@ -4254,10 +4244,10 @@ export const restaurantPayoutSettleV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      restaurant_id: input.parameters.restaurant_id,
-      payout_id: input.parameters.payout_id,
-      currency: input.parameters.currency,
-      amount: input.parameters.amount,
+      restaurant_id: input.restaurant_id,
+      payout_id: input.payout_id,
+      currency: input.currency,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4284,13 +4274,11 @@ export type DriverPayoutInitiateV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    driver_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-    payout_id: Scalars['String']['input'];
-  };
+  driver_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+  payout_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `driver_payout_initiate` (typeVersion 1). */
@@ -4303,11 +4291,11 @@ export const driverPayoutInitiateV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      driver_id: input.parameters.driver_id,
-      order_id: input.parameters.order_id,
-      currency: input.parameters.currency,
-      amount: input.parameters.amount,
-      payout_id: input.parameters.payout_id,
+      driver_id: input.driver_id,
+      order_id: input.order_id,
+      currency: input.currency,
+      amount: input.amount,
+      payout_id: input.payout_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4334,12 +4322,10 @@ export type DriverPayoutSettleV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    driver_id: Scalars['String']['input'];
-    payout_id: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-  };
+  driver_id: Scalars['String']['input'];
+  payout_id: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `driver_payout_settle` (typeVersion 1). */
@@ -4352,10 +4338,10 @@ export const driverPayoutSettleV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      driver_id: input.parameters.driver_id,
-      payout_id: input.parameters.payout_id,
-      currency: input.parameters.currency,
-      amount: input.parameters.amount,
+      driver_id: input.driver_id,
+      payout_id: input.payout_id,
+      currency: input.currency,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4382,14 +4368,12 @@ export type DisputePayoutInitiateV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    user_id: Scalars['String']['input'];
-    disputes_id: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    payout_id: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-  };
+  user_id: Scalars['String']['input'];
+  disputes_id: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  payout_id: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `dispute_payout_initiate` (typeVersion 1). */
@@ -4402,12 +4386,12 @@ export const disputePayoutInitiateV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      user_id: input.parameters.user_id,
-      disputes_id: input.parameters.disputes_id,
-      amount: input.parameters.amount,
-      currency: input.parameters.currency,
-      payout_id: input.parameters.payout_id,
-      order_id: input.parameters.order_id,
+      user_id: input.user_id,
+      disputes_id: input.disputes_id,
+      amount: input.amount,
+      currency: input.currency,
+      payout_id: input.payout_id,
+      order_id: input.order_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -4434,13 +4418,11 @@ export type DisputePayoutSettleV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    user_id: Scalars['String']['input'];
-    disputes_id: Scalars['String']['input'];
-    amount: Scalars['String']['input'];
-    currency: Scalars['String']['input'];
-    order_id: Scalars['String']['input'];
-  };
+  user_id: Scalars['String']['input'];
+  disputes_id: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  order_id: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `dispute_payout_settle` (typeVersion 1). */
@@ -4453,11 +4435,11 @@ export const disputePayoutSettleV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      user_id: input.parameters.user_id,
-      disputes_id: input.parameters.disputes_id,
-      amount: input.parameters.amount,
-      currency: input.parameters.currency,
-      order_id: input.parameters.order_id,
+      user_id: input.user_id,
+      disputes_id: input.disputes_id,
+      amount: input.amount,
+      currency: input.currency,
+      order_id: input.order_id,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),

@@ -36,9 +36,7 @@ export type UserFundsAccountV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an \`addLedgerEntries\` entry for \`user-funds-account\` (typeVersion 1). */
@@ -51,7 +49,7 @@ export const userFundsAccountV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -78,11 +76,9 @@ export type UserFundsAccountV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-    feeAmount: Scalars['Int64']['input'];
-    memo?: Scalars['String']['input'] | undefined;
-  };
+  amount: Scalars['String']['input'];
+  feeAmount: Scalars['Int64']['input'];
+  memo?: Scalars['String']['input'] | undefined;
 };
 
 /** Builds an \`addLedgerEntries\` entry for \`user-funds-account\` (typeVersion 2). */
@@ -95,9 +91,9 @@ export const userFundsAccountV2 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
-      feeAmount: input.parameters.feeAmount,
-      ...(input.parameters.memo !== undefined && { memo: input.parameters.memo }),
+      amount: input.amount,
+      feeAmount: input.feeAmount,
+      ...(input.memo !== undefined && { memo: input.memo }),
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),

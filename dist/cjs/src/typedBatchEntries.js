@@ -221,6 +221,8 @@ const getParameters = (entry, operation, warn) => {
         }
         parameters.push({
             wireName: field.name.value,
+            // Escaped later, once the payload's other field names are known.
+            name: field.name.value,
             type: definition.type,
             required: definition.type.kind === graphql_1.Kind.NON_NULL_TYPE,
         });
@@ -320,6 +322,34 @@ const pascalCase = (value) => splitWords(value)
 // A TypeScript identifier cannot start with a digit.
 const escapeIdentifier = (value) => /^[0-9]/.test(value) ? `_${value}` : value;
 /**
+ * Gives each parameter the field name it takes on the payload. Parameters share
+ * a namespace with the common fields, so a parameter called `posted` cannot keep
+ * that name: the first occupant keeps the plain name and later ones are
+ * suffixed. The wire name never changes, so each still carries its own value.
+ */
+const nameParameters = (payload, warn) => {
+    if (payload.parametersMode !== "typed") {
+        return payload;
+    }
+    const taken = new Set(["ik", ...payload.fields.map((field) => field.name)]);
+    return {
+        parametersMode: "typed",
+        parameters: payload.parameters.map((parameter) => {
+            let name = parameter.wireName;
+            let attempt = 1;
+            while (taken.has(name)) {
+                attempt += 1;
+                name = `${parameter.wireName}_${attempt}`;
+            }
+            if (name !== parameter.wireName) {
+                warn(`Parameter \`${parameter.wireName}\` of \`${payload.entryType}\` (typeVersion ${payload.typeVersion}) collides with another field of the payload, so it is called \`${name}\` there. It still posts as \`${parameter.wireName}\`.`);
+            }
+            taken.add(name);
+            return Object.assign(Object.assign({}, parameter), { name });
+        }),
+    };
+};
+/**
  * Assigns each payload its generated identifiers. A name depends only on its own
  * payload's identity — never on which other operations are present — so adding
  * an entry type or a new version of one never renames an existing payload.
@@ -342,7 +372,7 @@ const nameTypedEntryPayloads = (payloads, { warn = defaultWarn } = {}) => {
             warn(`Ledger Entry type \`${payload.entryType}\` (typeVersion ${payload.typeVersion}) generates the identifier \`${pascal}\`, which is already taken. Using \`${pascal}${suffix}\` instead.`);
         }
         taken.add(`${pascal}${suffix}`);
-        return Object.assign(Object.assign({}, payload), { typeName: escapeIdentifier(`${pascal}${suffix}`), builderName: escapeIdentifier(`${camel}${suffix}`) });
+        return Object.assign(Object.assign(Object.assign({}, payload), nameParameters(payload, warn)), { typeName: escapeIdentifier(`${pascal}${suffix}`), builderName: escapeIdentifier(`${camel}${suffix}`) });
     });
 };
 exports.nameTypedEntryPayloads = nameTypedEntryPayloads;
@@ -405,7 +435,7 @@ const renderField = (field, scalars) => {
 const renderParameters = (payload, scalars) => {
     if (payload.parametersMode === "absent") {
         // The operation posts no parameters, so the payload does not take any.
-        return undefined;
+        return [];
     }
     if (payload.parametersMode === "untyped") {
         const { parametersType } = payload;
@@ -415,27 +445,25 @@ const renderParameters = (payload, scalars) => {
         const required = (parametersType === null || parametersType === void 0 ? void 0 : parametersType.kind) === graphql_1.Kind.NON_NULL_TYPE ? "" : "?";
         const undefinable = required ? " | undefined" : "";
         return [
-            "  /**",
-            "   * This entry type's operation does not bind its parameters to typed",
-            "   * variables, so they cannot be typed individually.",
-            "   */",
-            `  parameters${required}: ${type}${undefinable};`,
-        ].join("\n");
+            [
+                "  /**",
+                "   * This entry type's operation does not bind its parameters to typed",
+                "   * variables, so they cannot be typed individually.",
+                "   */",
+                `  parameters${required}: ${type}${undefinable};`,
+            ].join("\n"),
+        ];
     }
-    const bound = payload.parameters;
-    if (bound.length === 0) {
-        // Every parameter is fixed by the operation, so there is nothing to set.
-        return undefined;
-    }
-    const fields = bound.map((parameter) => {
+    // Parameters sit alongside the common fields, in the order the operation
+    // declares them.
+    return payload.parameters.map((parameter) => {
         const optional = parameter.required ? "" : "?";
         const undefinable = parameter.required ? "" : " | undefined";
-        return `    ${renderPropertyKey(parameter.wireName)}${optional}: ${renderVariableType(parameter.type, scalars)}${undefinable};`;
+        const renamed = parameter.name === parameter.wireName
+            ? ""
+            : `  /** Posts as \`${parameter.wireName}\`. */\n`;
+        return `${renamed}  ${renderPropertyKey(parameter.name)}${optional}: ${renderVariableType(parameter.type, scalars)}${undefinable};`;
     });
-    const allOptional = bound.every((parameter) => !parameter.required);
-    const marker = allOptional ? "?" : "";
-    const trailer = allOptional ? " | undefined" : "";
-    return [`  parameters${marker}: {`, ...fields, `  }${trailer};`].join("\n");
 };
 /**
  * `value` when the caller must set it, and a conditional spread when they may
@@ -495,17 +523,16 @@ const renderParametersMember = (payload) => {
             }),
         };
     }
-    // A payload with a required parameter always takes a `parameters` object; one
-    // whose parameters are all optional may not, so it is read through `?.`.
-    const alwaysPresent = payload.parameters.some((parameter) => parameter.required);
-    const access = alwaysPresent ? "input.parameters" : "input.parameters?";
     return renderObjectMember({
         wireName: "parameters",
-        anyRequired: alwaysPresent,
-        // Parameters keep the order the source operation declares them in.
+        // With a required parameter the object always has something in it; with
+        // none, it is built first and posted only if the caller set something.
+        anyRequired: payload.parameters.some((parameter) => parameter.required),
+        // Parameters keep the order the source operation declares them in, and each
+        // posts under its Schema name however it is spelled on the payload.
         members: payload.parameters.map((parameter) => {
             const key = renderPropertyKey(parameter.wireName);
-            const read = `${access}.${parameter.wireName}`;
+            const read = `input.${parameter.name}`;
             return parameter.required
                 ? `${key}: ${read},`
                 : `...(${read} !== undefined && { ${key}: ${read} }),`;
@@ -599,8 +626,8 @@ const renderPayload = (payload, scalars) => {
     const members = [
         `  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */\n  ik: ${ikType};`,
         ...payload.fields.map((field) => renderField(field, scalars)),
-        renderParameters(payload, scalars),
-    ].filter((member) => member !== undefined);
+        ...renderParameters(payload, scalars),
+    ];
     return `/**
  * Payload for the ${description} Ledger Entry, for use with \`addLedgerEntries\`.
  *

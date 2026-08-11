@@ -32,6 +32,11 @@ export type BoundValue = {
 export type TypedEntryParameter = {
     /** The parameter name from the Schema. Goes on the wire verbatim. */
     wireName: string;
+    /**
+     * The field name on the generated payload. The wire name unless it collided
+     * with a common field or an earlier parameter (§2.5).
+     */
+    name: string;
 } & BoundValue;
 /**
  * An entry field a typed payload lets the caller set, derived from the source

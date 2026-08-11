@@ -497,6 +497,31 @@ describe("rendering", () => {
     expect(payload).not.toContain("| null");
   });
 
+  it("escapes a parameter that collides with a common field", () => {
+    const warn = vi.fn();
+    const output = generate(
+      entryOperation({
+        entryFields:
+          "posted: $posted, parameters: {posted: $postedParam, amount: $amount}",
+        variables:
+          "$ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $postedParam: String!, $amount: String!",
+      }),
+      warn,
+    );
+
+    // The entry's own `posted` holds the name, so the parameter takes another —
+    // but it still posts under the name the Schema knows it by.
+    const payload = payloadType(output, "ThingV1");
+    expect(payload).toContain("  posted?: Scalars['DateTime']['input'] | undefined;");
+    expect(payload).toContain("  posted_2: Scalars['String']['input'];");
+    expect(builderBody(output, "thingV1")).toContain("      posted: input.posted_2,");
+    expect(builderBody(output, "thingV1")).toContain(
+      "...(input.posted !== undefined && { posted: input.posted }),",
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("It still posts as `posted`");
+  });
+
   it("keeps a wire name verbatim even when it is a reserved word", () => {
     const output = generate(
       entryOperation({
@@ -509,19 +534,20 @@ describe("rendering", () => {
 
     // Property keys need no escaping in TypeScript, so no wire name is ever
     // rewritten, and two names that differ only in casing stay distinct.
+    // Parameters sit alongside the common fields, keeping their Schema names.
     const payload = payloadType(output, "ThingV1");
-    expect(payload).toContain("class: Scalars['String']['input'];");
-    expect(payload).toContain("function: Scalars['String']['input'];");
-    expect(payload).toContain("user_id: Scalars['String']['input'];");
-    expect(payload).toContain("userId: Scalars['String']['input'];");
+    expect(payload).toContain("  class: Scalars['String']['input'];");
+    expect(payload).toContain("  function: Scalars['String']['input'];");
+    expect(payload).toContain("  user_id: Scalars['String']['input'];");
+    expect(payload).toContain("  userId: Scalars['String']['input'];");
     // Wire names reach the built entry verbatim, in source order.
     expect(builderBody(output, "thingV1")).toContain(
       [
         "    parameters: {",
-        "      class: input.parameters.class,",
-        "      function: input.parameters.function,",
-        "      user_id: input.parameters.user_id,",
-        "      userId: input.parameters.userId,",
+        "      class: input.class,",
+        "      function: input.function,",
+        "      user_id: input.user_id,",
+        "      userId: input.userId,",
         "    },",
       ].join("\n"),
     );

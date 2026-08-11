@@ -3654,9 +3654,7 @@ export type UserFundsAccountV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 1). */
@@ -3669,7 +3667,7 @@ export const userFundsAccountV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -3696,10 +3694,8 @@ export type UserFundsAccountV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-    feeAmount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
+  feeAmount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 2). */
@@ -3712,8 +3708,8 @@ export const userFundsAccountV2 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
-      feeAmount: input.parameters.feeAmount,
+      amount: input.amount,
+      feeAmount: input.feeAmount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -3740,9 +3736,7 @@ export type FundingSettlementV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `fundingSettlement` (typeVersion 1). */
@@ -3755,7 +3749,7 @@ export const fundingSettlementV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
@@ -3782,9 +3776,7 @@ export type PaymentProcessingV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  parameters: {
-    amount: Scalars['String']['input'];
-  };
+  amount: Scalars['String']['input'];
 };
 
 /** Builds an `addLedgerEntries` entry for `payment_processing` (typeVersion 1). */
@@ -3797,7 +3789,7 @@ export const paymentProcessingV1 = (
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
     parameters: {
-      amount: input.parameters.amount,
+      amount: input.amount,
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
