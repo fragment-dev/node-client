@@ -102,3 +102,25 @@ mutation PostFixedValues(
     __typename
   }
 }
+
+# A parameter whose Schema name is already taken by a field of the payload. It
+# keeps its Schema name on the wire and takes another one on the payload.
+mutation PostCollidingParameter(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $posted: DateTime
+  $postedParameter: String!
+  $amount: String!
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {
+      ledger: { ik: $ledgerIk }
+      type: "colliding_parameter"
+      posted: $posted
+      parameters: { posted: $postedParameter, amount: $amount }
+    }
+  ) {
+    __typename
+  }
+}

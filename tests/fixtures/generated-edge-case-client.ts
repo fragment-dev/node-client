@@ -3517,6 +3517,17 @@ export type PostFixedValuesMutationVariables = Exact<{
 
 export type PostFixedValuesMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
 
+export type PostCollidingParameterMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  ledgerIk: Scalars['SafeString']['input'];
+  posted?: InputMaybe<Scalars['DateTime']['input']>;
+  postedParameter: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+}>;
+
+
+export type PostCollidingParameterMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
 
 export const PostRuntimeLinesDocument = gql`
     mutation PostRuntimeLines($ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $description: String, $lines: [LedgerLineInput!]!) {
@@ -3568,6 +3579,16 @@ export const PostFixedValuesDocument = gql`
   }
 }
     `;
+export const PostCollidingParameterDocument = gql`
+    mutation PostCollidingParameter($ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $postedParameter: String!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "colliding_parameter", posted: $posted, parameters: {posted: $postedParameter, amount: $amount}}
+  ) {
+    __typename
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 
@@ -3590,6 +3611,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     PostFixedValues(variables: PostFixedValuesMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostFixedValuesMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<PostFixedValuesMutation>(PostFixedValuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostFixedValues', 'mutation', variables);
+    },
+    PostCollidingParameter(variables: PostCollidingParameterMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostCollidingParameterMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostCollidingParameterMutation>(PostCollidingParameterDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostCollidingParameter', 'mutation', variables);
     }
   };
 }
@@ -3787,6 +3811,53 @@ export const fixedValuesV1 = (
 });
 
 /**
+ * Payload for the `colliding_parameter` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
+ *
+ * Derived from the `PostCollidingParameter` operation, which is what a caller
+ * may set: these are exactly the fields that operation binds.
+ */
+export type CollidingParameterV1 = {
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
+  ik: Scalars['SafeString']['input'];
+  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
+  ledgerIk: Scalars['SafeString']['input'];
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
+  /**
+   * The `posted` parameter, named `posted_2` here because
+   * this payload already has a `posted` field of its own. It still
+   * posts as `posted`.
+   */
+  posted_2: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+};
+
+/** Builds an `addLedgerEntries` entry for `colliding_parameter` (typeVersion 1). */
+export const collidingParameterV1 = (
+  input: CollidingParameterV1,
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      posted: input.posted_2,
+      amount: input.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'colliding_parameter',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
+
+/**
  * Every typed payload builder, keyed by `"<entry type>@<typeVersion>"`. Useful
  * when the entry type is only known at runtime.
  */
@@ -3795,4 +3866,5 @@ export const typedLedgerEntryBuilders = {
   'all_optional@2': allOptionalV2,
   'either_ledger_key@1': eitherLedgerKeyV1,
   'fixed_values@1': fixedValuesV1,
+  'colliding_parameter@1': collidingParameterV1,
 } as const;

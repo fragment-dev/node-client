@@ -16,6 +16,7 @@ import {
 import { disputePayoutInitiateV1 } from "./fixtures/generated-template-runtime-args-client.js";
 import {
   allOptionalV2,
+  collidingParameterV1,
   eitherLedgerKeyV1,
   fixedValuesV1,
   untypedParametersV1,
@@ -464,6 +465,24 @@ describe("payload shapes the Fragment CLI does not generate", () => {
       note: "just this one",
     });
     expect(partial.entry.parameters).toEqual({ note: "just this one" });
+  });
+
+  it("posts a renamed parameter under its Schema name", () => {
+    const built = collidingParameterV1({
+      ik: "entry-ik",
+      ledgerIk: "ledger-ik",
+      posted: "2024-01-01T00:00:00Z",
+      posted_2: "a parameter that happens to be called posted",
+      amount: "100",
+    });
+
+    // The entry's own `posted` and the parameter of the same name are separate
+    // values, and each lands where it belongs.
+    expect(built.entry.posted).toEqual("2024-01-01T00:00:00Z");
+    expect(built.entry.parameters).toEqual({
+      posted: "a parameter that happens to be called posted",
+      amount: "100",
+    });
   });
 
   it("merges two payload fields that write one match object", () => {

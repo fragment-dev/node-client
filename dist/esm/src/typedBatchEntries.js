@@ -457,9 +457,18 @@ const renderParameters = (payload, scalars) => {
     return payload.parameters.map((parameter) => {
         const optional = parameter.required ? "" : "?";
         const undefinable = parameter.required ? "" : " | undefined";
+        // A renamed parameter says which Schema parameter it is, since its field
+        // name is one the payload picked rather than one the caller would expect.
         const renamed = parameter.name === parameter.wireName
             ? ""
-            : `  /** Posts as \`${parameter.wireName}\`. */\n`;
+            : [
+                "  /**",
+                `   * The \`${parameter.wireName}\` parameter, named \`${parameter.name}\` here because`,
+                `   * this payload already has a \`${parameter.wireName}\` field of its own. It still`,
+                `   * posts as \`${parameter.wireName}\`.`,
+                "   */",
+                "",
+            ].join("\n");
         return `${renamed}  ${renderPropertyKey(parameter.name)}${optional}: ${renderVariableType(parameter.type, scalars)}${undefinable};`;
     });
 };
