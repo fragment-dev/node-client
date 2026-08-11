@@ -14,5 +14,22 @@ yarn fragment-node-client-codegen \
   -i tests/fixtures/test-schema-queries.graphql \
   -o tests/fixtures/generated-test-client.ts
 
-echo "Done! Don't forget to commit the updated files."
+# tests/template-schema/ is vendored from fragment-dev/graphql-queries. Its
+# .graphql files are generated there by the Fragment CLI and copied in as-is, so
+# they are never regenerated here — only the clients built from them are.
+echo "Generating SDK from the template schema queries..."
+yarn fragment-node-client-codegen \
+  -i tests/template-schema/queries.graphql \
+  -o tests/fixtures/generated-template-client.ts
 
+yarn fragment-node-client-codegen \
+  -i tests/template-schema/queries.runtime-args.graphql \
+  -o tests/fixtures/generated-template-runtime-args-client.ts
+
+# Hand-written operations covering shapes the CLI does not generate.
+echo "Generating SDK from the edge case queries..."
+yarn fragment-node-client-codegen \
+  -i tests/fixtures/edge-case-queries.graphql \
+  -o tests/fixtures/generated-edge-case-client.ts
+
+echo "Done! Don't forget to commit the updated files."

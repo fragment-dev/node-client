@@ -3,7 +3,7 @@ import { ClientError, GraphQLClient } from "graphql-request";
 import { getSdk as getDefaultSdk, } from "../generated/generated.js";
 import { version } from "../generated/version.js";
 import { getToken } from "./getToken.js";
-import { BadRequestError, FragmentError, InternalError } from "./errors.js";
+import { AddLedgerEntriesError, BadRequestError, FragmentError, InternalError, } from "./errors.js";
 import { DEFAULT_RETRY_CONFIG } from "./retryConfig.js";
 const getRetryableField = (error) => {
     if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
@@ -67,6 +67,26 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => async (request
                     else {
                         throw err;
                     }
+                    break;
+                }
+                case "AddLedgerEntriesError": {
+                    // The errors for each Ledger Entry responsible for the failure are
+                    // what tell a caller which entries to fix, so they are surfaced
+                    // rather than collapsed into the top-level message.
+                    const err = new AddLedgerEntriesError({
+                        code,
+                        cause: data[graphQlOperationName],
+                        message,
+                        errors: (data[graphQlOperationName].errors ??
+                            []),
+                    });
+                    if (!retryable) {
+                        bail(err);
+                    }
+                    else {
+                        throw err;
+                    }
+                    break;
                 }
                 case "BadRequestError": {
                     const err = new BadRequestError({
@@ -80,6 +100,7 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => async (request
                     else {
                         throw err;
                     }
+                    break;
                 }
                 default:
                     if (typeName.endsWith("Error")) {

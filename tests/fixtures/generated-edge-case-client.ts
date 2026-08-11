@@ -3342,257 +3342,103 @@ export type Workspace = {
   name: Scalars['String']['output'];
 };
 
-export type PostUserFundsAccountMutationVariables = Exact<{
+export type PostRuntimeLinesMutationVariables = Exact<{
   ik: Scalars['SafeString']['input'];
+  ledgerIk: Scalars['SafeString']['input'];
   posted?: InputMaybe<Scalars['DateTime']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  lines: Array<LedgerLineInput> | LedgerLineInput;
+}>;
+
+
+export type PostRuntimeLinesMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
+export type PostUntypedParametersMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  ledgerIk: Scalars['SafeString']['input'];
+  parameters: Scalars['JSON']['input'];
+}>;
+
+
+export type PostUntypedParametersMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
+export type PostAllOptionalMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  ledgerIk: Scalars['SafeString']['input'];
+  memo?: InputMaybe<Scalars['String']['input']>;
+  note?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type PostAllOptionalMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
+export type PostEitherLedgerKeyMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  ledgerId?: InputMaybe<Scalars['ID']['input']>;
+  ledgerIk?: InputMaybe<Scalars['SafeString']['input']>;
+  amount: Scalars['String']['input'];
+}>;
+
+
+export type PostEitherLedgerKeyMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
+export type PostFixedValuesMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
   ledgerIk: Scalars['SafeString']['input'];
   amount: Scalars['String']['input'];
 }>;
 
 
-export type PostUserFundsAccountMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
-
-export type PostUserFundsAccount_V2MutationVariables = Exact<{
-  ik: Scalars['SafeString']['input'];
-  posted?: InputMaybe<Scalars['DateTime']['input']>;
-  ledgerIk: Scalars['SafeString']['input'];
-  amount: Scalars['String']['input'];
-  feeAmount: Scalars['String']['input'];
-}>;
+export type PostFixedValuesMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
 
 
-export type PostUserFundsAccount_V2Mutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
-
-export type PostFundingSettlementMutationVariables = Exact<{
-  ik: Scalars['SafeString']['input'];
-  posted?: InputMaybe<Scalars['DateTime']['input']>;
-  ledgerIk: Scalars['SafeString']['input'];
-  amount: Scalars['String']['input'];
-}>;
-
-
-export type PostFundingSettlementMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
-
-export type PostPaymentProcessingMutationVariables = Exact<{
-  ik: Scalars['SafeString']['input'];
-  posted?: InputMaybe<Scalars['DateTime']['input']>;
-  ledgerIk: Scalars['SafeString']['input'];
-  amount: Scalars['String']['input'];
-}>;
-
-
-export type PostPaymentProcessingMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult', isIkReplay: boolean, entry: { __typename?: 'LedgerEntry', ik: string, id: string, created: string, type?: string | null, posted: string, description?: string | null, ledger: { __typename?: 'Ledger', ik: string }, tags: Array<{ __typename?: 'LedgerEntryTag', key: string, value: string }>, groups: Array<{ __typename?: 'LedgerEntryGroup', key: string, value: string }> }, lines: Array<{ __typename?: 'LedgerLine', amount: string, key?: string | null, account: { __typename?: 'LedgerAccount', path: string }, currency?: { __typename?: 'Currency', code: CurrencyCode, customCurrencyId?: string | null } | null }> } | { __typename: 'BadRequestError', code: string, message: string, retryable: boolean } | { __typename: 'InternalError', code: string, message: string, retryable: boolean } };
-
-
-export const PostUserFundsAccountDocument = gql`
-    mutation PostUserFundsAccount($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+export const PostRuntimeLinesDocument = gql`
+    mutation PostRuntimeLines($ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $description: String, $lines: [LedgerLineInput!]!) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 1, posted: $posted, parameters: {amount: $amount}}
+    entry: {ledger: {ik: $ledgerIk}, type: "runtime_lines", posted: $posted, description: $description, lines: $lines}
   ) {
     __typename
-    ... on AddLedgerEntryResult {
-      entry {
-        ik
-        id
-        created
-        type
-        posted
-        description
-        ledger {
-          ik
-        }
-        tags {
-          key
-          value
-        }
-        groups {
-          key
-          value
-        }
-      }
-      lines {
-        account {
-          path
-        }
-        amount
-        currency {
-          code
-          customCurrencyId
-        }
-        key
-      }
-      isIkReplay
-    }
-    ... on BadRequestError {
-      code
-      message
-      retryable
-    }
-    ... on InternalError {
-      code
-      message
-      retryable
-    }
   }
 }
     `;
-export const PostUserFundsAccount_V2Document = gql`
-    mutation PostUserFundsAccount_v2($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!, $feeAmount: String!) {
+export const PostUntypedParametersDocument = gql`
+    mutation PostUntypedParameters($ik: SafeString!, $ledgerIk: SafeString!, $parameters: JSON!) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "user-funds-account", typeVersion: 2, posted: $posted, parameters: {amount: $amount, feeAmount: $feeAmount}}
+    entry: {ledger: {ik: $ledgerIk}, type: "untyped_parameters", parameters: $parameters}
   ) {
     __typename
-    ... on AddLedgerEntryResult {
-      entry {
-        ik
-        id
-        created
-        type
-        posted
-        description
-        ledger {
-          ik
-        }
-        tags {
-          key
-          value
-        }
-        groups {
-          key
-          value
-        }
-      }
-      lines {
-        account {
-          path
-        }
-        amount
-        currency {
-          code
-          customCurrencyId
-        }
-        key
-      }
-      isIkReplay
-    }
-    ... on BadRequestError {
-      code
-      message
-      retryable
-    }
-    ... on InternalError {
-      code
-      message
-      retryable
-    }
   }
 }
     `;
-export const PostFundingSettlementDocument = gql`
-    mutation PostFundingSettlement($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+export const PostAllOptionalDocument = gql`
+    mutation PostAllOptional($ik: SafeString!, $ledgerIk: SafeString!, $memo: String, $note: String) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "fundingSettlement", posted: $posted, parameters: {amount: $amount}}
+    entry: {ledger: {ik: $ledgerIk}, type: "all_optional", typeVersion: 2, parameters: {memo: $memo, note: $note}}
   ) {
     __typename
-    ... on AddLedgerEntryResult {
-      entry {
-        ik
-        id
-        created
-        type
-        posted
-        description
-        ledger {
-          ik
-        }
-        tags {
-          key
-          value
-        }
-        groups {
-          key
-          value
-        }
-      }
-      lines {
-        account {
-          path
-        }
-        amount
-        currency {
-          code
-          customCurrencyId
-        }
-        key
-      }
-      isIkReplay
-    }
-    ... on BadRequestError {
-      code
-      message
-      retryable
-    }
-    ... on InternalError {
-      code
-      message
-      retryable
-    }
   }
 }
     `;
-export const PostPaymentProcessingDocument = gql`
-    mutation PostPaymentProcessing($ik: SafeString!, $posted: DateTime, $ledgerIk: SafeString!, $amount: String!) {
+export const PostEitherLedgerKeyDocument = gql`
+    mutation PostEitherLedgerKey($ik: SafeString!, $ledgerId: ID, $ledgerIk: SafeString, $amount: String!) {
   addLedgerEntry(
     ik: $ik
-    entry: {ledger: {ik: $ledgerIk}, type: "payment_processing", posted: $posted, parameters: {amount: $amount}}
+    entry: {ledger: {id: $ledgerId, ik: $ledgerIk}, type: "either_ledger_key", parameters: {amount: $amount}}
   ) {
     __typename
-    ... on AddLedgerEntryResult {
-      entry {
-        ik
-        id
-        created
-        type
-        posted
-        description
-        ledger {
-          ik
-        }
-        tags {
-          key
-          value
-        }
-        groups {
-          key
-          value
-        }
-      }
-      lines {
-        account {
-          path
-        }
-        amount
-        currency {
-          code
-          customCurrencyId
-        }
-        key
-      }
-      isIkReplay
-    }
-    ... on BadRequestError {
-      code
-      message
-      retryable
-    }
-    ... on InternalError {
-      code
-      message
-      retryable
-    }
+  }
+}
+    `;
+export const PostFixedValuesDocument = gql`
+    mutation PostFixedValues($ik: SafeString!, $ledgerIk: SafeString!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "fixed_values", description: "posted by the nightly sweep", tags: [{key: "source", value: "sweep"}], parameters: {amount: $amount, currency: "USD"}}
+  ) {
+    __typename
   }
 }
     `;
@@ -3604,17 +3450,20 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
-    PostUserFundsAccount(variables: PostUserFundsAccountMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostUserFundsAccountMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PostUserFundsAccountMutation>(PostUserFundsAccountDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostUserFundsAccount', 'mutation', variables);
+    PostRuntimeLines(variables: PostRuntimeLinesMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostRuntimeLinesMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostRuntimeLinesMutation>(PostRuntimeLinesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostRuntimeLines', 'mutation', variables);
     },
-    PostUserFundsAccount_v2(variables: PostUserFundsAccount_V2MutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostUserFundsAccount_V2Mutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PostUserFundsAccount_V2Mutation>(PostUserFundsAccount_V2Document, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostUserFundsAccount_v2', 'mutation', variables);
+    PostUntypedParameters(variables: PostUntypedParametersMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostUntypedParametersMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostUntypedParametersMutation>(PostUntypedParametersDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostUntypedParameters', 'mutation', variables);
     },
-    PostFundingSettlement(variables: PostFundingSettlementMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostFundingSettlementMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PostFundingSettlementMutation>(PostFundingSettlementDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostFundingSettlement', 'mutation', variables);
+    PostAllOptional(variables: PostAllOptionalMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostAllOptionalMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostAllOptionalMutation>(PostAllOptionalDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostAllOptional', 'mutation', variables);
     },
-    PostPaymentProcessing(variables: PostPaymentProcessingMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostPaymentProcessingMutation> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PostPaymentProcessingMutation>(PostPaymentProcessingDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostPaymentProcessing', 'mutation', variables);
+    PostEitherLedgerKey(variables: PostEitherLedgerKeyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostEitherLedgerKeyMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostEitherLedgerKeyMutation>(PostEitherLedgerKeyDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostEitherLedgerKey', 'mutation', variables);
+    },
+    PostFixedValues(variables: PostFixedValuesMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostFixedValuesMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostFixedValuesMutation>(PostFixedValuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostFixedValues', 'mutation', variables);
     }
   };
 }
@@ -3628,7 +3477,7 @@ export type Sdk = ReturnType<typeof getSdk>;
  *
  * ```ts
  * await client.addLedgerEntries({
- *   entries: [userFundsAccountV1({ ik, ledgerIk, parameters: { ... } })],
+ *   entries: [untypedParametersV1({ ik, ledgerIk, parameters: { ... } })],
  * });
  * ```
  *
@@ -3638,12 +3487,12 @@ export type Sdk = ReturnType<typeof getSdk>;
  */
 
 /**
- * Payload for the `user-funds-account` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
+ * Payload for the `untyped_parameters` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
  *
- * Derived from the `PostUserFundsAccount` operation, which is what a caller
+ * Derived from the `PostUntypedParameters` operation, which is what a caller
  * may set: these are exactly the fields that operation binds.
  */
-export type UserFundsAccountV1 = {
+export type UntypedParametersV1 = {
   /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
@@ -3654,36 +3503,38 @@ export type UserFundsAccountV1 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  amount: Scalars['String']['input'];
+  /**
+   * This entry type's operation does not bind its parameters to typed
+   * variables, so they cannot be typed individually.
+   */
+  parameters: Scalars['JSON']['input'];
 };
 
-/** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 1). */
-export const userFundsAccountV1 = (
-  input: UserFundsAccountV1,
+/** Builds an `addLedgerEntries` entry for `untyped_parameters` (typeVersion 1). */
+export const untypedParametersV1 = (
+  input: UntypedParametersV1,
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
     ...(input.description !== undefined && { description: input.description }),
     ...(input.groups !== undefined && { groups: input.groups }),
     ledger: { ik: input.ledgerIk },
-    parameters: {
-      amount: input.amount,
-    },
+    parameters: input.parameters,
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
-    type: 'user-funds-account',
+    type: 'untyped_parameters',
     typeVersion: 1,
   },
   ik: input.ik,
 });
 
 /**
- * Payload for the `user-funds-account` (typeVersion 2) Ledger Entry, for use with `addLedgerEntries`.
+ * Payload for the `all_optional` (typeVersion 2) Ledger Entry, for use with `addLedgerEntries`.
  *
- * Derived from the `PostUserFundsAccount_v2` operation, which is what a caller
+ * Derived from the `PostAllOptional` operation, which is what a caller
  * may set: these are exactly the fields that operation binds.
  */
-export type UserFundsAccountV2 = {
+export type AllOptionalV2 = {
   /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
@@ -3694,42 +3545,46 @@ export type UserFundsAccountV2 = {
   tags?: Array<LedgerEntryTagInput> | undefined;
   groups?: Array<LedgerEntryGroupInput> | undefined;
   conditions?: Array<LedgerEntryConditionInput> | undefined;
-  amount: Scalars['String']['input'];
-  feeAmount: Scalars['String']['input'];
+  memo?: Scalars['String']['input'] | undefined;
+  note?: Scalars['String']['input'] | undefined;
 };
 
-/** Builds an `addLedgerEntries` entry for `user-funds-account` (typeVersion 2). */
-export const userFundsAccountV2 = (
-  input: UserFundsAccountV2,
-): AddLedgerEntryInput => ({
-  entry: {
-    ...(input.conditions !== undefined && { conditions: input.conditions }),
-    ...(input.description !== undefined && { description: input.description }),
-    ...(input.groups !== undefined && { groups: input.groups }),
-    ledger: { ik: input.ledgerIk },
-    parameters: {
-      amount: input.amount,
-      feeAmount: input.feeAmount,
+/** Builds an `addLedgerEntries` entry for `all_optional` (typeVersion 2). */
+export const allOptionalV2 = (
+  input: AllOptionalV2,
+): AddLedgerEntryInput => {
+  const parameters = {
+    ...(input.memo !== undefined && { memo: input.memo }),
+    ...(input.note !== undefined && { note: input.note }),
+  };
+  return {
+    entry: {
+      ...(input.conditions !== undefined && { conditions: input.conditions }),
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.groups !== undefined && { groups: input.groups }),
+      ledger: { ik: input.ledgerIk },
+      ...(Object.keys(parameters).length > 0 && { parameters }),
+      ...(input.posted !== undefined && { posted: input.posted }),
+      ...(input.tags !== undefined && { tags: input.tags }),
+      type: 'all_optional',
+      typeVersion: 2,
     },
-    ...(input.posted !== undefined && { posted: input.posted }),
-    ...(input.tags !== undefined && { tags: input.tags }),
-    type: 'user-funds-account',
-    typeVersion: 2,
-  },
-  ik: input.ik,
-});
+    ik: input.ik,
+  };
+};
 
 /**
- * Payload for the `fundingSettlement` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
+ * Payload for the `either_ledger_key` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
  *
- * Derived from the `PostFundingSettlement` operation, which is what a caller
+ * Derived from the `PostEitherLedgerKey` operation, which is what a caller
  * may set: these are exactly the fields that operation binds.
  */
-export type FundingSettlementV1 = {
+export type EitherLedgerKeyV1 = {
   /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
   ik: Scalars['SafeString']['input'];
+  ledgerId?: Scalars['ID']['input'] | undefined;
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
-  ledgerIk: Scalars['SafeString']['input'];
+  ledgerIk?: Scalars['SafeString']['input'] | undefined;
   /** ISO 8601 timestamp to post this Ledger Entry at. */
   posted?: Scalars['DateTime']['input'] | undefined;
   description?: Scalars['String']['input'] | undefined;
@@ -3739,33 +3594,39 @@ export type FundingSettlementV1 = {
   amount: Scalars['String']['input'];
 };
 
-/** Builds an `addLedgerEntries` entry for `fundingSettlement` (typeVersion 1). */
-export const fundingSettlementV1 = (
-  input: FundingSettlementV1,
-): AddLedgerEntryInput => ({
-  entry: {
-    ...(input.conditions !== undefined && { conditions: input.conditions }),
-    ...(input.description !== undefined && { description: input.description }),
-    ...(input.groups !== undefined && { groups: input.groups }),
-    ledger: { ik: input.ledgerIk },
-    parameters: {
-      amount: input.amount,
+/** Builds an `addLedgerEntries` entry for `either_ledger_key` (typeVersion 1). */
+export const eitherLedgerKeyV1 = (
+  input: EitherLedgerKeyV1,
+): AddLedgerEntryInput => {
+  const ledger = {
+    ...(input.ledgerId !== undefined && { id: input.ledgerId }),
+    ...(input.ledgerIk !== undefined && { ik: input.ledgerIk }),
+  };
+  return {
+    entry: {
+      ...(input.conditions !== undefined && { conditions: input.conditions }),
+      ...(input.description !== undefined && { description: input.description }),
+      ...(input.groups !== undefined && { groups: input.groups }),
+      ...(Object.keys(ledger).length > 0 && { ledger }),
+      parameters: {
+        amount: input.amount,
+      },
+      ...(input.posted !== undefined && { posted: input.posted }),
+      ...(input.tags !== undefined && { tags: input.tags }),
+      type: 'either_ledger_key',
+      typeVersion: 1,
     },
-    ...(input.posted !== undefined && { posted: input.posted }),
-    ...(input.tags !== undefined && { tags: input.tags }),
-    type: 'fundingSettlement',
-    typeVersion: 1,
-  },
-  ik: input.ik,
-});
+    ik: input.ik,
+  };
+};
 
 /**
- * Payload for the `payment_processing` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
+ * Payload for the `fixed_values` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
  *
- * Derived from the `PostPaymentProcessing` operation, which is what a caller
+ * Derived from the `PostFixedValues` operation, which is what a caller
  * may set: these are exactly the fields that operation binds.
  */
-export type PaymentProcessingV1 = {
+export type FixedValuesV1 = {
   /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
   ik: Scalars['SafeString']['input'];
   /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
@@ -3779,9 +3640,9 @@ export type PaymentProcessingV1 = {
   amount: Scalars['String']['input'];
 };
 
-/** Builds an `addLedgerEntries` entry for `payment_processing` (typeVersion 1). */
-export const paymentProcessingV1 = (
-  input: PaymentProcessingV1,
+/** Builds an `addLedgerEntries` entry for `fixed_values` (typeVersion 1). */
+export const fixedValuesV1 = (
+  input: FixedValuesV1,
 ): AddLedgerEntryInput => ({
   entry: {
     ...(input.conditions !== undefined && { conditions: input.conditions }),
@@ -3793,7 +3654,7 @@ export const paymentProcessingV1 = (
     },
     ...(input.posted !== undefined && { posted: input.posted }),
     ...(input.tags !== undefined && { tags: input.tags }),
-    type: 'payment_processing',
+    type: 'fixed_values',
     typeVersion: 1,
   },
   ik: input.ik,
@@ -3804,8 +3665,8 @@ export const paymentProcessingV1 = (
  * when the entry type is only known at runtime.
  */
 export const typedLedgerEntryBuilders = {
-  'user-funds-account@1': userFundsAccountV1,
-  'user-funds-account@2': userFundsAccountV2,
-  'fundingSettlement@1': fundingSettlementV1,
-  'payment_processing@1': paymentProcessingV1,
+  'untyped_parameters@1': untypedParametersV1,
+  'all_optional@2': allOptionalV2,
+  'either_ledger_key@1': eitherLedgerKeyV1,
+  'fixed_values@1': fixedValuesV1,
 } as const;

@@ -1,0 +1,104 @@
+# Hand-written operations covering shapes the Fragment CLI does not currently
+# generate, but that a caller may write by hand and that the derivation supports.
+# Unlike the other fixtures, this file is not generated -- edit it directly.
+
+# An entry type whose Lines the Schema does not fix, so the caller supplies them.
+# No payload is generated for it: `lines` is not a common field, so a payload
+# could only ever post an entry with no Lines. Post these with a raw
+# `AddLedgerEntryInput` instead.
+mutation PostRuntimeLines(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $posted: DateTime
+  $description: String
+  $lines: [LedgerLineInput!]!
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {
+      ledger: { ik: $ledgerIk }
+      type: "runtime_lines"
+      posted: $posted
+      description: $description
+      lines: $lines
+    }
+  ) {
+    __typename
+  }
+}
+
+# `parameters` bound to a variable rather than an inline object, so the payload
+# falls back to an untyped map.
+mutation PostUntypedParameters(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $parameters: JSON!
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: { ledger: { ik: $ledgerIk }, type: "untyped_parameters", parameters: $parameters }
+  ) {
+    __typename
+  }
+}
+
+# Every parameter optional, so `parameters` itself is omitted when none are set.
+mutation PostAllOptional(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $memo: String
+  $note: String
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {
+      ledger: { ik: $ledgerIk }
+      type: "all_optional"
+      typeVersion: 2
+      parameters: { memo: $memo, note: $note }
+    }
+  ) {
+    __typename
+  }
+}
+
+# The Ledger matched by either key, so two payload fields write one entry field.
+mutation PostEitherLedgerKey(
+  $ik: SafeString!
+  $ledgerId: ID
+  $ledgerIk: SafeString
+  $amount: String!
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {
+      ledger: { id: $ledgerId, ik: $ledgerIk }
+      type: "either_ledger_key"
+      parameters: { amount: $amount }
+    }
+  ) {
+    __typename
+  }
+}
+
+# Values the operation fixes. They are encoded in the Schema the operation was
+# generated from, so the API derives them: the payload neither exposes nor
+# re-posts them.
+mutation PostFixedValues(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $amount: String!
+) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {
+      ledger: { ik: $ledgerIk }
+      type: "fixed_values"
+      description: "posted by the nightly sweep"
+      tags: [{ key: "source", value: "sweep" }]
+      parameters: { amount: $amount, currency: "USD" }
+    }
+  ) {
+    __typename
+  }
+}

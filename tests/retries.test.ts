@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { http, graphql, HttpResponse } from "msw";
 import { createFragmentClient } from "../src/client.js";
+import { BadRequestError, InternalError } from "../src/errors.js";
 
 const fragmentApi = graphql.link(`https://fragment-api.example.com/graphql`);
 
@@ -98,5 +99,53 @@ describe("Client retries", () => {
     } catch (e) {}
 
     expect(onRetry).toHaveBeenCalledTimes(0);
+  });
+
+  it("raises a non-retryable internal error without falling through", async () => {
+    // The mutation cases share a switch; a missing `break` would report this as
+    // a BadRequestError instead.
+    server.use(
+      fragmentApi.mutation("addLedgerEntry", () =>
+        HttpResponse.json({
+          data: {
+            addLedgerEntry: {
+              __typename: "InternalError",
+              code: "INTERNAL_ERROR",
+              message: "Something went wrong on our end",
+              retryable: false,
+            },
+          },
+        }),
+      ),
+    );
+
+    const onRetry = vi.fn();
+    const client = createFragmentClient({
+      params: {
+        clientId: "test",
+        clientSecret: "test",
+        scope: "*",
+        authUrl: "https://fragment-auth.example.com/oauth2/token",
+        apiUrl: "https://fragment-api.example.com/graphql",
+      },
+      retryConfig: { retries: 2, minTimeout: 1, maxTimeout: 1, onRetry },
+    });
+
+    let thrown: unknown;
+    try {
+      await client.addLedgerEntry({
+        ik: "add-ledger-entry-ik",
+        ledgerIk: "ledger-ik",
+        type: "runtime-entry",
+        parameters: {},
+      });
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(InternalError);
+    expect(thrown).not.toBeInstanceOf(BadRequestError);
+    expect((thrown as InternalError).code).toEqual("internal_error");
+    expect(onRetry).not.toHaveBeenCalled();
   });
 });
