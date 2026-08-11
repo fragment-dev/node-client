@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = void 0;
+exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -289,6 +289,17 @@ var LinkType;
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (exports.LinkType = LinkType = {}));
 /**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["Processing"] = "processing";
+    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
+    PaymentStatus["Settled"] = "settled";
+})(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+/**
  * Controls how lines are posted for a Ledger Entry.
  * New entries created via the dashboard default to `net_amounts`.
  * Existing entries without this field set are treated as `raw_lines`.
@@ -449,6 +460,53 @@ exports.DeleteLedgerDocument = (0, graphql_tag_1.gql) `
       __typename
       ... on DeleteLedgerResult {
         success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.AddLedgerEntriesDocument = (0, graphql_tag_1.gql) `
+  mutation addLedgerEntries($entries: [AddLedgerEntryInput!]!) {
+    addLedgerEntries(entries: $entries) {
+      __typename
+      ... on AddLedgerEntriesResult {
+        results {
+          isIkReplay
+          entry {
+            type
+            id
+            ik
+            posted
+            created
+          }
+          lines {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      ... on AddLedgerEntriesError {
+        code
+        message
+        retryable
+        errors {
+          ik
+          code
+          message
+          retryable
+        }
       }
       ... on BadRequestError {
         code
@@ -1608,6 +1666,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         deleteLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteLedger", "mutation", variables);
+        },
+        addLedgerEntries(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntriesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntries", "mutation", variables);
         },
         addLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntry", "mutation", variables);

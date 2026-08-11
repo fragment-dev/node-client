@@ -285,6 +285,17 @@ export var LinkType;
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (LinkType = {}));
 /**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+export var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["Processing"] = "processing";
+    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
+    PaymentStatus["Settled"] = "settled";
+})(PaymentStatus || (PaymentStatus = {}));
+/**
  * Controls how lines are posted for a Ledger Entry.
  * New entries created via the dashboard default to `net_amounts`.
  * Existing entries without this field set are treated as `raw_lines`.
@@ -445,6 +456,53 @@ export const DeleteLedgerDocument = gql `
       __typename
       ... on DeleteLedgerResult {
         success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const AddLedgerEntriesDocument = gql `
+  mutation addLedgerEntries($entries: [AddLedgerEntryInput!]!) {
+    addLedgerEntries(entries: $entries) {
+      __typename
+      ... on AddLedgerEntriesResult {
+        results {
+          isIkReplay
+          entry {
+            type
+            id
+            ik
+            posted
+            created
+          }
+          lines {
+            id
+            amount
+            account {
+              path
+            }
+          }
+        }
+      }
+      ... on AddLedgerEntriesError {
+        code
+        message
+        retryable
+        errors {
+          ik
+          code
+          message
+          retryable
+        }
       }
       ... on BadRequestError {
         code
@@ -1607,6 +1665,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         deleteLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(DeleteLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteLedger", "mutation", variables);
+        },
+        addLedgerEntries(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntries", "mutation", variables);
         },
         addLedgerEntry(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntry", "mutation", variables);
