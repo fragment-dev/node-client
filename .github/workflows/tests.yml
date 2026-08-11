@@ -52,7 +52,8 @@ jobs:
           path: |
             /home/linuxbrew/.linuxbrew
             ~/.cache/Homebrew
-          key: ${{ runner.os }}-homebrew-fragment-cli
+          # v2: the previous key holds a Homebrew too old to pour current bottles.
+          key: ${{ runner.os }}-homebrew-fragment-cli-v2
           restore-keys: |
             ${{ runner.os }}-homebrew-
 
@@ -63,6 +64,11 @@ jobs:
           fi
           echo "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" >> $GITHUB_ENV
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          # The cache restores whatever Homebrew was current when the key was first
+          # written, and the runner disables auto-update. A months-old Homebrew
+          # cannot pour a current bottle -- it fails with `unknown install step:
+          # run` -- so bring Homebrew itself up to date before installing.
+          /home/linuxbrew/.linuxbrew/bin/brew update --quiet
           /home/linuxbrew/.linuxbrew/bin/brew tap fragment-dev/tap || true
           if ! /home/linuxbrew/.linuxbrew/bin/brew list fragment-dev/tap/fragment-cli &>/dev/null; then
             /home/linuxbrew/.linuxbrew/bin/brew install fragment-dev/tap/fragment-cli
