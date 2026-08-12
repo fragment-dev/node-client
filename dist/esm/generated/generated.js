@@ -355,6 +355,31 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
+/** The status of a Payment Type. */
+export var SchemaPaymentEntryStatus;
+(function (SchemaPaymentEntryStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentEntryStatus["Active"] = "active";
+})(SchemaPaymentEntryStatus || (SchemaPaymentEntryStatus = {}));
+/** The direction a Payment Type moves money. */
+export var SchemaPaymentTypeDirection;
+(function (SchemaPaymentTypeDirection) {
+    /** Money moves into the Payment Account. */
+    SchemaPaymentTypeDirection["Payin"] = "payin";
+    /** Money moves out of the Payment Account. */
+    SchemaPaymentTypeDirection["Payout"] = "payout";
+})(SchemaPaymentTypeDirection || (SchemaPaymentTypeDirection = {}));
+/**
+ * Identifies a system-owned line in a payment entry. The amounts of system
+ * lines are filled by Fragment when the payment entry is posted.
+ */
+export var SchemaSystemLineKind;
+(function (SchemaSystemLineKind) {
+    /** The line carrying the Fragment fee amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line carrying the settled payment amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
+})(SchemaSystemLineKind || (SchemaSystemLineKind = {}));
 export var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";
