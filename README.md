@@ -38,7 +38,7 @@ Read the [Using custom queries](#using-custom-queries) section to learn how to u
 
 ### Post a Ledger Entry
 
-To [post](https://fragment.dev/docs#post-ledger-entries-post-to-the-api) a Ledger Entry defined in your schema:
+To [post](https://fragment.dev/guides/post-ledger-entries#post-to-the-api) a Ledger Entry defined in your schema:
 
 ```typescript
 await fragment.addLedgerEntry({
@@ -53,7 +53,7 @@ await fragment.addLedgerEntry({
 });
 ```
 
-To post a Ledger Entry with lines [defined at runtime](https://fragment.dev/docs#post-ledger-entries-runtime-entries):
+To post a Ledger Entry with lines [defined at runtime](https://fragment.dev/guides/post-ledger-entries#runtime-entries):
 
 ```typescript
 await fragment.addLedgerEntryRuntime({
@@ -127,9 +127,38 @@ await fragment.PostUserFundsAccount_v2({
 
 Each version can have different parameters and line structures, and the generated methods will reflect those differences.
 
+### Post a batch of Ledger Entries
+
+To [post](https://fragment.dev/guides/post-ledger-entries#batch-ledger-entries) a batch of Ledger Entries atomically:
+
+```typescript
+import { userFundsAccountV1 } from './src/fragment-client.ts';
+
+await fragment.addLedgerEntries({
+  entries: [
+    userFundsAccountV1({
+      ik: "some-ik-1",
+      ledgerIk: "your-ledger-ik",
+      posted: "1968-01-01T16:45:00Z",
+      user_id: "user-1",
+      funding_amount: "20000",
+    }),
+    userFundsAccountV1({
+      ik: "some-ik-2",
+      ledgerIk: "your-ledger-ik",
+      posted: "1968-01-01T16:45:00Z",
+      user_id: "user-2",
+      funding_amount: "20000",
+    }),
+  ],
+});
+```
+
+Construct the entries in the batch using the typed payloads generated for your Schema, named `<entryType>V<typeVersion>`. They are exported from your generated client alongside `getSdk`.
+
 ### Sync transactions
 
-To sync transaction using a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system):
+To sync transaction using a [Custom Link](https://fragment.dev/guides/sync-payments#custom-link):
 
 ```typescript
 import { CurrencyCode } from "@fragment-dev/node-client";
@@ -169,7 +198,7 @@ await fragment.syncCustomTxs({
 
 ### Reconcile a transaction
 
-To [reconcile](https://fragment.dev/docs#reconcile-transactions) a transaction:
+To [reconcile](https://fragment.dev/guides/reconcile-payments#reconcile-a-tx) a transaction:
 
 ```typescript
 await fragment.reconcileTx({
@@ -186,7 +215,7 @@ await fragment.reconcileTx({
 });
 ```
 
-To reconcile a Ledger Entry with lines [defined at runtime](https://fragment.dev/docs#post-ledger-entries-runtime-entries):
+To reconcile a Ledger Entry with lines [defined at runtime](https://fragment.dev/guides/post-ledger-entries#runtime-entries):
 
 ```typescript
 await fragment.reconcileTxRuntime({
@@ -272,7 +301,7 @@ const result = await fragment.listLedgerAccounts({
 assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 ```
 
-To retrieve Ledger Accounts with [balances](https://fragment.dev/docs#read-balances):
+To retrieve Ledger Accounts with [balances](https://fragment.dev/guides/read-balances):
 
 ```typescript
 const result = await fragment.listLedgerAccountBalances({
@@ -282,7 +311,7 @@ const result = await fragment.listLedgerAccountBalances({
 assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 ```
 
-To retrieve [multi-currency](https://fragment.dev/docs#handle-currencies) Ledger Accounts with balances:
+To retrieve [multi-currency](https://fragment.dev/guides/handle-currencies) Ledger Accounts with balances:
 
 ```typescript
 const result = await fragment.listMultiCurrencyLedgerAccountBalances({

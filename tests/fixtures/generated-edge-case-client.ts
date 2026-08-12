@@ -2077,6 +2077,13 @@ export type LedgerLineTag = {
   value: Scalars['SafeString']['output'];
 };
 
+export type LedgerLineTagInput = {
+  /** The key of this tag. Can be up to 128 characters long. */
+  key: Scalars['SafeString']['input'];
+  /** The value associated with this tag's key. Can be up to 128 characters long. */
+  value: Scalars['SafeString']['input'];
+};
+
 /** A paginated list of Ledger Lines */
 export type LedgerLinesConnection = {
   __typename?: 'LedgerLinesConnection';
@@ -2832,6 +2839,8 @@ export type SchemaInput = {
   ledgerEntries?: InputMaybe<SchemaLedgerEntriesInput>;
   /** The human-readable name of the Schema. */
   name?: InputMaybe<Scalars['ParameterizedString']['input']>;
+  /** EXPERIMENTAL: The Payment Types to add to the Schema. */
+  payments?: InputMaybe<SchemaPaymentsInput>;
   /** Any scenes associated with this Schema. */
   scenes?: InputMaybe<Array<SceneInput>>;
 };
@@ -3041,9 +3050,104 @@ export type SchemaMatchInput = {
   version?: InputMaybe<Scalars['Int']['input']>;
 };
 
+/**
+ * EXPERIMENTAL: The Ledger Entries a Payment Type posts as a payment moves
+ * through its lifecycle, keyed by lifecycle transition.
+ */
+export type SchemaPaymentAccountingInput = {
+  /** Posted when the payment enters processing. Optional. */
+  needs_confirmation_to_processing?: InputMaybe<SchemaPaymentEntryInput>;
+  /** Posted when the payment settles. Every Payment Type must define it. */
+  processing_to_settled: SchemaPaymentEntryInput;
+};
+
+/** EXPERIMENTAL: The Ledger Entry a Payment Type posts on a payment lifecycle event. */
+export type SchemaPaymentEntryInput = {
+  /** Human-readable description of the payment entry. */
+  description?: InputMaybe<Scalars['ParameterizedString']['input']>;
+  /** The Ledger Lines in the payment entry. */
+  lines: Array<SchemaPaymentLineInput>;
+};
+
+/** The status of a Payment Type. */
+export enum SchemaPaymentEntryStatus {
+  /** The Payment Type is active. */
+  Active = 'active'
+}
+
 /** EXPERIMENTAL: Marks a Ledger Account as a Payment Account. */
 export type SchemaPaymentInput = {
   penguin: Scalars['Boolean']['input'];
+};
+
+/** EXPERIMENTAL: A Ledger Line in a payment entry. */
+export type SchemaPaymentLineInput = {
+  /**
+   * The Ledger Account this line will be posted to.
+   * It supports parameters in its attributes via handlebars syntax.
+   */
+  account: SchemaLedgerAccountMatchInput;
+  /** The amount of the line. It supports parameters via the handlebars syntax and addition (+) and subtraction (-). */
+  amount: Scalars['ParameterizedString']['input'];
+  /**
+   * The currency of the line. This is required if the Ledger Account has currencyMode multi.
+   * It supports parameters in its attributes via handlebars syntax.
+   */
+  currency?: InputMaybe<SchemaCurrencyMatchInput>;
+  /** Human-readable description of the line. */
+  description?: InputMaybe<Scalars['ParameterizedString']['input']>;
+  /** The key for the line. Keys must be unique within a payment entry. */
+  key: Scalars['SafeString']['input'];
+  /**
+   * Marks this as a system-owned line. Fragment fills the amounts of system
+   * lines when the payment entry is posted.
+   */
+  system?: InputMaybe<SchemaSystemLineKind>;
+};
+
+/** EXPERIMENTAL: The payment a Payment Type creates. */
+export type SchemaPaymentTypeDetailsInput = {
+  /**
+   * The amount requested for the payment, as a parameterized expression filled
+   * from createPayment parameters.
+   */
+  amount: Scalars['ParameterizedString']['input'];
+  /** The direction the payment moves money. */
+  direction: SchemaPaymentTypeDirection;
+};
+
+/** The direction a Payment Type moves money. */
+export enum SchemaPaymentTypeDirection {
+  /** Money moves into the Payment Account. */
+  Payin = 'payin',
+  /** Money moves out of the Payment Account. */
+  Payout = 'payout'
+}
+
+/**
+ * EXPERIMENTAL: A Payment Type in a Schema. All Payment Types defined in a
+ * Schema must have a unique `type` and `typeVersion` pair.
+ */
+export type SchemaPaymentTypeInput = {
+  /** The Ledger Entries posted as the payment moves through its lifecycle. */
+  accounting: SchemaPaymentAccountingInput;
+  /** The payment this Payment Type creates. */
+  payment: SchemaPaymentTypeDetailsInput;
+  /** The status of this Payment Type. */
+  status: SchemaPaymentEntryStatus;
+  /**
+   * The type of this Payment Type. This is a stable, unique identifier for it.
+   * Uniqueness is enforced at the Schema level.
+   */
+  type: Scalars['SafeString']['input'];
+  /** The version of the Payment Type. */
+  typeVersion: Scalars['Int']['input'];
+};
+
+/** EXPERIMENTAL: The Payment Types in your Schema. */
+export type SchemaPaymentsInput = {
+  /** A list of Payment Type definitions. */
+  types: Array<SchemaPaymentTypeInput>;
 };
 
 /**
@@ -3054,6 +3158,17 @@ export type SchemaRepeatedConfigInput = {
   /** The key of the array parameter whose elements expand this line or condition. */
   key: Scalars['SafeString']['input'];
 };
+
+/**
+ * Identifies a system-owned line in a payment entry. The amounts of system
+ * lines are filled by Fragment when the payment entry is posted.
+ */
+export enum SchemaSystemLineKind {
+  /** The line carrying the Fragment fee amount, posted to the Payment Account. */
+  PaymentFeeLine = 'payment_fee_line',
+  /** The line carrying the settled payment amount, posted to the Payment Account. */
+  PaymentSettlementLine = 'payment_settlement_line'
+}
 
 /**
  * Matches a transaction at an external system.
@@ -3307,6 +3422,8 @@ export type UpdateLedgerAccountResult = {
 export type UpdateLedgerEntryInput = {
   /** The list of Groups to add to this Ledger Entry. */
   groups?: InputMaybe<Array<LedgerEntryGroupInput>>;
+  /** The list of Ledger Line updates to apply to Ledger Lines on this Ledger Entry. */
+  ledgerLines?: InputMaybe<Array<UpdateLedgerLineInput>>;
   /** The list of Tags to add and/or update on this Ledger Entry. */
   tags?: InputMaybe<Array<LedgerEntryTagInput>>;
   /** The list of Tags to remove from this Ledger Entry. */
@@ -3324,6 +3441,15 @@ export type UpdateLedgerEntryResult = {
 export type UpdateLedgerInput = {
   /** The new Ledger name.  */
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateLedgerLineInput = {
+  /** The Ledger Line that is being updated. It must belong to the Ledger Entry being updated. */
+  ledgerLine: LedgerLineMatchInput;
+  /** The list of Tags to add and/or update on this Ledger Line. */
+  tags?: InputMaybe<Array<LedgerLineTagInput>>;
+  /** The list of Tags to remove from this Ledger Line. */
+  tagsToRemove?: InputMaybe<Array<LedgerLineTagInput>>;
 };
 
 export type UpdateLedgerResponse = BadRequestError | InternalError | UpdateLedgerResult;
@@ -3391,6 +3517,17 @@ export type PostFixedValuesMutationVariables = Exact<{
 
 export type PostFixedValuesMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
 
+export type PostCollidingParameterMutationVariables = Exact<{
+  ik: Scalars['SafeString']['input'];
+  ledgerIk: Scalars['SafeString']['input'];
+  posted?: InputMaybe<Scalars['DateTime']['input']>;
+  postedParameter: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+}>;
+
+
+export type PostCollidingParameterMutation = { __typename?: 'Mutation', addLedgerEntry: { __typename: 'AddLedgerEntryResult' } | { __typename: 'BadRequestError' } | { __typename: 'InternalError' } };
+
 
 export const PostRuntimeLinesDocument = gql`
     mutation PostRuntimeLines($ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $description: String, $lines: [LedgerLineInput!]!) {
@@ -3442,6 +3579,16 @@ export const PostFixedValuesDocument = gql`
   }
 }
     `;
+export const PostCollidingParameterDocument = gql`
+    mutation PostCollidingParameter($ik: SafeString!, $ledgerIk: SafeString!, $posted: DateTime, $postedParameter: String!, $amount: String!) {
+  addLedgerEntry(
+    ik: $ik
+    entry: {ledger: {ik: $ledgerIk}, type: "colliding_parameter", posted: $posted, parameters: {posted: $postedParameter, amount: $amount}}
+  ) {
+    __typename
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 
@@ -3464,6 +3611,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     PostFixedValues(variables: PostFixedValuesMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostFixedValuesMutation> {
       return withWrapper((wrappedRequestHeaders) => client.request<PostFixedValuesMutation>(PostFixedValuesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostFixedValues', 'mutation', variables);
+    },
+    PostCollidingParameter(variables: PostCollidingParameterMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<PostCollidingParameterMutation> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PostCollidingParameterMutation>(PostCollidingParameterDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PostCollidingParameter', 'mutation', variables);
     }
   };
 }
@@ -3661,6 +3811,53 @@ export const fixedValuesV1 = (
 });
 
 /**
+ * Payload for the `colliding_parameter` (typeVersion 1) Ledger Entry, for use with `addLedgerEntries`.
+ *
+ * Derived from the `PostCollidingParameter` operation, which is what a caller
+ * may set: these are exactly the fields that operation binds.
+ */
+export type CollidingParameterV1 = {
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) for this Ledger Entry. */
+  ik: Scalars['SafeString']['input'];
+  /** The Idempotency Key of the Ledger to add this Ledger Entry to. */
+  ledgerIk: Scalars['SafeString']['input'];
+  /** ISO 8601 timestamp to post this Ledger Entry at. */
+  posted?: Scalars['DateTime']['input'] | undefined;
+  description?: Scalars['String']['input'] | undefined;
+  tags?: Array<LedgerEntryTagInput> | undefined;
+  groups?: Array<LedgerEntryGroupInput> | undefined;
+  conditions?: Array<LedgerEntryConditionInput> | undefined;
+  /**
+   * The `posted` parameter, named `posted_2` here because
+   * this payload already has a `posted` field of its own. It still
+   * posts as `posted`.
+   */
+  posted_2: Scalars['String']['input'];
+  amount: Scalars['String']['input'];
+};
+
+/** Builds an `addLedgerEntries` entry for `colliding_parameter` (typeVersion 1). */
+export const collidingParameterV1 = (
+  input: CollidingParameterV1,
+): AddLedgerEntryInput => ({
+  entry: {
+    ...(input.conditions !== undefined && { conditions: input.conditions }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.groups !== undefined && { groups: input.groups }),
+    ledger: { ik: input.ledgerIk },
+    parameters: {
+      posted: input.posted_2,
+      amount: input.amount,
+    },
+    ...(input.posted !== undefined && { posted: input.posted }),
+    ...(input.tags !== undefined && { tags: input.tags }),
+    type: 'colliding_parameter',
+    typeVersion: 1,
+  },
+  ik: input.ik,
+});
+
+/**
  * Every typed payload builder, keyed by `"<entry type>@<typeVersion>"`. Useful
  * when the entry type is only known at runtime.
  */
@@ -3669,4 +3866,5 @@ export const typedLedgerEntryBuilders = {
   'all_optional@2': allOptionalV2,
   'either_ledger_key@1': eitherLedgerKeyV1,
   'fixed_values@1': fixedValuesV1,
+  'colliding_parameter@1': collidingParameterV1,
 } as const;

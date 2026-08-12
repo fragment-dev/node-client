@@ -514,6 +514,11 @@ describe("rendering", () => {
     const payload = payloadType(output, "ThingV1");
     expect(payload).toContain("  posted?: Scalars['DateTime']['input'] | undefined;");
     expect(payload).toContain("  posted_2: Scalars['String']['input'];");
+    // The field name is one the payload picked, so it says which parameter it is.
+    expect(payload).toContain(
+      "   * The `posted` parameter, named `posted_2` here because",
+    );
+    expect(payload).toContain("posts as `posted`.");
     expect(builderBody(output, "thingV1")).toContain("      posted: input.posted_2,");
     expect(builderBody(output, "thingV1")).toContain(
       "...(input.posted !== undefined && { posted: input.posted }),",
