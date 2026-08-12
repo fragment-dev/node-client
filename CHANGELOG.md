@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [2.1.0]
+
+### Added
+
+- `addLedgerEntries` posts a batch of Ledger Entries atomically.
+- Strongly-typed batch payloads. Codegen now emits one payload per Ledger Entry
+  type into your generated client, derived from the per-entry-type
+  `addLedgerEntry` operations in the codegen input. Because a batch mutation
+  takes one list of one input type, GraphQL cannot type each entry's
+  `parameters` field individually; these payloads do. Pass them to
+  `addLedgerEntries` directly, mixed with raw `AddLedgerEntryInput` values.
+  Payload names always carry the entry type version, defaulting to `V1`.
+- Ledger Line tags can now be updated using `updateLedgerEntry`.
+
 ## [2.0.0]
 
 ### Changed
