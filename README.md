@@ -127,6 +127,48 @@ await fragment.PostUserFundsAccount_v2({
 
 Each version can have different parameters and line structures, and the generated methods will reflect those differences.
 
+### Post a batch of Ledger Entries
+
+To [post](https://fragment.dev/guides/post-ledger-entries#batch-ledger-entries) a batch of Ledger Entries atomically:
+
+```typescript
+import { userFundsAccountV1 } from './src/fragment-client.ts';
+
+await fragment.addLedgerEntries({
+  entries: [
+    userFundsAccountV1({
+      ik: "some-ik-1",
+      ledgerIk: "your-ledger-ik",
+      posted: "1968-01-01T16:45:00Z",
+      user_id: "user-1",
+      funding_amount: "20000",
+    }),
+    userFundsAccountV1({
+      ik: "some-ik-2",
+      ledgerIk: "your-ledger-ik",
+      posted: "1968-01-01T16:45:00Z",
+      user_id: "user-2",
+      funding_amount: "20000",
+    }),
+  ],
+});
+```
+
+Construct the entries in the batch using the typed payloads generated for your Schema, named `<entryType>V<typeVersion>`. They are exported from your generated client alongside `getSdk`.
+
+Either every entry in the batch is added or none are. The response is a union, so narrow it before reading the results:
+
+```typescript
+if (response.addLedgerEntries.__typename === "AddLedgerEntriesResult") {
+  // Results come back in the order the entries were sent.
+  response.addLedgerEntries.results.forEach(({ entry, isIkReplay }) => {
+    console.log(entry.ik, isIkReplay);
+  });
+}
+```
+
+When a batch fails the SDK throws an `AddLedgerEntriesError`, whose `errors` name the Idempotency Key of each Ledger Entry that was responsible for the failure.
+
 ### Sync transactions
 
 To sync transaction using a [Custom Link](https://fragment.dev/docs#reconcile-transactions-link-any-system):
