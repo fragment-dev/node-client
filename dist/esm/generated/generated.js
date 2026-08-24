@@ -1,5 +1,5 @@
 import { gql } from "graphql-tag";
-/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 export var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
@@ -285,6 +285,17 @@ export var LinkType;
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (LinkType = {}));
 /**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+export var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["Processing"] = "processing";
+    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
+    PaymentStatus["Settled"] = "settled";
+})(PaymentStatus || (PaymentStatus = {}));
+/**
  * Controls how lines are posted for a Ledger Entry.
  * New entries created via the dashboard default to `net_amounts`.
  * Existing entries without this field set are treated as `raw_lines`.
@@ -298,7 +309,7 @@ export var PostLinesAs;
     /** Lines with a zero amount are skipped, but lines are not aggregated. If all lines have a zero amount, no lines are skipped. */
     PostLinesAs["SkipZeroLines"] = "skip_zero_lines";
 })(PostLinesAs || (PostLinesAs = {}));
-/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 export var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
@@ -315,7 +326,7 @@ export var SceneEventType;
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
  */
 export var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {
@@ -344,6 +355,31 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
+/** The status of a Payment Type. */
+export var SchemaPaymentEntryStatus;
+(function (SchemaPaymentEntryStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentEntryStatus["Active"] = "active";
+})(SchemaPaymentEntryStatus || (SchemaPaymentEntryStatus = {}));
+/** The direction a Payment Type moves money. */
+export var SchemaPaymentTypeDirection;
+(function (SchemaPaymentTypeDirection) {
+    /** Money moves into the Payment Account. */
+    SchemaPaymentTypeDirection["Payin"] = "payin";
+    /** Money moves out of the Payment Account. */
+    SchemaPaymentTypeDirection["Payout"] = "payout";
+})(SchemaPaymentTypeDirection || (SchemaPaymentTypeDirection = {}));
+/**
+ * Identifies a system-owned line in a payment entry. The amounts of system
+ * lines are filled by Fragment when the payment entry is posted.
+ */
+export var SchemaSystemLineKind;
+(function (SchemaSystemLineKind) {
+    /** The line carrying the Fragment fee amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line carrying the settled payment amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
+})(SchemaSystemLineKind || (SchemaSystemLineKind = {}));
 export var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";
