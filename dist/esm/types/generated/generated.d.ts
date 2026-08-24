@@ -321,6 +321,15 @@ export type CreateLedgerResult = {
     /** The Ledger that was created */
     ledger: Ledger;
 };
+/** EXPERIMENTAL: The Payment to create. */
+export type CreatePaymentInput = {
+    /** Parameters for the specific Payment Type. */
+    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+    /** The type of the Payment. Must be defined in the Schema linked to the Ledger. */
+    type: Scalars["SafeString"]["input"];
+    /** The version of the Payment Type. Defaults to the latest active version. */
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
+};
 export type CreatePaymentResponse = BadRequestError | InternalError | Payment;
 export type Currency = {
     __typename?: "Currency";
@@ -2039,6 +2048,33 @@ export declare enum LedgerMigrationStatus {
     /** The Ledger Migration has been started. */
     Started = "started"
 }
+/** EXPERIMENTAL: A Payment posted to a Ledger. */
+export type LedgerPayment = {
+    __typename?: "LedgerPayment";
+    /** The amount of this Payment, in whole cents. */
+    amount: Scalars["Int96"]["output"];
+    created: Scalars["DateTime"]["output"];
+    /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) the Payment was created with. */
+    ik: Scalars["SafeString"]["output"];
+    /** The Ledger this Payment belongs to. */
+    ledgerId: Scalars["SafeString"]["output"];
+    /** Parameters the Payment was created with. Only returned by the `ledgerPayment` query. */
+    parameters?: Maybe<Scalars["JSON"]["output"]>;
+    /** The status of this Payment. */
+    status: PaymentStatus;
+    /** The Payment Type in the Schema this Payment was created from. */
+    type: Scalars["SafeString"]["output"];
+    /** The version of the Payment Type. */
+    typeVersion: Scalars["Int"]["output"];
+};
+/** EXPERIMENTAL: A paginated list of Payments. */
+export type LedgerPaymentsConnection = {
+    __typename?: "LedgerPaymentsConnection";
+    /** The current page of results. */
+    nodes: Array<LedgerPayment>;
+    /** The pagination info for this list. */
+    pageInfo: PageInfo;
+};
 export type LedgerTypeFilter = {
     equalTo?: InputMaybe<LedgerTypes>;
     /** Must match one of the values provided. Limited to 100 items maximum. */
@@ -2214,9 +2250,9 @@ export type MutationCreateLedgerAccountsArgs = {
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationCreatePaymentArgs = {
-    amount: Scalars["Int96"]["input"];
     ik: Scalars["SafeString"]["input"];
     ledger: LedgerMatchInput;
+    payment: CreatePaymentInput;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteCustomTxsArgs = {
@@ -2350,6 +2386,10 @@ export type Query = {
     ledgerEntryHistory: LedgerEntriesConnection;
     /** Get LedgerLine by ID */
     ledgerLine?: Maybe<LedgerLine>;
+    /** EXPERIMENTAL: Get a single Payment by its Idempotency Key. */
+    ledgerPayment?: Maybe<LedgerPayment>;
+    /** EXPERIMENTAL: List the Payments on a Ledger, most recent first. */
+    ledgerPayments: LedgerPaymentsConnection;
     /** Query Ledgers in workspace. Ledgers are paginated and returned in reverse-chronological order by their created date. */
     ledgers: LedgersConnection;
     /** Get a Link by ID. Returns a BadRequestError if the Link is not found. */
@@ -2399,6 +2439,19 @@ export type QueryLedgerEntryHistoryArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerLineArgs = {
     ledgerLine: LedgerLineMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryLedgerPaymentArgs = {
+    ik: Scalars["SafeString"]["input"];
+    ledger: LedgerMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryLedgerPaymentsArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    before?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+    last?: InputMaybe<Scalars["Int"]["input"]>;
+    ledger: LedgerMatchInput;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgersArgs = {
