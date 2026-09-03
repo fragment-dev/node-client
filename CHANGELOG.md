@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [2.2.0]
+
+### Added
+
+- `createPayment` creates a Payment on a Ledger. Pass an `ik`, a `ledgerIk`, and
+  a Payment `type`, along with optional `typeVersion` and `parameters`. It
+  returns the Payment's `clientSecret` and `status`. Payments are experimental,
+  so this API may change in a future release.
+
+### Changed
+
+- `typeVersion` on `LedgerEntryInput` is now supported and defaults to `1`. It
+  was previously reserved for an upcoming feature.
+- `PaymentStatus` now uses `needs_payment_method` instead of
+  `requires_confirmation`.
+- `SchemaPaymentEntryStatus` is now named `SchemaPaymentTypeStatus`, and
+  `SchemaPaymentEntryInput` now takes `needs_payment_method_to_processing`
+  instead of `needs_confirmation_to_processing`.
+
 ## [2.1.0]
 
 ### Added
