@@ -323,7 +323,7 @@ export type CreateLedgerResult = {
 };
 /** EXPERIMENTAL: The Payment to create. */
 export type CreatePaymentInput = {
-    /** Parameters for the specific Payment Type. */
+    /** Parameters for the specific Payment Type. Must be a key-value pair of strings. Must be a flat object: nested objects and arrays are rejected. */
     parameters?: InputMaybe<Scalars["JSON"]["input"]>;
     /** The type of the Payment. Must be defined in the Schema linked to the Ledger. */
     type: Scalars["SafeString"]["input"];
@@ -2338,8 +2338,8 @@ export type Payment = {
  * Status of a Payment.
  */
 export declare enum PaymentStatus {
+    NeedsPaymentMethod = "needs_payment_method",
     Processing = "processing",
-    RequiresConfirmation = "requires_confirmation",
     Settled = "settled"
 }
 /**
@@ -2844,7 +2844,7 @@ export type SchemaMatchInput = {
  */
 export type SchemaPaymentAccountingInput = {
     /** Posted when the payment enters processing. Optional. */
-    needs_confirmation_to_processing?: InputMaybe<SchemaPaymentEntryInput>;
+    needs_payment_method_to_processing?: InputMaybe<SchemaPaymentEntryInput>;
     /** Posted when the payment settles. Every Payment Type must define it. */
     processing_to_settled: SchemaPaymentEntryInput;
 };
@@ -2855,11 +2855,6 @@ export type SchemaPaymentEntryInput = {
     /** The Ledger Lines in the payment entry. */
     lines: Array<SchemaPaymentLineInput>;
 };
-/** The status of a Payment Type. */
-export declare enum SchemaPaymentEntryStatus {
-    /** The Payment Type is active. */
-    Active = "active"
-}
 /** EXPERIMENTAL: Marks a Ledger Account as a Payment Account. */
 export type SchemaPaymentInput = {
     penguin: Scalars["Boolean"]["input"];
@@ -2915,7 +2910,7 @@ export type SchemaPaymentTypeInput = {
     /** The payment this Payment Type creates. */
     payment: SchemaPaymentTypeDetailsInput;
     /** The status of this Payment Type. */
-    status: SchemaPaymentEntryStatus;
+    status: SchemaPaymentTypeStatus;
     /**
      * The type of this Payment Type. This is a stable, unique identifier for it.
      * Uniqueness is enforced at the Schema level.
@@ -2924,6 +2919,11 @@ export type SchemaPaymentTypeInput = {
     /** The version of the Payment Type. */
     typeVersion: Scalars["Int"]["input"];
 };
+/** The status of a Payment Type. */
+export declare enum SchemaPaymentTypeStatus {
+    /** The Payment Type is active. */
+    Active = "active"
+}
 /** EXPERIMENTAL: The Payment Types in your Schema. */
 export type SchemaPaymentsInput = {
     /** A list of Payment Type definitions. */
@@ -4515,6 +4515,31 @@ export type CreateCustomCurrencyMutation = {
         retryable: boolean;
     };
 };
+export type CreatePaymentMutationVariables = Exact<{
+    ik: Scalars["SafeString"]["input"];
+    ledgerIk: Scalars["SafeString"]["input"];
+    type: Scalars["SafeString"]["input"];
+    typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
+    parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+}>;
+export type CreatePaymentMutation = {
+    __typename?: "Mutation";
+    createPayment: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "Payment";
+        clientSecret: string;
+        status: PaymentStatus;
+    };
+};
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const DeleteSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
@@ -4548,6 +4573,7 @@ export declare const GetEntriesToMigrateForLedgerEntryDataMigrationDocument: imp
 export declare const GetAccountDataMigrationsDocument: import("graphql").DocumentNode;
 export declare const GetEntriesToMigrateForLedgerAccountDataMigrationDocument: import("graphql").DocumentNode;
 export declare const CreateCustomCurrencyDocument: import("graphql").DocumentNode;
+export declare const CreatePaymentDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -4583,6 +4609,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     getAccountDataMigrations(variables: GetAccountDataMigrationsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetAccountDataMigrationsQuery>;
     getEntriesToMigrateForLedgerAccountDataMigration(variables: GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetEntriesToMigrateForLedgerAccountDataMigrationQuery>;
     createCustomCurrency(variables: CreateCustomCurrencyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomCurrencyMutation>;
+    createPayment(variables: CreatePaymentMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreatePaymentMutation>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};
