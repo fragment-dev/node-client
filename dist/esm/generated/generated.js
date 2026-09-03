@@ -291,8 +291,8 @@ export var LinkType;
  */
 export var PaymentStatus;
 (function (PaymentStatus) {
+    PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentStatus["Processing"] = "processing";
-    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
     PaymentStatus["Settled"] = "settled";
 })(PaymentStatus || (PaymentStatus = {}));
 /**
@@ -355,12 +355,6 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
-/** The status of a Payment Type. */
-export var SchemaPaymentEntryStatus;
-(function (SchemaPaymentEntryStatus) {
-    /** The Payment Type is active. */
-    SchemaPaymentEntryStatus["Active"] = "active";
-})(SchemaPaymentEntryStatus || (SchemaPaymentEntryStatus = {}));
 /** The direction a Payment Type moves money. */
 export var SchemaPaymentTypeDirection;
 (function (SchemaPaymentTypeDirection) {
@@ -369,6 +363,12 @@ export var SchemaPaymentTypeDirection;
     /** Money moves out of the Payment Account. */
     SchemaPaymentTypeDirection["Payout"] = "payout";
 })(SchemaPaymentTypeDirection || (SchemaPaymentTypeDirection = {}));
+/** The status of a Payment Type. */
+export var SchemaPaymentTypeStatus;
+(function (SchemaPaymentTypeStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentTypeStatus["Active"] = "active";
+})(SchemaPaymentTypeStatus || (SchemaPaymentTypeStatus = {}));
 /**
  * Identifies a system-owned line in a payment entry. The amounts of system
  * lines are filled by Fragment when the payment entry is posted.
@@ -1673,6 +1673,41 @@ export const CreateCustomCurrencyDocument = gql `
     }
   }
 `;
+export const CreatePaymentDocument = gql `
+  mutation createPayment(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $type: SafeString!
+    $typeVersion: Int
+    $parameters: JSON
+  ) {
+    createPayment(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      payment: {
+        type: $type
+        typeVersion: $typeVersion
+        parameters: $parameters
+      }
+    ) {
+      __typename
+      ... on Payment {
+        clientSecret
+        status
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1789,6 +1824,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         createCustomCurrency(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomCurrencyDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomCurrency", "mutation", variables);
+        },
+        createPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(CreatePaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createPayment", "mutation", variables);
         },
     };
 }

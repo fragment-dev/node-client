@@ -314,7 +314,7 @@ export type CreateLedgerResult = {
 
 /** EXPERIMENTAL: The Payment to create. */
 export type CreatePaymentInput = {
-  /** Parameters for the specific Payment Type. */
+  /** Parameters for the specific Payment Type. Must be a key-value pair of strings. Must be a flat object: nested objects and arrays are rejected. */
   parameters?: InputMaybe<Scalars["JSON"]["input"]>;
   /** The type of the Payment. Must be defined in the Schema linked to the Ledger. */
   type: Scalars["SafeString"]["input"];
@@ -2526,8 +2526,8 @@ export type Payment = {
  * Status of a Payment.
  */
 export enum PaymentStatus {
+  NeedsPaymentMethod = "needs_payment_method",
   Processing = "processing",
-  RequiresConfirmation = "requires_confirmation",
   Settled = "settled",
 }
 
@@ -3089,7 +3089,7 @@ export type SchemaMatchInput = {
  */
 export type SchemaPaymentAccountingInput = {
   /** Posted when the payment enters processing. Optional. */
-  needs_confirmation_to_processing?: InputMaybe<SchemaPaymentEntryInput>;
+  needs_payment_method_to_processing?: InputMaybe<SchemaPaymentEntryInput>;
   /** Posted when the payment settles. Every Payment Type must define it. */
   processing_to_settled: SchemaPaymentEntryInput;
 };
@@ -3101,12 +3101,6 @@ export type SchemaPaymentEntryInput = {
   /** The Ledger Lines in the payment entry. */
   lines: Array<SchemaPaymentLineInput>;
 };
-
-/** The status of a Payment Type. */
-export enum SchemaPaymentEntryStatus {
-  /** The Payment Type is active. */
-  Active = "active",
-}
 
 /** EXPERIMENTAL: Marks a Ledger Account as a Payment Account. */
 export type SchemaPaymentInput = {
@@ -3167,7 +3161,7 @@ export type SchemaPaymentTypeInput = {
   /** The payment this Payment Type creates. */
   payment: SchemaPaymentTypeDetailsInput;
   /** The status of this Payment Type. */
-  status: SchemaPaymentEntryStatus;
+  status: SchemaPaymentTypeStatus;
   /**
    * The type of this Payment Type. This is a stable, unique identifier for it.
    * Uniqueness is enforced at the Schema level.
@@ -3176,6 +3170,12 @@ export type SchemaPaymentTypeInput = {
   /** The version of the Payment Type. */
   typeVersion: Scalars["Int"]["input"];
 };
+
+/** The status of a Payment Type. */
+export enum SchemaPaymentTypeStatus {
+  /** The Payment Type is active. */
+  Active = "active",
+}
 
 /** EXPERIMENTAL: The Payment Types in your Schema. */
 export type SchemaPaymentsInput = {
@@ -4877,6 +4877,32 @@ export type CreateCustomCurrencyMutation = {
       };
 };
 
+export type CreatePaymentMutationVariables = Exact<{
+  ik: Scalars["SafeString"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+  type: Scalars["SafeString"]["input"];
+  typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
+  parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+}>;
+
+export type CreatePaymentMutation = {
+  __typename?: "Mutation";
+  createPayment:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | { __typename: "Payment"; clientSecret: string; status: PaymentStatus };
+};
+
 export const StoreSchemaDocument = gql`
   mutation storeSchema($schema: SchemaInput!) {
     storeSchema(schema: $schema) {
@@ -6155,6 +6181,41 @@ export const CreateCustomCurrencyDocument = gql`
     }
   }
 `;
+export const CreatePaymentDocument = gql`
+  mutation createPayment(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $type: SafeString!
+    $typeVersion: Int
+    $parameters: JSON
+  ) {
+    createPayment(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      payment: {
+        type: $type
+        typeVersion: $typeVersion
+        parameters: $parameters
+      }
+    ) {
+      __typename
+      ... on Payment {
+        clientSecret
+        status
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 
 export type SdkFunctionWrapper = <T>(
   action: (requestHeaders?: Record<string, string>) => Promise<T>,
@@ -6694,6 +6755,22 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "createCustomCurrency",
+        "mutation",
+        variables,
+      );
+    },
+    createPayment(
+      variables: CreatePaymentMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<CreatePaymentMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<CreatePaymentMutation>(
+            CreatePaymentDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "createPayment",
         "mutation",
         variables,
       );
