@@ -1793,7 +1793,7 @@ export type LedgerEntryInput = {
     tags?: InputMaybe<Array<LedgerEntryTagInput>>;
     /** The type of the Ledger Entry. Must be defined in the Schema linked to the Ledger specified below. */
     type?: InputMaybe<Scalars["String"]["input"]>;
-    /** Experimental: This field is reserved for an upcoming feature and is not yet supported. */
+    /** The version of the Ledger Entry type to post. Defaults to 1. */
     typeVersion?: InputMaybe<Scalars["Int"]["input"]>;
 };
 /** Specify a Ledger Entry by using `id`. */
