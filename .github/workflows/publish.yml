@@ -38,6 +38,20 @@ jobs:
           max_attempts: 2
           command: yarn
 
-      - run: npm publish --access public
+      - name: Determine npm dist-tag
+        id: dist-tag
+        run: |
+          VERSION="$(npm pkg get version | tr -d '\"')"
+          MAJOR="${VERSION%%.*}"
+          LATEST_MAJOR="$(npm view @fragment-dev/node-client version 2>/dev/null | cut -d. -f1)"
+          if [ -n "$LATEST_MAJOR" ] && [ "$MAJOR" -lt "$LATEST_MAJOR" ]; then
+            TAG="v$MAJOR"
+          else
+            TAG="latest"
+          fi
+          echo "Publishing $VERSION under dist-tag $TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
