@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [2.3.0]
+
+### Added
+
+- `getPayment` fetches a Payment on a Ledger. Pass an `ik` and a `ledgerIk`; it
+  returns the Payment's `amount`, `currency`, `status`, `type`, `typeVersion`,
+  `mode`, `parameters`, and `created` time.
+- `listPayments` lists the Payments on a Ledger. Pass a `ledgerIk`, along with
+  optional pagination (`first`, `after`, `before`) and a `filter`.
+- `instantiateLedgerAccount` creates a Ledger Account from a schema template.
+  Pass a `ledger`, a template `path`, and optional `parameters`.
+
+### Changed
+
+- `createPayment` now requires `typeVersion`, and its response nests the
+  Payment: read `clientSecret` and `status` from the `payment` field instead of
+  the top level. Payments are experimental, so this API may change in a future
+  release.
+
 ## [2.2.0]
 
 ### Added
