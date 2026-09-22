@@ -2143,6 +2143,8 @@ export type LedgerLinesFilterSet = {
   currency?: InputMaybe<CurrencyFilter>;
   /** Use this filter to filter Ledger Lines by their `posted` date. */
   date?: InputMaybe<DateFilter>;
+  /** Filter Ledger Lines by the external IDs of their linked transactions. Only supported on `LedgerAccount.lines` for a linked Ledger Account. */
+  externalTxIds?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Use this to filter Ledger Lines that were posted to this Ledger Account, using `reverseLedgerEntry`. */
   isReversal?: InputMaybe<Scalars['Boolean']['input']>;
   /** Use this to filter Ledger Lines that have been reversed. */
@@ -2259,8 +2261,11 @@ export type Link = {
   name: Scalars['String']['output'];
 };
 
+/** Specify a Link by ID, or a Custom Link by its creation IK. */
 export type LinkMatchInput = {
-  id: Scalars['ID']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** The IK passed to createCustomLink. If id is also provided, both must identify the same Link. */
+  ik?: InputMaybe<Scalars['SafeString']['input']>;
 };
 
 /** The type of Link an external account belongs to. */
@@ -2683,7 +2688,7 @@ export type Query = {
   ledgerLine?: Maybe<LedgerLine>;
   /** Query Ledgers in workspace. Ledgers are paginated and returned in reverse-chronological order by their created date. */
   ledgers: LedgersConnection;
-  /** Get a Link by ID. Returns a BadRequestError if the Link is not found. */
+  /** Get a Link by ID or a Custom Link by creation IK. Returns a BadRequestError if the Link is not found. */
   link?: Maybe<Link>;
   /** Get all links in a workspace */
   links: LinksConnection;
