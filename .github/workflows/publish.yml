@@ -44,8 +44,11 @@ jobs:
           VERSION="$(npm pkg get version | tr -d '\"')"
           MAJOR="${VERSION%%.*}"
           LATEST_MAJOR="$(npm view @fragment-dev/node-client version 2>/dev/null | cut -d. -f1)"
+          # npm refuses dist-tags that parse as SemVer ranges, so "v1" is rejected
+          # outright ("Tag name must not be a valid SemVer range"). The "-legacy"
+          # suffix keeps the tag readable while staying a valid tag name.
           if [ -n "$LATEST_MAJOR" ] && [ "$MAJOR" -lt "$LATEST_MAJOR" ]; then
-            TAG="v$MAJOR"
+            TAG="v${MAJOR}-legacy"
           else
             TAG="latest"
           fi
