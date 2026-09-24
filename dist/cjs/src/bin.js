@@ -74,6 +74,15 @@ if (!allowedInputExtensions.includes(path.extname(argv.input))) {
             UTCOffset: "string",
         },
         gqlImport: "@fragment-dev/node-client#gql",
+        // codegen v7's typescript-operations emits schema enums/inputs itself,
+        // which duplicates the typescript plugin and makes the generated client
+        // fail to compile. Pointing it at a "shared types" module suppresses
+        // that; the self-import and namespace are stripped below so customer
+        // output stays a single flat file.
+        importSchemaTypesFrom: "./__fragment_schema_types.js",
+        namespacedImportName: "Types",
+        addTypename: true,
+        nonOptionalTypename: true,
     },
     generates: {
         [path.join(process.cwd(), argv.outputFilename)]: {
@@ -91,7 +100,10 @@ if (!allowedInputExtensions.includes(path.extname(argv.input))) {
     },
 }, false)
     .then(([fileOutput]) => {
-    const output = fileOutput.content.replace(/import .* from 'graphql-request'/g, "import { GraphQLClient, RequestOptions } from '@fragment-dev/node-client'");
+    const output = fileOutput.content
+        .replace(/import .* from 'graphql-request'/g, "import { GraphQLClient, RequestOptions } from '@fragment-dev/node-client'")
+        .replace(/^import type \* as Types from '[^']*';\n/m, "")
+        .replace(/\bTypes\./g, "");
     (0, fs_1.writeFileSync)(fileOutput.filename, output, "utf-8");
     process.exit(0);
 })
