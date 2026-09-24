@@ -1,5 +1,5 @@
 import { gql } from "graphql-tag";
-/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 export var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
@@ -146,6 +146,7 @@ export var CurrencyCode;
     CurrencyCode["Sek"] = "SEK";
     CurrencyCode["Sgd"] = "SGD";
     CurrencyCode["Shp"] = "SHP";
+    CurrencyCode["Sle"] = "SLE";
     CurrencyCode["Sll"] = "SLL";
     CurrencyCode["Sol"] = "SOL";
     CurrencyCode["Sos"] = "SOS";
@@ -285,6 +286,33 @@ export var LinkType;
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (LinkType = {}));
 /**
+ * EXPERIMENTAL — subject to change.
+ *
+ * The currencies a Payment can be denominated in.
+ */
+export var PaymentCurrencyCode;
+(function (PaymentCurrencyCode) {
+    PaymentCurrencyCode["Usd"] = "USD";
+})(PaymentCurrencyCode || (PaymentCurrencyCode = {}));
+/** Mode of a Payment. */
+export var PaymentMode;
+(function (PaymentMode) {
+    PaymentMode["Production"] = "production";
+    PaymentMode["Sandbox"] = "sandbox";
+})(PaymentMode || (PaymentMode = {}));
+/**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+export var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["Accepted"] = "accepted";
+    PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
+    PaymentStatus["Processing"] = "processing";
+    PaymentStatus["Settled"] = "settled";
+})(PaymentStatus || (PaymentStatus = {}));
+/**
  * Controls how lines are posted for a Ledger Entry.
  * New entries created via the dashboard default to `net_amounts`.
  * Existing entries without this field set are treated as `raw_lines`.
@@ -298,7 +326,7 @@ export var PostLinesAs;
     /** Lines with a zero amount are skipped, but lines are not aggregated. If all lines have a zero amount, no lines are skipped. */
     PostLinesAs["SkipZeroLines"] = "skip_zero_lines";
 })(PostLinesAs || (PostLinesAs = {}));
-/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 export var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
@@ -308,14 +336,18 @@ export var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (ReadBalanceConsistencyMode = {}));
+/** The kind of thing a Scene Event simulates. */
 export var SceneEventType;
 (function (SceneEventType) {
+    /** A simulated Ledger Entry. */
     SceneEventType["Entry"] = "entry";
+    /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+    SceneEventType["Payment"] = "payment";
 })(SceneEventType || (SceneEventType = {}));
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
  */
 export var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {
@@ -344,6 +376,39 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
+/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+export var SchemaPaymentAccountingEventKey;
+(function (SchemaPaymentAccountingEventKey) {
+    /** The payment was captured and is guaranteed to settle. */
+    SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** The payment settled. */
+    SchemaPaymentAccountingEventKey["Settled"] = "settled";
+})(SchemaPaymentAccountingEventKey || (SchemaPaymentAccountingEventKey = {}));
+/** The direction a Payment Type moves money. */
+export var SchemaPaymentTypeDirection;
+(function (SchemaPaymentTypeDirection) {
+    /** Money moves into the Payment Account. */
+    SchemaPaymentTypeDirection["Payin"] = "payin";
+    /** Money moves out of the Payment Account. */
+    SchemaPaymentTypeDirection["Payout"] = "payout";
+})(SchemaPaymentTypeDirection || (SchemaPaymentTypeDirection = {}));
+/** The status of a Payment Type. */
+export var SchemaPaymentTypeStatus;
+(function (SchemaPaymentTypeStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentTypeStatus["Active"] = "active";
+})(SchemaPaymentTypeStatus || (SchemaPaymentTypeStatus = {}));
+/**
+ * Identifies a system-owned line in a payment entry. The amounts of system
+ * lines are filled by Fragment when the payment entry is posted.
+ */
+export var SchemaSystemLineKind;
+(function (SchemaSystemLineKind) {
+    /** The line carrying the Fragment fee amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line carrying the settled payment amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
+})(SchemaSystemLineKind || (SchemaSystemLineKind = {}));
 export var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";
@@ -1592,119 +1657,269 @@ export const CreateCustomCurrencyDocument = gql `
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
-        storeSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(StoreSchemaDocument, variables, {
-                ...requestHeaders,
-                ...wrappedRequestHeaders,
+        storeSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: StoreSchemaDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
             }), "storeSchema", "mutation", variables);
         },
-        deleteSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(DeleteSchemaDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteSchema", "mutation", variables);
+        deleteSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: DeleteSchemaDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "deleteSchema", "mutation", variables);
         },
-        createLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(CreateLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createLedger", "mutation", variables);
+        createLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: CreateLedgerDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "createLedger", "mutation", variables);
         },
-        deleteLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(DeleteLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteLedger", "mutation", variables);
+        deleteLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: DeleteLedgerDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "deleteLedger", "mutation", variables);
         },
-        addLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntry", "mutation", variables);
+        addLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: AddLedgerEntryDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "addLedgerEntry", "mutation", variables);
         },
-        reverseLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ReverseLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "reverseLedgerEntry", "mutation", variables);
+        reverseLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ReverseLedgerEntryDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "reverseLedgerEntry", "mutation", variables);
         },
-        migrateLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(MigrateLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "migrateLedgerEntry", "mutation", variables);
+        migrateLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: MigrateLedgerEntryDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "migrateLedgerEntry", "mutation", variables);
         },
-        addLedgerEntryRuntime(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntryRuntimeDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntryRuntime", "mutation", variables);
+        addLedgerEntryRuntime(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: AddLedgerEntryRuntimeDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "addLedgerEntryRuntime", "mutation", variables);
         },
-        reconcileTx(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ReconcileTxDocument, variables, {
-                ...requestHeaders,
-                ...wrappedRequestHeaders,
+        reconcileTx(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ReconcileTxDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
             }), "reconcileTx", "mutation", variables);
         },
-        reconcileTxRuntime(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ReconcileTxRuntimeDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "reconcileTxRuntime", "mutation", variables);
+        reconcileTxRuntime(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ReconcileTxRuntimeDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "reconcileTxRuntime", "mutation", variables);
         },
-        updateLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(UpdateLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "updateLedgerEntry", "mutation", variables);
+        updateLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: UpdateLedgerEntryDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "updateLedgerEntry", "mutation", variables);
         },
-        updateLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(UpdateLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "updateLedger", "mutation", variables);
+        updateLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: UpdateLedgerDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "updateLedger", "mutation", variables);
         },
-        createCustomLink(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomLinkDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomLink", "mutation", variables);
+        createCustomLink(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: CreateCustomLinkDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "createCustomLink", "mutation", variables);
         },
-        syncCustomAccounts(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomAccountsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomAccounts", "mutation", variables);
+        syncCustomAccounts(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: SyncCustomAccountsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "syncCustomAccounts", "mutation", variables);
         },
-        syncCustomTxs(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomTxs", "mutation", variables);
+        syncCustomTxs(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: SyncCustomTxsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "syncCustomTxs", "mutation", variables);
         },
-        deleteCustomTxs(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(DeleteCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteCustomTxs", "mutation", variables);
+        deleteCustomTxs(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: DeleteCustomTxsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "deleteCustomTxs", "mutation", variables);
         },
-        getLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerDocument, variables, {
-                ...requestHeaders,
-                ...wrappedRequestHeaders,
+        getLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetLedgerDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
             }), "getLedger", "query", variables);
         },
-        getLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerEntryDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getLedgerEntry", "query", variables);
+        getLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetLedgerEntryDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getLedgerEntry", "query", variables);
         },
-        listLedgerAccounts(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerAccountsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerAccounts", "query", variables);
+        listLedgerAccounts(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ListLedgerAccountsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "listLedgerAccounts", "query", variables);
         },
-        listLedgerAccountBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerAccountBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerAccountBalances", "query", variables);
+        listLedgerAccountBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ListLedgerAccountBalancesDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "listLedgerAccountBalances", "query", variables);
         },
-        listMultiCurrencyLedgerAccountBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ListMultiCurrencyLedgerAccountBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listMultiCurrencyLedgerAccountBalances", "query", variables);
+        listMultiCurrencyLedgerAccountBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ListMultiCurrencyLedgerAccountBalancesDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "listMultiCurrencyLedgerAccountBalances", "query", variables);
         },
-        getLedgerAccountLines(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountLinesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getLedgerAccountLines", "query", variables);
+        getLedgerAccountLines(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetLedgerAccountLinesDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getLedgerAccountLines", "query", variables);
         },
-        getLedgerAccountBalance(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getLedgerAccountBalance", "query", variables);
+        getLedgerAccountBalance(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetLedgerAccountBalanceDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getLedgerAccountBalance", "query", variables);
         },
-        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetLedgerAccountBalanceWithChildRollupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
+        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetLedgerAccountBalanceWithChildRollupDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
-        getSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetSchemaDocument, variables, {
-                ...requestHeaders,
-                ...wrappedRequestHeaders,
+        getSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetSchemaDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
             }), "getSchema", "query", variables);
         },
-        listLedgerEntries(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntries", "query", variables);
+        listLedgerEntries(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ListLedgerEntriesDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "listLedgerEntries", "query", variables);
         },
-        getWorkspace(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetWorkspaceDocument, variables, {
-                ...requestHeaders,
-                ...wrappedRequestHeaders,
+        getWorkspace(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetWorkspaceDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
             }), "getWorkspace", "query", variables);
         },
-        listLedgerEntryGroupBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(ListLedgerEntryGroupBalancesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listLedgerEntryGroupBalances", "query", variables);
+        listLedgerEntryGroupBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: ListLedgerEntryGroupBalancesDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "listLedgerEntryGroupBalances", "query", variables);
         },
-        getEntryDataMigrations(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetEntryDataMigrationsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntryDataMigrations", "query", variables);
+        getEntryDataMigrations(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetEntryDataMigrationsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getEntryDataMigrations", "query", variables);
         },
-        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetEntriesToMigrateForLedgerEntryDataMigrationDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
+        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetEntriesToMigrateForLedgerEntryDataMigrationDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
         },
-        getAccountDataMigrations(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetAccountDataMigrationsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getAccountDataMigrations", "query", variables);
+        getAccountDataMigrations(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetAccountDataMigrationsDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getAccountDataMigrations", "query", variables);
         },
-        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(GetEntriesToMigrateForLedgerAccountDataMigrationDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
+        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: GetEntriesToMigrateForLedgerAccountDataMigrationDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
         },
-        createCustomCurrency(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomCurrencyDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomCurrency", "mutation", variables);
+        createCustomCurrency(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: CreateCustomCurrencyDocument,
+                variables,
+                requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+                signal,
+            }), "createCustomCurrency", "mutation", variables);
         },
     };
 }

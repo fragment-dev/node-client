@@ -22,6 +22,15 @@ generate(
           withHooks: true,
           defaultScalarType: "string",
           useImplementingTypes: true,
+          // codegen v7's typescript-operations emits schema enums/inputs itself,
+          // which duplicates the typescript plugin. Pointing it at a "shared types"
+          // module suppresses that; the self-import and namespace are stripped below
+          // so the output stays a single flat file.
+          importSchemaTypesFrom: "./generated.js",
+          namespacedImportName: "Types",
+          // v7 stops emitting __typename in operation types by default; restore it.
+          addTypename: true,
+          nonOptionalTypename: true,
         },
         plugins: [
           "typescript",
@@ -40,11 +49,26 @@ generate(
   false,
 )
   .then(async ([fileOutput]: Types.FileOutput[]) => {
-    const output = fileOutput.content.replace(
-      /import gql from 'graphql-tag'/g,
-      "import { gql } from 'graphql-tag'",
-    );
-    const prettifiedOutput = await prettier.format(output, {
+    const output = fileOutput.content
+      .replace(/import gql from 'graphql-tag'/g, "import { gql } from 'graphql-tag'")
+      .replace(/^import type \* as Types from '[^']*generated\.js';\n/m, "")
+      .replace(/\bTypes\./g, "")
+      // v7 no longer exports these codegen helpers; 1.x consumers could import them.
+      .replace(/^type Exact</m, "export type Exact<");
+
+    const compatHelpers = [
+      "export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {",
+      "  [SubKey in K]?: Maybe<T[SubKey]>;",
+      "};",
+      "export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {",
+      "  [SubKey in K]: Maybe<T[SubKey]>;",
+      "};",
+      "export type MakeEmpty<",
+      "  T extends { [key: string]: unknown },",
+      "  K extends keyof T,",
+      "> = { [_ in K]?: never };",
+    ].join("\n");
+    const prettifiedOutput = await prettier.format(output + "\n" + compatHelpers, {
       parser: "typescript",
     });
     const qualifiedFilename = path.resolve(process.cwd(), fileOutput.filename);

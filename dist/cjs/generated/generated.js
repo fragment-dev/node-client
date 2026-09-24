@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = void 0;
+exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentMode = exports.PaymentCurrencyCode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceWithChildRollupDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
-/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
@@ -150,6 +150,7 @@ var CurrencyCode;
     CurrencyCode["Sek"] = "SEK";
     CurrencyCode["Sgd"] = "SGD";
     CurrencyCode["Shp"] = "SHP";
+    CurrencyCode["Sle"] = "SLE";
     CurrencyCode["Sll"] = "SLL";
     CurrencyCode["Sol"] = "SOL";
     CurrencyCode["Sos"] = "SOS";
@@ -289,6 +290,33 @@ var LinkType;
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (exports.LinkType = LinkType = {}));
 /**
+ * EXPERIMENTAL — subject to change.
+ *
+ * The currencies a Payment can be denominated in.
+ */
+var PaymentCurrencyCode;
+(function (PaymentCurrencyCode) {
+    PaymentCurrencyCode["Usd"] = "USD";
+})(PaymentCurrencyCode || (exports.PaymentCurrencyCode = PaymentCurrencyCode = {}));
+/** Mode of a Payment. */
+var PaymentMode;
+(function (PaymentMode) {
+    PaymentMode["Production"] = "production";
+    PaymentMode["Sandbox"] = "sandbox";
+})(PaymentMode || (exports.PaymentMode = PaymentMode = {}));
+/**
+ * EXPERIMENTAL — subject to change.
+ *
+ * Status of a Payment.
+ */
+var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["Accepted"] = "accepted";
+    PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
+    PaymentStatus["Processing"] = "processing";
+    PaymentStatus["Settled"] = "settled";
+})(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+/**
  * Controls how lines are posted for a Ledger Entry.
  * New entries created via the dashboard default to `net_amounts`.
  * Existing entries without this field set are treated as `raw_lines`.
@@ -302,7 +330,7 @@ var PostLinesAs;
     /** Lines with a zero amount are skipped, but lines are not aggregated. If all lines have a zero amount, no lines are skipped. */
     PostLinesAs["SkipZeroLines"] = "skip_zero_lines";
 })(PostLinesAs || (exports.PostLinesAs = PostLinesAs = {}));
-/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
@@ -312,14 +340,18 @@ var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (exports.ReadBalanceConsistencyMode = ReadBalanceConsistencyMode = {}));
+/** The kind of thing a Scene Event simulates. */
 var SceneEventType;
 (function (SceneEventType) {
+    /** A simulated Ledger Entry. */
     SceneEventType["Entry"] = "entry";
+    /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+    SceneEventType["Payment"] = "payment";
 })(SceneEventType || (exports.SceneEventType = SceneEventType = {}));
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
  */
 var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {
@@ -348,6 +380,39 @@ var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (exports.SchemaLedgerEntryStatus = SchemaLedgerEntryStatus = {}));
+/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+var SchemaPaymentAccountingEventKey;
+(function (SchemaPaymentAccountingEventKey) {
+    /** The payment was captured and is guaranteed to settle. */
+    SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** The payment settled. */
+    SchemaPaymentAccountingEventKey["Settled"] = "settled";
+})(SchemaPaymentAccountingEventKey || (exports.SchemaPaymentAccountingEventKey = SchemaPaymentAccountingEventKey = {}));
+/** The direction a Payment Type moves money. */
+var SchemaPaymentTypeDirection;
+(function (SchemaPaymentTypeDirection) {
+    /** Money moves into the Payment Account. */
+    SchemaPaymentTypeDirection["Payin"] = "payin";
+    /** Money moves out of the Payment Account. */
+    SchemaPaymentTypeDirection["Payout"] = "payout";
+})(SchemaPaymentTypeDirection || (exports.SchemaPaymentTypeDirection = SchemaPaymentTypeDirection = {}));
+/** The status of a Payment Type. */
+var SchemaPaymentTypeStatus;
+(function (SchemaPaymentTypeStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentTypeStatus["Active"] = "active";
+})(SchemaPaymentTypeStatus || (exports.SchemaPaymentTypeStatus = SchemaPaymentTypeStatus = {}));
+/**
+ * Identifies a system-owned line in a payment entry. The amounts of system
+ * lines are filled by Fragment when the payment entry is posted.
+ */
+var SchemaSystemLineKind;
+(function (SchemaSystemLineKind) {
+    /** The line carrying the Fragment fee amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line carrying the settled payment amount, posted to the Payment Account. */
+    SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
+})(SchemaSystemLineKind || (exports.SchemaSystemLineKind = SchemaSystemLineKind = {}));
 var StripeEnv;
 (function (StripeEnv) {
     StripeEnv["Livemode"] = "livemode";
@@ -1596,104 +1661,269 @@ exports.CreateCustomCurrencyDocument = (0, graphql_tag_1.gql) `
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
-        storeSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.StoreSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "storeSchema", "mutation", variables);
+        storeSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.StoreSchemaDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "storeSchema", "mutation", variables);
         },
-        deleteSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteSchema", "mutation", variables);
+        deleteSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.DeleteSchemaDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "deleteSchema", "mutation", variables);
         },
-        createLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createLedger", "mutation", variables);
+        createLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.CreateLedgerDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "createLedger", "mutation", variables);
         },
-        deleteLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteLedger", "mutation", variables);
+        deleteLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.DeleteLedgerDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "deleteLedger", "mutation", variables);
         },
-        addLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntry", "mutation", variables);
+        addLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.AddLedgerEntryDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "addLedgerEntry", "mutation", variables);
         },
-        reverseLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ReverseLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reverseLedgerEntry", "mutation", variables);
+        reverseLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ReverseLedgerEntryDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "reverseLedgerEntry", "mutation", variables);
         },
-        migrateLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.MigrateLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "migrateLedgerEntry", "mutation", variables);
+        migrateLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.MigrateLedgerEntryDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "migrateLedgerEntry", "mutation", variables);
         },
-        addLedgerEntryRuntime(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntryRuntimeDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntryRuntime", "mutation", variables);
+        addLedgerEntryRuntime(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.AddLedgerEntryRuntimeDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "addLedgerEntryRuntime", "mutation", variables);
         },
-        reconcileTx(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ReconcileTxDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reconcileTx", "mutation", variables);
+        reconcileTx(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ReconcileTxDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "reconcileTx", "mutation", variables);
         },
-        reconcileTxRuntime(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ReconcileTxRuntimeDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "reconcileTxRuntime", "mutation", variables);
+        reconcileTxRuntime(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ReconcileTxRuntimeDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "reconcileTxRuntime", "mutation", variables);
         },
-        updateLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.UpdateLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "updateLedgerEntry", "mutation", variables);
+        updateLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.UpdateLedgerEntryDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "updateLedgerEntry", "mutation", variables);
         },
-        updateLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.UpdateLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "updateLedger", "mutation", variables);
+        updateLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.UpdateLedgerDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "updateLedger", "mutation", variables);
         },
-        createCustomLink(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateCustomLinkDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createCustomLink", "mutation", variables);
+        createCustomLink(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.CreateCustomLinkDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "createCustomLink", "mutation", variables);
         },
-        syncCustomAccounts(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.SyncCustomAccountsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "syncCustomAccounts", "mutation", variables);
+        syncCustomAccounts(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.SyncCustomAccountsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "syncCustomAccounts", "mutation", variables);
         },
-        syncCustomTxs(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.SyncCustomTxsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "syncCustomTxs", "mutation", variables);
+        syncCustomTxs(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.SyncCustomTxsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "syncCustomTxs", "mutation", variables);
         },
-        deleteCustomTxs(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteCustomTxsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteCustomTxs", "mutation", variables);
+        deleteCustomTxs(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.DeleteCustomTxsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "deleteCustomTxs", "mutation", variables);
         },
-        getLedger(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedger", "query", variables);
+        getLedger(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetLedgerDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getLedger", "query", variables);
         },
-        getLedgerEntry(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerEntryDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedgerEntry", "query", variables);
+        getLedgerEntry(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetLedgerEntryDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getLedgerEntry", "query", variables);
         },
-        listLedgerAccounts(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerAccountsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerAccounts", "query", variables);
+        listLedgerAccounts(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ListLedgerAccountsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "listLedgerAccounts", "query", variables);
         },
-        listLedgerAccountBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerAccountBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerAccountBalances", "query", variables);
+        listLedgerAccountBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ListLedgerAccountBalancesDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "listLedgerAccountBalances", "query", variables);
         },
-        listMultiCurrencyLedgerAccountBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListMultiCurrencyLedgerAccountBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listMultiCurrencyLedgerAccountBalances", "query", variables);
+        listMultiCurrencyLedgerAccountBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ListMultiCurrencyLedgerAccountBalancesDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "listMultiCurrencyLedgerAccountBalances", "query", variables);
         },
-        getLedgerAccountLines(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountLinesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedgerAccountLines", "query", variables);
+        getLedgerAccountLines(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetLedgerAccountLinesDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getLedgerAccountLines", "query", variables);
         },
-        getLedgerAccountBalance(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getLedgerAccountBalance", "query", variables);
+        getLedgerAccountBalance(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetLedgerAccountBalanceDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getLedgerAccountBalance", "query", variables);
         },
-        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetLedgerAccountBalanceWithChildRollupDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
+        GetLedgerAccountBalanceWithChildRollup(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetLedgerAccountBalanceWithChildRollupDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "GetLedgerAccountBalanceWithChildRollup", "query", variables);
         },
-        getSchema(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetSchemaDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getSchema", "query", variables);
+        getSchema(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetSchemaDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getSchema", "query", variables);
         },
-        listLedgerEntries(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerEntriesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerEntries", "query", variables);
+        listLedgerEntries(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ListLedgerEntriesDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "listLedgerEntries", "query", variables);
         },
-        getWorkspace(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetWorkspaceDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getWorkspace", "query", variables);
+        getWorkspace(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetWorkspaceDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getWorkspace", "query", variables);
         },
-        listLedgerEntryGroupBalances(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListLedgerEntryGroupBalancesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listLedgerEntryGroupBalances", "query", variables);
+        listLedgerEntryGroupBalances(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.ListLedgerEntryGroupBalancesDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "listLedgerEntryGroupBalances", "query", variables);
         },
-        getEntryDataMigrations(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntryDataMigrationsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntryDataMigrations", "query", variables);
+        getEntryDataMigrations(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetEntryDataMigrationsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getEntryDataMigrations", "query", variables);
         },
-        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
+        getEntriesToMigrateForLedgerEntryDataMigration(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getEntriesToMigrateForLedgerEntryDataMigration", "query", variables);
         },
-        getAccountDataMigrations(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetAccountDataMigrationsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getAccountDataMigrations", "query", variables);
+        getAccountDataMigrations(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetAccountDataMigrationsDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getAccountDataMigrations", "query", variables);
         },
-        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
+        getEntriesToMigrateForLedgerAccountDataMigration(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "getEntriesToMigrateForLedgerAccountDataMigration", "query", variables);
         },
-        createCustomCurrency(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateCustomCurrencyDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createCustomCurrency", "mutation", variables);
+        createCustomCurrency(variables, requestHeaders, signal) {
+            return withWrapper((wrappedRequestHeaders) => client.request({
+                document: exports.CreateCustomCurrencyDocument,
+                variables,
+                requestHeaders: Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders),
+                signal,
+            }), "createCustomCurrency", "mutation", variables);
         },
     };
 }
