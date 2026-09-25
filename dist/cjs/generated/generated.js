@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentEntryStatus = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = void 0;
+exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentMode = exports.PaymentCurrencyCode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -150,6 +150,7 @@ var CurrencyCode;
     CurrencyCode["Sek"] = "SEK";
     CurrencyCode["Sgd"] = "SGD";
     CurrencyCode["Shp"] = "SHP";
+    CurrencyCode["Sle"] = "SLE";
     CurrencyCode["Sll"] = "SLL";
     CurrencyCode["Sol"] = "SOL";
     CurrencyCode["Sos"] = "SOS";
@@ -291,12 +292,28 @@ var LinkType;
 /**
  * EXPERIMENTAL — subject to change.
  *
+ * The currencies a Payment can be denominated in.
+ */
+var PaymentCurrencyCode;
+(function (PaymentCurrencyCode) {
+    PaymentCurrencyCode["Usd"] = "USD";
+})(PaymentCurrencyCode || (exports.PaymentCurrencyCode = PaymentCurrencyCode = {}));
+/** Mode of a Payment. */
+var PaymentMode;
+(function (PaymentMode) {
+    PaymentMode["Production"] = "production";
+    PaymentMode["Sandbox"] = "sandbox";
+})(PaymentMode || (exports.PaymentMode = PaymentMode = {}));
+/**
+ * EXPERIMENTAL — subject to change.
+ *
  * Status of a Payment.
  */
 var PaymentStatus;
 (function (PaymentStatus) {
+    PaymentStatus["Accepted"] = "accepted";
+    PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentStatus["Processing"] = "processing";
-    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
     PaymentStatus["Settled"] = "settled";
 })(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
 /**
@@ -323,9 +340,13 @@ var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (exports.ReadBalanceConsistencyMode = ReadBalanceConsistencyMode = {}));
+/** The kind of thing a Scene Event simulates. */
 var SceneEventType;
 (function (SceneEventType) {
+    /** A simulated Ledger Entry. */
     SceneEventType["Entry"] = "entry";
+    /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+    SceneEventType["Payment"] = "payment";
 })(SceneEventType || (exports.SceneEventType = SceneEventType = {}));
 /**
  * The consistency modes available for entities created within this Schema.
@@ -359,12 +380,14 @@ var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (exports.SchemaLedgerEntryStatus = SchemaLedgerEntryStatus = {}));
-/** The status of a Payment Type. */
-var SchemaPaymentEntryStatus;
-(function (SchemaPaymentEntryStatus) {
-    /** The Payment Type is active. */
-    SchemaPaymentEntryStatus["Active"] = "active";
-})(SchemaPaymentEntryStatus || (exports.SchemaPaymentEntryStatus = SchemaPaymentEntryStatus = {}));
+/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+var SchemaPaymentAccountingEventKey;
+(function (SchemaPaymentAccountingEventKey) {
+    /** The payment was captured and is guaranteed to settle. */
+    SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** The payment settled. */
+    SchemaPaymentAccountingEventKey["Settled"] = "settled";
+})(SchemaPaymentAccountingEventKey || (exports.SchemaPaymentAccountingEventKey = SchemaPaymentAccountingEventKey = {}));
 /** The direction a Payment Type moves money. */
 var SchemaPaymentTypeDirection;
 (function (SchemaPaymentTypeDirection) {
@@ -373,6 +396,12 @@ var SchemaPaymentTypeDirection;
     /** Money moves out of the Payment Account. */
     SchemaPaymentTypeDirection["Payout"] = "payout";
 })(SchemaPaymentTypeDirection || (exports.SchemaPaymentTypeDirection = SchemaPaymentTypeDirection = {}));
+/** The status of a Payment Type. */
+var SchemaPaymentTypeStatus;
+(function (SchemaPaymentTypeStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentTypeStatus["Active"] = "active";
+})(SchemaPaymentTypeStatus || (exports.SchemaPaymentTypeStatus = SchemaPaymentTypeStatus = {}));
 /**
  * Identifies a system-owned line in a payment entry. The amounts of system
  * lines are filled by Fragment when the payment entry is posted.
@@ -485,6 +514,40 @@ exports.DeleteLedgerDocument = (0, graphql_tag_1.gql) `
       __typename
       ... on DeleteLedgerResult {
         success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.InstantiateLedgerAccountDocument = (0, graphql_tag_1.gql) `
+  mutation instantiateLedgerAccount(
+    $ledger: LedgerMatchInput!
+    $path: String!
+    $parameters: Parameters
+  ) {
+    instantiateLedgerAccount(
+      ledger: $ledger
+      path: $path
+      parameters: $parameters
+    ) {
+      __typename
+      ... on InstantiateLedgerAccountResult {
+        ledgerAccount {
+          id
+          path
+          name
+          type
+          created
+        }
       }
       ... on BadRequestError {
         code
@@ -1655,6 +1718,7 @@ exports.CreateCustomCurrencyDocument = (0, graphql_tag_1.gql) `
         customCode: $customCode
       }
     ) {
+      __typename
       ... on CreateCustomCurrencyResult {
         customCurrency {
           code
@@ -1677,6 +1741,102 @@ exports.CreateCustomCurrencyDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.CreatePaymentDocument = (0, graphql_tag_1.gql) `
+  mutation createPayment(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $type: SafeString!
+    $typeVersion: Int!
+    $parameters: JSON
+  ) {
+    createPayment(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      payment: {
+        type: $type
+        typeVersion: $typeVersion
+        parameters: $parameters
+      }
+    ) {
+      __typename
+      ... on CreatePaymentResult {
+        payment {
+          id
+          ik
+          clientSecret
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.GetPaymentDocument = (0, graphql_tag_1.gql) `
+  query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
+    payment(payment: { ik: $ik, ledger: { ik: $ledgerIk } }) {
+      id
+      ik
+      amount
+      currency {
+        code
+        name
+        precision
+      }
+      status
+      type
+      typeVersion
+      mode
+      parameters
+      created
+    }
+  }
+`;
+exports.ListPaymentsDocument = (0, graphql_tag_1.gql) `
+  query listPayments(
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $filter: PaymentsFilterSet
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      payments(after: $after, first: $first, before: $before, filter: $filter) {
+        nodes {
+          id
+          ik
+          amount
+          currency {
+            code
+          }
+          status
+          type
+          typeVersion
+          created
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1691,6 +1851,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         deleteLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteLedgerDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteLedger", "mutation", variables);
+        },
+        instantiateLedgerAccount(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.InstantiateLedgerAccountDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "instantiateLedgerAccount", "mutation", variables);
         },
         addLedgerEntries(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.AddLedgerEntriesDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "addLedgerEntries", "mutation", variables);
@@ -1778,6 +1941,15 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         createCustomCurrency(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateCustomCurrencyDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createCustomCurrency", "mutation", variables);
+        },
+        createPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreatePaymentDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createPayment", "mutation", variables);
+        },
+        getPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.GetPaymentDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getPayment", "query", variables);
+        },
+        listPayments(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListPaymentsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listPayments", "query", variables);
         },
     };
 }

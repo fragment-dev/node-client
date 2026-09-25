@@ -146,6 +146,7 @@ export var CurrencyCode;
     CurrencyCode["Sek"] = "SEK";
     CurrencyCode["Sgd"] = "SGD";
     CurrencyCode["Shp"] = "SHP";
+    CurrencyCode["Sle"] = "SLE";
     CurrencyCode["Sll"] = "SLL";
     CurrencyCode["Sol"] = "SOL";
     CurrencyCode["Sos"] = "SOS";
@@ -287,12 +288,28 @@ export var LinkType;
 /**
  * EXPERIMENTAL — subject to change.
  *
+ * The currencies a Payment can be denominated in.
+ */
+export var PaymentCurrencyCode;
+(function (PaymentCurrencyCode) {
+    PaymentCurrencyCode["Usd"] = "USD";
+})(PaymentCurrencyCode || (PaymentCurrencyCode = {}));
+/** Mode of a Payment. */
+export var PaymentMode;
+(function (PaymentMode) {
+    PaymentMode["Production"] = "production";
+    PaymentMode["Sandbox"] = "sandbox";
+})(PaymentMode || (PaymentMode = {}));
+/**
+ * EXPERIMENTAL — subject to change.
+ *
  * Status of a Payment.
  */
 export var PaymentStatus;
 (function (PaymentStatus) {
+    PaymentStatus["Accepted"] = "accepted";
+    PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentStatus["Processing"] = "processing";
-    PaymentStatus["RequiresConfirmation"] = "requires_confirmation";
     PaymentStatus["Settled"] = "settled";
 })(PaymentStatus || (PaymentStatus = {}));
 /**
@@ -319,9 +336,13 @@ export var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (ReadBalanceConsistencyMode = {}));
+/** The kind of thing a Scene Event simulates. */
 export var SceneEventType;
 (function (SceneEventType) {
+    /** A simulated Ledger Entry. */
     SceneEventType["Entry"] = "entry";
+    /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+    SceneEventType["Payment"] = "payment";
 })(SceneEventType || (SceneEventType = {}));
 /**
  * The consistency modes available for entities created within this Schema.
@@ -355,12 +376,14 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
-/** The status of a Payment Type. */
-export var SchemaPaymentEntryStatus;
-(function (SchemaPaymentEntryStatus) {
-    /** The Payment Type is active. */
-    SchemaPaymentEntryStatus["Active"] = "active";
-})(SchemaPaymentEntryStatus || (SchemaPaymentEntryStatus = {}));
+/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+export var SchemaPaymentAccountingEventKey;
+(function (SchemaPaymentAccountingEventKey) {
+    /** The payment was captured and is guaranteed to settle. */
+    SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** The payment settled. */
+    SchemaPaymentAccountingEventKey["Settled"] = "settled";
+})(SchemaPaymentAccountingEventKey || (SchemaPaymentAccountingEventKey = {}));
 /** The direction a Payment Type moves money. */
 export var SchemaPaymentTypeDirection;
 (function (SchemaPaymentTypeDirection) {
@@ -369,6 +392,12 @@ export var SchemaPaymentTypeDirection;
     /** Money moves out of the Payment Account. */
     SchemaPaymentTypeDirection["Payout"] = "payout";
 })(SchemaPaymentTypeDirection || (SchemaPaymentTypeDirection = {}));
+/** The status of a Payment Type. */
+export var SchemaPaymentTypeStatus;
+(function (SchemaPaymentTypeStatus) {
+    /** The Payment Type is active. */
+    SchemaPaymentTypeStatus["Active"] = "active";
+})(SchemaPaymentTypeStatus || (SchemaPaymentTypeStatus = {}));
 /**
  * Identifies a system-owned line in a payment entry. The amounts of system
  * lines are filled by Fragment when the payment entry is posted.
@@ -481,6 +510,40 @@ export const DeleteLedgerDocument = gql `
       __typename
       ... on DeleteLedgerResult {
         success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const InstantiateLedgerAccountDocument = gql `
+  mutation instantiateLedgerAccount(
+    $ledger: LedgerMatchInput!
+    $path: String!
+    $parameters: Parameters
+  ) {
+    instantiateLedgerAccount(
+      ledger: $ledger
+      path: $path
+      parameters: $parameters
+    ) {
+      __typename
+      ... on InstantiateLedgerAccountResult {
+        ledgerAccount {
+          id
+          path
+          name
+          type
+          created
+        }
       }
       ... on BadRequestError {
         code
@@ -1651,6 +1714,7 @@ export const CreateCustomCurrencyDocument = gql `
         customCode: $customCode
       }
     ) {
+      __typename
       ... on CreateCustomCurrencyResult {
         customCurrency {
           code
@@ -1673,6 +1737,102 @@ export const CreateCustomCurrencyDocument = gql `
     }
   }
 `;
+export const CreatePaymentDocument = gql `
+  mutation createPayment(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $type: SafeString!
+    $typeVersion: Int!
+    $parameters: JSON
+  ) {
+    createPayment(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      payment: {
+        type: $type
+        typeVersion: $typeVersion
+        parameters: $parameters
+      }
+    ) {
+      __typename
+      ... on CreatePaymentResult {
+        payment {
+          id
+          ik
+          clientSecret
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const GetPaymentDocument = gql `
+  query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
+    payment(payment: { ik: $ik, ledger: { ik: $ledgerIk } }) {
+      id
+      ik
+      amount
+      currency {
+        code
+        name
+        precision
+      }
+      status
+      type
+      typeVersion
+      mode
+      parameters
+      created
+    }
+  }
+`;
+export const ListPaymentsDocument = gql `
+  query listPayments(
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $filter: PaymentsFilterSet
+  ) {
+    ledger(ledger: { ik: $ledgerIk }) {
+      payments(after: $after, first: $first, before: $before, filter: $filter) {
+        nodes {
+          id
+          ik
+          amount
+          currency {
+            code
+          }
+          status
+          type
+          typeVersion
+          created
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          hasPreviousPage
+          startCursor
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1690,6 +1850,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         deleteLedger(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(DeleteLedgerDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteLedger", "mutation", variables);
+        },
+        instantiateLedgerAccount(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(InstantiateLedgerAccountDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "instantiateLedgerAccount", "mutation", variables);
         },
         addLedgerEntries(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(AddLedgerEntriesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "addLedgerEntries", "mutation", variables);
@@ -1789,6 +1952,21 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         createCustomCurrency(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreateCustomCurrencyDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createCustomCurrency", "mutation", variables);
+        },
+        createPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(CreatePaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createPayment", "mutation", variables);
+        },
+        getPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentDocument, variables, {
+                ...requestHeaders,
+                ...wrappedRequestHeaders,
+            }), "getPayment", "query", variables);
+        },
+        listPayments(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ListPaymentsDocument, variables, {
+                ...requestHeaders,
+                ...wrappedRequestHeaders,
+            }), "listPayments", "query", variables);
         },
     };
 }

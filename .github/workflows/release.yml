@@ -46,6 +46,9 @@ jobs:
           max_attempts: 2
           command: yarn
 
+      - name: Install Fragment CLI
+        run: npm install -g @fragment-dev/cli
+
       - name: Bump version
         id: bump-version
         run: |
@@ -56,6 +59,7 @@ jobs:
           echo "Creating NPM release ${{ inputs.type }}"
           npm version ${{ inputs.type }}
           yarn build
+          yarn update-test-schema
           echo "version=$(npm pkg get version | tr -d '\"')"
           echo "version=$(npm pkg get version | tr -d '\"')" >> $GITHUB_OUTPUT
         env:
