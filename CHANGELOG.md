@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [2.4.0]
+
+### Added
+
+- `createPayment` now also returns the Payment's `id`, `ik`, `amount`, `mode`,
+  and `currency`, so its `payment` can be passed to `<PaymentSession>` in
+  `@fragment-dev/payment-elements` as-is.
+- `getLedgerAccountLines` can filter by `externalTxIds` on
+  `LedgerLinesFilterSet`, returning only the Ledger Lines linked to those
+  external transactions. Only supported for linked Ledger Accounts.
+
+### Changed
+
+- `PaymentStatus` now uses `accepted` instead of `approved`:
+  `PaymentStatus.Approved` is now `PaymentStatus.Accepted`. Payments are
+  experimental, so this API may change in a future release.
+
 ## [2.3.0]
 
 ### Added
