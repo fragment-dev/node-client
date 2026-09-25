@@ -2344,6 +2344,8 @@ export type Payment = {
     created: Scalars["DateTime"]["output"];
     /** The currency this Payment is denominated in. */
     currency: PaymentCurrency;
+    /** EXPERIMENTAL: The log of events that have occurred on this Payment, most recent first. */
+    events: PaymentEventsConnection;
     /** The ID of this Payment. */
     id: Scalars["ID"]["output"];
     /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) the Payment was created with. */
@@ -2360,6 +2362,32 @@ export type Payment = {
     type: Scalars["SafeString"]["output"];
     /** The version of the Payment Type. */
     typeVersion: Scalars["Int"]["output"];
+};
+/** EXPERIMENTAL: The card network captured the Payment. */
+export type PaymentCardCapturedEvent = PaymentEvent & {
+    __typename?: "PaymentCardCapturedEvent";
+    /** The `initiated` Ledger Entry, `null` where the Payment Type defines none. */
+    ledgerEntry?: Maybe<LedgerEntry>;
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    status: PaymentStatus;
+};
+/** EXPERIMENTAL: The payer completed checkout. */
+export type PaymentCheckoutCompletedEvent = PaymentEvent & {
+    __typename?: "PaymentCheckoutCompletedEvent";
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    status: PaymentStatus;
+};
+/** EXPERIMENTAL: The Payment was created. */
+export type PaymentCreatedEvent = PaymentEvent & {
+    __typename?: "PaymentCreatedEvent";
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    status: PaymentStatus;
 };
 /** EXPERIMENTAL: The currency a Payment is denominated in. */
 export type PaymentCurrency = {
@@ -2379,6 +2407,21 @@ export type PaymentCurrency = {
 export declare enum PaymentCurrencyCode {
     Usd = "USD"
 }
+/** EXPERIMENTAL: Something that happened to a Payment. */
+export type PaymentEvent = {
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    status: PaymentStatus;
+};
+/** EXPERIMENTAL: A paginated list of Payment events. */
+export type PaymentEventsConnection = {
+    __typename?: "PaymentEventsConnection";
+    /** The current page of results. */
+    nodes: Array<PaymentCardCapturedEvent | PaymentCheckoutCompletedEvent | PaymentCreatedEvent | PaymentSettledEvent>;
+    /** The pagination info for this list. */
+    pageInfo: PageInfo;
+};
 /** Specify a Ledger Payment by using `ledger` and `ik`. */
 export type PaymentMatchInput = {
     /** The Idempotency Key the Payment was created with. */
@@ -2391,13 +2434,23 @@ export declare enum PaymentMode {
     Production = "production",
     Sandbox = "sandbox"
 }
+/** EXPERIMENTAL: The Payment settled. */
+export type PaymentSettledEvent = PaymentEvent & {
+    __typename?: "PaymentSettledEvent";
+    /** The `settled` Ledger Entry. */
+    ledgerEntry: LedgerEntry;
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    status: PaymentStatus;
+};
 /**
  * EXPERIMENTAL — subject to change.
  *
  * Status of a Payment.
  */
 export declare enum PaymentStatus {
-    Approved = "approved",
+    Accepted = "accepted",
     NeedsPaymentMethod = "needs_payment_method",
     Processing = "processing",
     Settled = "settled"
@@ -2944,7 +2997,7 @@ export type SchemaMatchInput = {
 };
 /** EXPERIMENTAL: A lifecycle transition of a Payment. */
 export declare enum SchemaPaymentAccountingEventKey {
-    /** The payment was approved and is guaranteed to settle. */
+    /** The payment was captured and is guaranteed to settle. */
     Initiated = "initiated",
     /** The payment settled. */
     Settled = "settled"
@@ -2954,7 +3007,7 @@ export declare enum SchemaPaymentAccountingEventKey {
  * through its lifecycle, keyed by lifecycle transition.
  */
 export type SchemaPaymentAccountingInput = {
-    /** Posted when the payment is approved. Optional. */
+    /** Posted when the payment is captured. Optional. */
     initiated?: InputMaybe<SchemaPaymentEntryInput>;
     /** Posted when the payment settles. Every Payment Type must define it. */
     settled: SchemaPaymentEntryInput;
@@ -4673,8 +4726,16 @@ export type CreatePaymentMutation = {
         __typename: "CreatePaymentResult";
         payment: {
             __typename?: "Payment";
+            id: string;
+            ik: string;
             clientSecret: string;
             status: PaymentStatus;
+            amount: string;
+            mode: PaymentMode;
+            currency: {
+                __typename?: "PaymentCurrency";
+                code: PaymentCurrencyCode;
+            };
         };
     } | {
         __typename: "InternalError";
