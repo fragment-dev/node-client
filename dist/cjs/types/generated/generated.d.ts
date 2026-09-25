@@ -2780,6 +2780,11 @@ export type SchemaExternalAccountMatchInput = {
     id?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
     /** The FRAGMENT ID of the link */
     linkId?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
+    /**
+     * The idempotency key of a CustomLink, expressed with a schema parameter. Requires linkType: CustomLink.
+     * If linkId is also supplied, both must identify the same Link.
+     */
+    linkIk?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
     /** The type of Link this external account belongs to. Must be one of: IncreaseLink, UnitLink, CustomLink, or StripeLink. */
     linkType?: InputMaybe<LinkType>;
 };

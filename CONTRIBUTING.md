@@ -17,7 +17,7 @@ yarn
 
 ## Development
 
-Generated GraphQL clients live in `generated/`. Regenerate them after changing queries or the schema:
+Generated GraphQL clients live in `generated/`. Codegen also regenerates `src/types.ts` with runtime exports for every generated enum. Regenerate them after changing queries or the schema:
 
 ```bash
 yarn gen-clients
