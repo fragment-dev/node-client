@@ -311,7 +311,7 @@ var PaymentMode;
  */
 var PaymentStatus;
 (function (PaymentStatus) {
-    PaymentStatus["Approved"] = "approved";
+    PaymentStatus["Accepted"] = "accepted";
     PaymentStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentStatus["Processing"] = "processing";
     PaymentStatus["Settled"] = "settled";
@@ -383,7 +383,7 @@ var SchemaLedgerEntryStatus;
 /** EXPERIMENTAL: A lifecycle transition of a Payment. */
 var SchemaPaymentAccountingEventKey;
 (function (SchemaPaymentAccountingEventKey) {
-    /** The payment was approved and is guaranteed to settle. */
+    /** The payment was captured and is guaranteed to settle. */
     SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
     /** The payment settled. */
     SchemaPaymentAccountingEventKey["Settled"] = "settled";
@@ -1761,8 +1761,15 @@ exports.CreatePaymentDocument = (0, graphql_tag_1.gql) `
       __typename
       ... on CreatePaymentResult {
         payment {
+          id
+          ik
           clientSecret
           status
+          amount
+          mode
+          currency {
+            code
+          }
         }
       }
       ... on BadRequestError {
