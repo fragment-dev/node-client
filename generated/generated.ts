@@ -2563,6 +2563,8 @@ export type Payment = {
 /** EXPERIMENTAL: The card network captured the Payment. */
 export type PaymentCardCapturedEvent = PaymentEvent & {
   __typename?: "PaymentCardCapturedEvent";
+  /** The ID of this Payment event. */
+  id: Scalars["ID"]["output"];
   /** The `initiated` Ledger Entry, `null` where the Payment Type defines none. */
   ledgerEntry?: Maybe<LedgerEntry>;
   /** When this event occurred. */
@@ -2574,6 +2576,8 @@ export type PaymentCardCapturedEvent = PaymentEvent & {
 /** EXPERIMENTAL: The payer completed checkout. */
 export type PaymentCheckoutCompletedEvent = PaymentEvent & {
   __typename?: "PaymentCheckoutCompletedEvent";
+  /** The ID of this Payment event. */
+  id: Scalars["ID"]["output"];
   /** When this event occurred. */
   occurredAt: Scalars["DateTime"]["output"];
   /** The status of the Payment after this event. */
@@ -2583,6 +2587,8 @@ export type PaymentCheckoutCompletedEvent = PaymentEvent & {
 /** EXPERIMENTAL: The Payment was created. */
 export type PaymentCreatedEvent = PaymentEvent & {
   __typename?: "PaymentCreatedEvent";
+  /** The ID of this Payment event. */
+  id: Scalars["ID"]["output"];
   /** When this event occurred. */
   occurredAt: Scalars["DateTime"]["output"];
   /** The status of the Payment after this event. */
@@ -2611,6 +2617,8 @@ export enum PaymentCurrencyCode {
 
 /** EXPERIMENTAL: Something that happened to a Payment. */
 export type PaymentEvent = {
+  /** The ID of this Payment event. */
+  id: Scalars["ID"]["output"];
   /** When this event occurred. */
   occurredAt: Scalars["DateTime"]["output"];
   /** The status of the Payment after this event. */
@@ -2648,6 +2656,8 @@ export enum PaymentMode {
 /** EXPERIMENTAL: The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
   __typename?: "PaymentSettledEvent";
+  /** The ID of this Payment event. */
+  id: Scalars["ID"]["output"];
   /** The `settled` Ledger Entry. */
   ledgerEntry: LedgerEntry;
   /** When this event occurred. */
