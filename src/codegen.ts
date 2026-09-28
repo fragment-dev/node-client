@@ -5,6 +5,8 @@ import { generate } from "@graphql-codegen/cli";
 import type { Types } from "@graphql-codegen/plugin-helpers";
 import prettier from "prettier";
 
+import { generateEnumExports } from "../scripts/generateEnumExports.js";
+
 const GENERATED_FILENAME = "generated/generated.ts";
 
 generate(
@@ -49,6 +51,17 @@ generate(
     });
     const qualifiedFilename = path.resolve(process.cwd(), fileOutput.filename);
     writeFileSync(qualifiedFilename, prettifiedOutput, "utf-8");
+    const enumExports = await prettier.format(
+      generateEnumExports(prettifiedOutput),
+      {
+        parser: "typescript",
+      },
+    );
+    writeFileSync(
+      path.resolve(process.cwd(), "src/types.ts"),
+      enumExports,
+      "utf-8",
+    );
     process.exit(0);
   })
   .catch((error) => {
