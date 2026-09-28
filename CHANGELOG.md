@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [2.4.1]
+
+### Fixed
+
+- All generated enums are now available as runtime exports from
+  `@fragment-dev/node-client/types`, including `PaymentStatus`, `PaymentMode`,
+  and `PaymentCurrencyCode`, which were previously only exported as types.
+
 ## [2.4.0]
 
 ### Added
