@@ -100,7 +100,7 @@
   "typesVersions": {
     "*": {
       "types": [
-        "./dist/esm/types/src/types.d.ts"
+        "./dist/cjs/types/src/types.d.ts"
       ]
     }
   },
