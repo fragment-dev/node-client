@@ -122,6 +122,39 @@ export type AddLedgerEntryResult = {
   lines: Array<LedgerLine>;
 };
 
+/** Filters for pending clearing accounts. */
+export type AgingClearingAccountsFilterSet = {
+  /** Account path filter, with the same wildcard rules as LedgerAccountsFilterSet.path. */
+  path?: InputMaybe<StringMatchFilter>;
+};
+
+/** Selection of pending clearing accounts to count. */
+export type AgingClearingAccountsInput = {
+  /** Additional account filters. */
+  filter?: InputMaybe<AgingClearingAccountsFilterSet>;
+};
+
+/** Inclusive posted-time bounds usable directly in existing list filters. */
+export type AgingInterval = {
+  __typename?: "AgingInterval";
+  /** Unique pending accounts matching ledgerAccounts with this interval's earliestPosted filter. Different pending currencies can place an account in multiple intervals. Null when not requested. */
+  clearingAccountCount?: Maybe<Scalars["Int"]["output"]>;
+  /** Inclusive upper bound for earliestPosted.before or posted.before. */
+  endTime: Scalars["DateTime"]["output"];
+  /** Inclusive lower bound for earliestPosted.after or posted.after; null for the oldest interval. */
+  startTime?: Maybe<Scalars["DateTime"]["output"]>;
+  /** Transactions matching unreconciledTxs with this interval's posted filter and the requested Links and filters. Null when not requested. */
+  unreconciledTxCount?: Maybe<Scalars["Int"]["output"]>;
+};
+
+/** Selection of unreconciled transactions to count. */
+export type AgingUnreconciledTxsInput = {
+  /** Additional posted-time bounds intersected with each interval. */
+  filter?: InputMaybe<LedgerUnreconciledTxsFilterSet>;
+  /** Links identified by Fragment ID or Custom Link creation IK. Provide between 1 and 100 selectors; duplicates are searched once. */
+  links: Array<LinkMatchInput>;
+};
+
 /** Equivalent to an HTTP 400 - request either has missing or incorrect data */
 export type BadRequestError = Error & {
   __typename?: "BadRequestError";
@@ -162,6 +195,25 @@ export enum BalanceUpdateConsistencyMode {
   Eventual = "eventual",
   Strong = "strong",
 }
+
+/** A saved card. */
+export type CardPaymentMethod = PaymentMethod & {
+  __typename?: "CardPaymentMethod";
+  /** The card network, for example `visa` or `mastercard`. */
+  brand: Scalars["String"]["output"];
+  /** When the payment method was saved. */
+  created: Scalars["DateTime"]["output"];
+  /** The card's expiry month, 1–12. */
+  expiryMonth: Scalars["Int"]["output"];
+  /** The card's four-digit expiry year. */
+  expiryYear: Scalars["Int"]["output"];
+  /** FRAGMENT ID of the saved Payment Method. */
+  id: Scalars["ID"]["output"];
+  /** The last four digits of the card number. */
+  last4: Scalars["String"]["output"];
+  /** The user who owns this payment method. */
+  user: User;
+};
 
 /** The input for your Chart of Accounts in a Schema. */
 export type ChartOfAccountsInput = {
@@ -312,14 +364,30 @@ export type CreateLedgerResult = {
   ledger: Ledger;
 };
 
-/** EXPERIMENTAL: The Payment to create. */
+/** The Payment to create. */
 export type CreatePaymentInput = {
   /** Parameters for the specific Payment Type. Must be a key-value pair of strings. Must be a flat object: nested objects and arrays are rejected. */
   parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+  /** The saved Payment Method to charge for this Payment. When set, the Payment is charged immediately. */
+  paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
   /** The type of the Payment. Must be defined in the Schema linked to the Ledger. */
   type: Scalars["SafeString"]["input"];
   /** The version of the Payment Type. */
   typeVersion: Scalars["Int"]["input"];
+};
+
+export type CreatePaymentMethodSetupResponse =
+  | BadRequestError
+  | CreatePaymentMethodSetupResult
+  | InternalError;
+
+/** The created Payment Method Setup. */
+export type CreatePaymentMethodSetupResult = {
+  __typename?: "CreatePaymentMethodSetupResult";
+  /** Whether an earlier call with the same `ik` created this Payment Method Setup. */
+  isIkReplay: Scalars["Boolean"]["output"];
+  /** The Payment Method Setup that was created. */
+  paymentMethodSetup: PaymentMethodSetup;
 };
 
 export type CreatePaymentResponse =
@@ -327,9 +395,11 @@ export type CreatePaymentResponse =
   | CreatePaymentResult
   | InternalError;
 
-/** EXPERIMENTAL: The created Payment. */
+/** The created Payment. */
 export type CreatePaymentResult = {
   __typename?: "CreatePaymentResult";
+  /** Whether an earlier call with the same `ik` created this Payment. */
+  isIkReplay: Scalars["Boolean"]["output"];
   /** The Payment that was created. */
   payment: Payment;
 };
@@ -653,6 +723,18 @@ export type DeleteLedgerResult = {
   success: Scalars["Boolean"]["output"];
 };
 
+export type DeletePaymentMethodResponse =
+  | BadRequestError
+  | DeletePaymentMethodResult
+  | InternalError;
+
+/** The result of deleting a Payment Method. */
+export type DeletePaymentMethodResult = {
+  __typename?: "DeletePaymentMethodResult";
+  /** Whether the Payment Method was deleted. */
+  success: Scalars["Boolean"]["output"];
+};
+
 export type DeleteSchemaResponse =
   | BadRequestError
   | DeleteSchemaResult
@@ -667,6 +749,10 @@ export type DeletedCustomTx = {
   __typename?: "DeletedCustomTx";
   /** A deleted Tx */
   tx: Tx;
+};
+
+export type EmailFilter = {
+  equalTo: Scalars["String"]["input"];
 };
 
 export type EntryGroupMatchInput = {
@@ -967,11 +1053,15 @@ export type Ledger = {
   migrations: LedgerMigrationConnection;
   /** The name of the Ledger. Can be updated with the [updateLedger](/api-reference/api-mutations#updateledger) mutation. */
   name: Scalars["String"]["output"];
-  /** EXPERIMENTAL: List the Payments on a Ledger, most recent first. */
+  /** List the Payments on a Ledger, most recent first. */
   payments: PaymentsConnection;
+  /** Counts of pending clearing accounts and unreconciled transactions, grouped by age measured from the time of the request. */
+  reconciliationReport: ReconciliationReport;
   /** Schema key associated with this Ledger. */
   schema?: Maybe<Schema>;
   type: LedgerTypes;
+  /** Transactions in the specified Links that have not been reconciled to any account in this Ledger. Includes external accounts not linked to this Ledger. Sorted by posted timestamp, newest first. */
+  unreconciledTxs: TxsConnection;
   /** @deprecated Callers should not need to query or store this value. */
   workspaceId: Scalars["ID"]["output"];
 };
@@ -1058,6 +1148,24 @@ export type LedgerPaymentsArgs = {
   filter?: InputMaybe<PaymentsFilterSet>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** Ledgers are databases designed for managing money */
+export type LedgerReconciliationReportArgs = {
+  clearingAccounts?: InputMaybe<AgingClearingAccountsInput>;
+  granularity: Granularity;
+  intervals: Scalars["Int"]["input"];
+  unreconciledTxs?: InputMaybe<AgingUnreconciledTxsInput>;
+};
+
+/** Ledgers are databases designed for managing money */
+export type LedgerUnreconciledTxsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  filter?: InputMaybe<LedgerUnreconciledTxsFilterSet>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+  links: Array<LinkMatchInput>;
 };
 
 /** A ledger account is a container for money */
@@ -1339,6 +1447,7 @@ export type LedgerAccountOwnBalancesDuringArgs = {
 export type LedgerAccountUnreconciledTxsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   before?: InputMaybe<Scalars["String"]["input"]>;
+  filter?: InputMaybe<LedgerAccountUnreconciledTxsFilterSet>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
 };
@@ -1548,6 +1657,12 @@ export enum LedgerAccountTypes {
   Income = "income",
   Liability = "liability",
 }
+
+/** Filters for a ledger account's unreconciled transactions. */
+export type LedgerAccountUnreconciledTxsFilterSet = {
+  /** The transaction's posted timestamp. Bounds are inclusive; when both are supplied, before must be later than after. */
+  posted?: InputMaybe<DateTimeFilter>;
+};
 
 /** A paginated list of Ledger Accounts */
 export type LedgerAccountsConnection = {
@@ -2009,7 +2124,7 @@ export type LedgerEntryTag = {
 export type LedgerEntryTagInput = {
   /** The key of this tag. Can be up to 128 characters long. */
   key: Scalars["SafeString"]["input"];
-  /** The value associated with this tag's key. Can be up to 128 characters long. */
+  /** The value associated with this tag's key. Can be up to 256 characters long. */
   value: Scalars["SafeString"]["input"];
 };
 
@@ -2125,7 +2240,7 @@ export type LedgerLineTag = {
 export type LedgerLineTagInput = {
   /** The key of this tag. Can be up to 128 characters long. */
   key: Scalars["SafeString"]["input"];
-  /** The value associated with this tag's key. Can be up to 128 characters long. */
+  /** The value associated with this tag's key. Can be up to 256 characters long. */
   value: Scalars["SafeString"]["input"];
 };
 
@@ -2241,6 +2356,12 @@ export enum LedgerTypes {
   Double = "double",
 }
 
+/** Filters for transactions not reconciled to any account in a Ledger. */
+export type LedgerUnreconciledTxsFilterSet = {
+  /** Filter by the external transaction's posted timestamp. Bounds are inclusive. */
+  posted?: InputMaybe<DateTimeFilter>;
+};
+
 /** A paginated list of Ledgers */
 export type LedgersConnection = {
   __typename?: "LedgersConnection";
@@ -2342,12 +2463,10 @@ export type Mutation = {
   createLedgerAccount: CreateLedgerAccountResponse;
   /** This API call is used to create Ledger Accounts. It is only used if you are not using a Schema. Unlike other mutations that take a single IK, 'createLedgerAccount' accepts an IK for each of the ledger accounts in the request payload. This is so you can recover in the case of a partial failure.  One API call can create up to 200 Ledger Accounts, up to 10 levels deep. */
   createLedgerAccounts: CreateLedgerAccountsResponse;
-  /**
-   * EXPERIMENTAL — subject to change.
-   *
-   * Create a Payment.
-   */
+  /** Create a Payment. */
   createPayment: CreatePaymentResponse;
+  /** Save a Payment Method for a User without charging it. */
+  createPaymentMethodSetup: CreatePaymentMethodSetupResponse;
   /** Delete Txs on a Custom Link. Once deleted, a Tx will not show up in listing queries, but can be resolved by if you lookup by its Fragment ID. */
   deleteCustomTxs: DeleteCustomTxsResponse;
   /**
@@ -2356,6 +2475,8 @@ export type Mutation = {
    * After using the deleteLedger mutation you can re-use the ik in a new ledger after a 30 second wait.
    */
   deleteLedger: DeleteLedgerResponse;
+  /** Delete a Payment Method saved for a User. */
+  deletePaymentMethod: DeletePaymentMethodResponse;
   /** Delete a Schema */
   deleteSchema: DeleteSchemaResponse;
   /** Instantiates a Ledger Account from a template in the Ledger's Schema before any Ledger Entry is posted to it. Creates any missing templated ancestors. */
@@ -2439,6 +2560,13 @@ export type MutationCreatePaymentArgs = {
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationCreatePaymentMethodSetupArgs = {
+  ik: Scalars["SafeString"]["input"];
+  ledger: LedgerMatchInput;
+  user: UserMatchInput;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteCustomTxsArgs = {
   txs: Array<Scalars["ID"]["input"]>;
 };
@@ -2446,6 +2574,11 @@ export type MutationDeleteCustomTxsArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteLedgerArgs = {
   ledger: LedgerMatchInput;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationDeletePaymentMethodArgs = {
+  paymentMethod: PaymentMethodMatchInput;
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
@@ -2530,7 +2663,7 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars["String"]["output"]>;
 };
 
-/** EXPERIMENTAL: A Payment posted to a Ledger. */
+/** A Payment posted to a Ledger. */
 export type Payment = {
   __typename?: "Payment";
   /** The amount of this Payment, in whole cents. */
@@ -2540,7 +2673,7 @@ export type Payment = {
   created: Scalars["DateTime"]["output"];
   /** The currency this Payment is denominated in. */
   currency: PaymentCurrency;
-  /** EXPERIMENTAL: The log of events that have occurred on this Payment, most recent first. */
+  /** The log of events that have occurred on this Payment, most recent first. */
   events: PaymentEventsConnection;
   /** The ID of this Payment. */
   id: Scalars["ID"]["output"];
@@ -2560,7 +2693,7 @@ export type Payment = {
   typeVersion: Scalars["Int"]["output"];
 };
 
-/** EXPERIMENTAL: The card network captured the Payment. */
+/** The card network captured the Payment. */
 export type PaymentCardCapturedEvent = PaymentEvent & {
   __typename?: "PaymentCardCapturedEvent";
   /** The ID of this Payment event. */
@@ -2573,9 +2706,9 @@ export type PaymentCardCapturedEvent = PaymentEvent & {
   status: PaymentStatus;
 };
 
-/** EXPERIMENTAL: The payer completed checkout. */
-export type PaymentCheckoutCompletedEvent = PaymentEvent & {
-  __typename?: "PaymentCheckoutCompletedEvent";
+/** The payer went through checkout. */
+export type PaymentCheckoutEvent = PaymentEvent & {
+  __typename?: "PaymentCheckoutEvent";
   /** The ID of this Payment event. */
   id: Scalars["ID"]["output"];
   /** When this event occurred. */
@@ -2584,7 +2717,7 @@ export type PaymentCheckoutCompletedEvent = PaymentEvent & {
   status: PaymentStatus;
 };
 
-/** EXPERIMENTAL: The Payment was created. */
+/** The Payment was created. */
 export type PaymentCreatedEvent = PaymentEvent & {
   __typename?: "PaymentCreatedEvent";
   /** The ID of this Payment event. */
@@ -2595,7 +2728,7 @@ export type PaymentCreatedEvent = PaymentEvent & {
   status: PaymentStatus;
 };
 
-/** EXPERIMENTAL: The currency a Payment is denominated in. */
+/** The currency a Payment is denominated in. */
 export type PaymentCurrency = {
   __typename?: "PaymentCurrency";
   /** The currency code. */
@@ -2606,16 +2739,12 @@ export type PaymentCurrency = {
   precision: Scalars["Int"]["output"];
 };
 
-/**
- * EXPERIMENTAL — subject to change.
- *
- * The currencies a Payment can be denominated in.
- */
+/** The currencies a Payment can be denominated in. */
 export enum PaymentCurrencyCode {
   Usd = "USD",
 }
 
-/** EXPERIMENTAL: Something that happened to a Payment. */
+/** Something that happened to a Payment. */
 export type PaymentEvent = {
   /** The ID of this Payment event. */
   id: Scalars["ID"]["output"];
@@ -2625,13 +2754,13 @@ export type PaymentEvent = {
   status: PaymentStatus;
 };
 
-/** EXPERIMENTAL: A paginated list of Payment events. */
+/** A paginated list of Payment events. */
 export type PaymentEventsConnection = {
   __typename?: "PaymentEventsConnection";
   /** The current page of results. */
   nodes: Array<
     | PaymentCardCapturedEvent
-    | PaymentCheckoutCompletedEvent
+    | PaymentCheckoutEvent
     | PaymentCreatedEvent
     | PaymentSettledEvent
   >;
@@ -2647,13 +2776,84 @@ export type PaymentMatchInput = {
   ledger: LedgerMatchInput;
 };
 
+/** A payment method saved for a User. */
+export type PaymentMethod = {
+  /** When the payment method was saved. */
+  created: Scalars["DateTime"]["output"];
+  /** FRAGMENT ID of the saved Payment Method. */
+  id: Scalars["ID"]["output"];
+  /** The user who owns this payment method. */
+  user: User;
+};
+
+/** Specify a saved Payment Method by its ID. */
+export type PaymentMethodMatchInput = {
+  /** FRAGMENT ID of the Payment Method. */
+  id: Scalars["ID"]["input"];
+};
+
+/** An attempt to save the Payment Method for a User. */
+export type PaymentMethodSetup = {
+  __typename?: "PaymentMethodSetup";
+  /** The credential to provide to the `<PaymentMethodSetupSession>` component in the Fragment Elements SDK. */
+  clientSecret: Scalars["String"]["output"];
+  /** When the Payment Method Setup was created. */
+  created: Scalars["DateTime"]["output"];
+  /** The currency the saved payment method will be charged in. */
+  currency: PaymentCurrency;
+  /** The Fragment ID of this Payment Method Setup. */
+  id: Scalars["ID"]["output"];
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) the Payment Method Setup was created with. */
+  ik: Scalars["SafeString"]["output"];
+  /** Whether this Payment Method Setup was created in sandbox or production. */
+  mode: PaymentMode;
+  /** The Payment Method this setup saved, once its status is `saved`. */
+  paymentMethod?: Maybe<CardPaymentMethod>;
+  /** The status of this Payment Method Setup. */
+  status: PaymentMethodSetupStatus;
+};
+
+/** Specify a Payment Method Setup by using `id`, or `ik` and `ledger`, or all three when they name the same Payment Method Setup. */
+export type PaymentMethodSetupMatchInput = {
+  /** The FRAGMENT ID of the Payment Method Setup. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** The IK passed to `createPaymentMethodSetup`. Required if you have not provided `id`. */
+  ik?: InputMaybe<Scalars["SafeString"]["input"]>;
+  /** The Ledger the Payment Method Setup belongs to. Required if you have not provided `id`. */
+  ledger?: InputMaybe<LedgerMatchInput>;
+};
+
+/** Status of a Payment Method Setup. */
+export enum PaymentMethodSetupStatus {
+  Canceled = "canceled",
+  NeedsAction = "needs_action",
+  NeedsPaymentMethod = "needs_payment_method",
+  Processing = "processing",
+  Saved = "saved",
+}
+
+/** A list of Payment Methods, all in one page. */
+export type PaymentMethodsConnection = {
+  __typename?: "PaymentMethodsConnection";
+  /** Every Payment Method in the list. */
+  nodes: Array<CardPaymentMethod>;
+  /** The pagination info for this list. It never reports another page. */
+  pageInfo: PageInfo;
+};
+
+/** Filter the list of saved Payment Methods returned. */
+export type PaymentMethodsFilterSet = {
+  /** Filter by the User the Payment Method belongs to. */
+  user: UserFilter;
+};
+
 /** Mode of a Payment. */
 export enum PaymentMode {
   Production = "production",
   Sandbox = "sandbox",
 }
 
-/** EXPERIMENTAL: The Payment settled. */
+/** The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
   __typename?: "PaymentSettledEvent";
   /** The ID of this Payment event. */
@@ -2666,11 +2866,7 @@ export type PaymentSettledEvent = PaymentEvent & {
   status: PaymentStatus;
 };
 
-/**
- * EXPERIMENTAL — subject to change.
- *
- * Status of a Payment.
- */
+/** Status of a Payment. */
 export enum PaymentStatus {
   Accepted = "accepted",
   NeedsPaymentMethod = "needs_payment_method",
@@ -2678,7 +2874,7 @@ export enum PaymentStatus {
   Settled = "settled",
 }
 
-/** EXPERIMENTAL: Filters a result set by Payment status. */
+/** Filters a result set by Payment status. */
 export type PaymentStatusFilter = {
   /** Results must have the specified status. */
   equalTo?: InputMaybe<PaymentStatus>;
@@ -2686,7 +2882,7 @@ export type PaymentStatusFilter = {
   in?: InputMaybe<Array<PaymentStatus>>;
 };
 
-/** EXPERIMENTAL: A paginated list of Payments. */
+/** A paginated list of Payments. */
 export type PaymentsConnection = {
   __typename?: "PaymentsConnection";
   /** The current page of results. */
@@ -2695,7 +2891,7 @@ export type PaymentsConnection = {
   pageInfo: PageInfo;
 };
 
-/** EXPERIMENTAL: The filters that can be applied to a list of Payments. */
+/** The filters that can be applied to a list of Payments. */
 export type PaymentsFilterSet = {
   /** Use this filter to filter Payments by their `created` timestamp. */
   created?: InputMaybe<DateTimeFilter>;
@@ -2755,8 +2951,14 @@ export type Query = {
   link?: Maybe<CustomLink | IncreaseLink | StripeLink | UnitLink>;
   /** Get all links in a workspace */
   links: LinksConnection;
-  /** EXPERIMENTAL: Get a single Payment by its Idempotency Key. */
+  /** Get a single Payment by its Idempotency Key. */
   payment?: Maybe<Payment>;
+  /** Get a Payment Method saved for a User. */
+  paymentMethod?: Maybe<CardPaymentMethod>;
+  /** Get a Payment Method Setup. */
+  paymentMethodSetup: PaymentMethodSetup;
+  /** List the Payment Methods a User saved in a Ledger, newest first. Deleted Payment Methods are not listed. */
+  paymentMethods: PaymentMethodsConnection;
   /** Get a Schema by key. */
   schema?: Maybe<Schema>;
   /** Retrieve all of the Schemas in the workspace. */
@@ -2830,6 +3032,25 @@ export type QueryPaymentArgs = {
 };
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryPaymentMethodArgs = {
+  paymentMethod: PaymentMethodMatchInput;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryPaymentMethodSetupArgs = {
+  paymentMethodSetup: PaymentMethodSetupMatchInput;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryPaymentMethodsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  filter: PaymentMethodsFilterSet;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QuerySchemaArgs = {
   schema: SchemaMatchInput;
 };
@@ -2872,6 +3093,17 @@ export type ReconcileTxResult = {
   lines: Array<LedgerLine>;
 };
 
+/** Reconciliation counts grouped by age, measured from endTime. */
+export type ReconciliationReport = {
+  __typename?: "ReconciliationReport";
+  /** Time of the request; the exclusive cutoff used to compute interval boundaries. */
+  endTime: Scalars["DateTime"]["output"];
+  /** Unit used to compute interval boundaries. */
+  granularity: Granularity;
+  /** Intervals ordered youngest first. The final interval has no lower time bound. */
+  intervals: Array<AgingInterval>;
+};
+
 export type ReverseLedgerEntryResponse =
   | BadRequestError
   | InternalError
@@ -2902,7 +3134,7 @@ export type SceneEventInput = {
   entry?: InputMaybe<SceneEntryInput>;
   /** The type of the Scene Event. */
   eventType: SceneEventType;
-  /** EXPERIMENTAL: The simulated Payment lifecycle transition. Required when eventType is `payment`. */
+  /** The simulated Payment lifecycle transition. Required when eventType is `payment`. */
   payment?: InputMaybe<ScenePaymentEventInput>;
 };
 
@@ -2910,7 +3142,7 @@ export type SceneEventInput = {
 export enum SceneEventType {
   /** A simulated Ledger Entry. */
   Entry = "entry",
-  /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+  /** One lifecycle transition of a simulated Payment. */
   Payment = "payment",
 }
 
@@ -2919,12 +3151,12 @@ export type SceneInput = {
   events: Array<SceneEventInput>;
   /** The human-readable name of the Scene. */
   name: Scalars["String"]["input"];
-  /** EXPERIMENTAL: The simulated Payments the Scene's payment events reference. */
+  /** The simulated Payments the Scene's payment events reference. */
   payments?: InputMaybe<Array<ScenePaymentInput>>;
 };
 
 /**
- * EXPERIMENTAL: One lifecycle transition of a simulated Payment, posted as a
+ * One lifecycle transition of a simulated Payment, posted as a
  * part of a Scene.
  */
 export type ScenePaymentEventInput = {
@@ -2935,7 +3167,7 @@ export type ScenePaymentEventInput = {
 };
 
 /**
- * EXPERIMENTAL: A simulated Payment declared by a Scene. Its lifecycle events
+ * A simulated Payment declared by a Scene. Its lifecycle events
  * reference it by `ik`, so one simulated Payment has exactly one set of
  * parameters.
  */
@@ -3072,7 +3304,7 @@ export type SchemaInput = {
   ledgerEntries?: InputMaybe<SchemaLedgerEntriesInput>;
   /** The human-readable name of the Schema. */
   name?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
-  /** EXPERIMENTAL: The Payment Types to add to the Schema. */
+  /** The Payment Types to add to the Schema. */
   payments?: InputMaybe<SchemaPaymentsInput>;
   /** Any scenes associated with this Schema. */
   scenes?: InputMaybe<Array<SceneInput>>;
@@ -3122,7 +3354,7 @@ export type SchemaLedgerAccountInput = {
   linkedAccount?: InputMaybe<SchemaExternalAccountMatchInput>;
   /** The human-readable name of this Ledger Account. */
   name?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
-  /** EXPERIMENTAL: Marks this as a Payment Account. */
+  /** Marks this as a Payment Account. */
   payment?: InputMaybe<SchemaPaymentInput>;
   /** The status of this Ledger Account. Defaults to active. */
   status?: InputMaybe<SchemaLedgerAccountStatus>;
@@ -3283,7 +3515,7 @@ export type SchemaMatchInput = {
   version?: InputMaybe<Scalars["Int"]["input"]>;
 };
 
-/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+/** A lifecycle transition of a Payment. */
 export enum SchemaPaymentAccountingEventKey {
   /** The payment was captured and is guaranteed to settle. */
   Initiated = "initiated",
@@ -3292,7 +3524,7 @@ export enum SchemaPaymentAccountingEventKey {
 }
 
 /**
- * EXPERIMENTAL: The Ledger Entries a Payment Type posts as a payment moves
+ * The Ledger Entries a Payment Type posts as a payment moves
  * through its lifecycle, keyed by lifecycle transition.
  */
 export type SchemaPaymentAccountingInput = {
@@ -3302,7 +3534,7 @@ export type SchemaPaymentAccountingInput = {
   settled: SchemaPaymentEntryInput;
 };
 
-/** EXPERIMENTAL: The Ledger Entry a Payment Type posts on a payment lifecycle event. */
+/** The Ledger Entry a Payment Type posts on a payment lifecycle event. */
 export type SchemaPaymentEntryInput = {
   /** Human-readable description of the payment entry. */
   description?: InputMaybe<Scalars["ParameterizedString"]["input"]>;
@@ -3310,12 +3542,12 @@ export type SchemaPaymentEntryInput = {
   lines: Array<SchemaPaymentLineInput>;
 };
 
-/** EXPERIMENTAL: Marks a Ledger Account as a Payment Account. */
+/** Marks a Ledger Account as a Payment Account. */
 export type SchemaPaymentInput = {
   enabled: Scalars["Boolean"]["input"];
 };
 
-/** EXPERIMENTAL: A Ledger Line in a payment entry. */
+/** A Ledger Line in a payment entry. */
 export type SchemaPaymentLineInput = {
   /**
    * The Ledger Account this line will be posted to.
@@ -3340,7 +3572,7 @@ export type SchemaPaymentLineInput = {
   system?: InputMaybe<SchemaSystemLineKind>;
 };
 
-/** EXPERIMENTAL: The payment a Payment Type creates. */
+/** The payment a Payment Type creates. */
 export type SchemaPaymentTypeDetailsInput = {
   /**
    * The amount requested for the payment, as a parameterized expression filled
@@ -3360,7 +3592,7 @@ export enum SchemaPaymentTypeDirection {
 }
 
 /**
- * EXPERIMENTAL: A Payment Type in a Schema. All Payment Types defined in a
+ * A Payment Type in a Schema. All Payment Types defined in a
  * Schema must have a unique `type` and `typeVersion` pair.
  */
 export type SchemaPaymentTypeInput = {
@@ -3385,7 +3617,7 @@ export enum SchemaPaymentTypeStatus {
   Active = "active",
 }
 
-/** EXPERIMENTAL: The Payment Types in your Schema. */
+/** The Payment Types in your Schema. */
 export type SchemaPaymentsInput = {
   /** A list of Payment Type definitions. */
   types: Array<SchemaPaymentTypeInput>;
@@ -3717,6 +3949,26 @@ export type UpdateLedgerResult = {
   __typename?: "UpdateLedgerResult";
   /** The updated Ledger.  */
   ledger: Ledger;
+};
+
+/** A User who pays through a Ledger. */
+export type User = {
+  __typename?: "User";
+  /** The User's email address. */
+  email: Scalars["String"]["output"];
+};
+
+export type UserFilter = {
+  /** Filter by the User's email address. */
+  email: EmailFilter;
+  /** The Ledger the User belongs to. */
+  ledger: LedgerMatchInput;
+};
+
+/** Specify a User by their email. */
+export type UserMatchInput = {
+  /** The User's email. */
+  email: Scalars["String"]["input"];
 };
 
 export type Workspace = {
@@ -4442,6 +4694,77 @@ export type SyncCustomTxsMutation = {
       };
 };
 
+export type SyncCustomAccountsByLinkIkMutationVariables = Exact<{
+  linkIk: Scalars["SafeString"]["input"];
+  accounts: Array<CustomAccountInput> | CustomAccountInput;
+}>;
+
+export type SyncCustomAccountsByLinkIkMutation = {
+  __typename?: "Mutation";
+  syncCustomAccounts:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "SyncCustomAccountsResult";
+        accounts: Array<{
+          __typename?: "ExternalAccount";
+          id: string;
+          externalId: string;
+          name: string;
+          currency?: {
+            __typename?: "Currency";
+            code: CurrencyCode;
+            customCurrencyId?: string | null;
+          } | null;
+        }>;
+      };
+};
+
+export type SyncCustomTxsByLinkIkMutationVariables = Exact<{
+  linkIk: Scalars["SafeString"]["input"];
+  txs: Array<CustomTxInput> | CustomTxInput;
+}>;
+
+export type SyncCustomTxsByLinkIkMutation = {
+  __typename?: "Mutation";
+  syncCustomTxs:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "SyncCustomTxsResult";
+        txs: Array<{
+          __typename: "Tx";
+          linkId: string;
+          id: string;
+          externalId: string;
+          externalAccountId: string;
+          amount: string;
+          description: string;
+          posted: string;
+        }>;
+      };
+};
+
 export type DeleteCustomTxsMutationVariables = Exact<{
   txs: Array<Scalars["ID"]["input"]> | Scalars["ID"]["input"];
 }>;
@@ -5125,6 +5448,7 @@ export type CreatePaymentMutationVariables = Exact<{
   type: Scalars["SafeString"]["input"];
   typeVersion: Scalars["Int"]["input"];
   parameters?: InputMaybe<Scalars["JSON"]["input"]>;
+  paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
 }>;
 
 export type CreatePaymentMutation = {
@@ -5221,6 +5545,154 @@ export type ListPaymentsQuery = {
       };
     };
   } | null;
+};
+
+export type ListPaymentMethodsQueryVariables = Exact<{
+  email: Scalars["String"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: InputMaybe<Scalars["Int"]["input"]>;
+  before?: InputMaybe<Scalars["String"]["input"]>;
+  last?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+
+export type ListPaymentMethodsQuery = {
+  __typename?: "Query";
+  paymentMethods: {
+    __typename?: "PaymentMethodsConnection";
+    nodes: Array<{
+      __typename: "CardPaymentMethod";
+      brand: string;
+      last4: string;
+      expiryMonth: number;
+      expiryYear: number;
+      id: string;
+      created: string;
+    }>;
+    pageInfo: {
+      __typename?: "PageInfo";
+      hasNextPage: boolean;
+      endCursor?: string | null;
+      hasPreviousPage: boolean;
+      startCursor?: string | null;
+    };
+  };
+};
+
+export type GetPaymentMethodQueryVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type GetPaymentMethodQuery = {
+  __typename?: "Query";
+  paymentMethod?: {
+    __typename: "CardPaymentMethod";
+    brand: string;
+    last4: string;
+    expiryMonth: number;
+    expiryYear: number;
+    id: string;
+    created: string;
+  } | null;
+};
+
+export type DeletePaymentMethodMutationVariables = Exact<{
+  id: Scalars["ID"]["input"];
+}>;
+
+export type DeletePaymentMethodMutation = {
+  __typename?: "Mutation";
+  deletePaymentMethod:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | { __typename: "DeletePaymentMethodResult"; success: boolean }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      };
+};
+
+export type CreatePaymentMethodSetupMutationVariables = Exact<{
+  ik: Scalars["SafeString"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+  email: Scalars["String"]["input"];
+}>;
+
+export type CreatePaymentMethodSetupMutation = {
+  __typename?: "Mutation";
+  createPaymentMethodSetup:
+    | {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      }
+    | {
+        __typename: "CreatePaymentMethodSetupResult";
+        isIkReplay: boolean;
+        paymentMethodSetup: {
+          __typename?: "PaymentMethodSetup";
+          id: string;
+          ik: string;
+          clientSecret: string;
+          status: PaymentMethodSetupStatus;
+          mode: PaymentMode;
+          created: string;
+          currency: {
+            __typename?: "PaymentCurrency";
+            code: PaymentCurrencyCode;
+          };
+          paymentMethod?: {
+            __typename: "CardPaymentMethod";
+            brand: string;
+            last4: string;
+            expiryMonth: number;
+            expiryYear: number;
+            id: string;
+            created: string;
+          } | null;
+        };
+      }
+    | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+      };
+};
+
+export type GetPaymentMethodSetupQueryVariables = Exact<{
+  ik: Scalars["SafeString"]["input"];
+  ledgerIk: Scalars["SafeString"]["input"];
+}>;
+
+export type GetPaymentMethodSetupQuery = {
+  __typename?: "Query";
+  paymentMethodSetup: {
+    __typename?: "PaymentMethodSetup";
+    id: string;
+    ik: string;
+    clientSecret: string;
+    status: PaymentMethodSetupStatus;
+    mode: PaymentMode;
+    created: string;
+    currency: { __typename?: "PaymentCurrency"; code: PaymentCurrencyCode };
+    paymentMethod?: {
+      __typename: "CardPaymentMethod";
+      brand: string;
+      last4: string;
+      expiryMonth: number;
+      expiryYear: number;
+      id: string;
+      created: string;
+    } | null;
+  };
 };
 
 export const StoreSchemaDocument = gql`
@@ -5903,6 +6375,69 @@ export const SyncCustomTxsDocument = gql`
     }
   }
 `;
+export const SyncCustomAccountsByLinkIkDocument = gql`
+  mutation syncCustomAccountsByLinkIk(
+    $linkIk: SafeString!
+    $accounts: [CustomAccountInput!]!
+  ) {
+    syncCustomAccounts(link: { ik: $linkIk }, accounts: $accounts) {
+      __typename
+      ... on SyncCustomAccountsResult {
+        accounts {
+          id
+          externalId
+          name
+          currency {
+            code
+            customCurrencyId
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const SyncCustomTxsByLinkIkDocument = gql`
+  mutation syncCustomTxsByLinkIk(
+    $linkIk: SafeString!
+    $txs: [CustomTxInput!]!
+  ) {
+    syncCustomTxs(link: { ik: $linkIk }, txs: $txs) {
+      __typename
+      ... on SyncCustomTxsResult {
+        txs {
+          __typename
+          linkId
+          id
+          externalId
+          externalAccountId
+          amount
+          description
+          posted
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const DeleteCustomTxsDocument = gql`
   mutation deleteCustomTxs($txs: [ID!]!) {
     deleteCustomTxs(txs: $txs) {
@@ -6543,6 +7078,7 @@ export const CreatePaymentDocument = gql`
     $type: SafeString!
     $typeVersion: Int!
     $parameters: JSON
+    $paymentMethod: PaymentMethodMatchInput
   ) {
     createPayment(
       ik: $ik
@@ -6551,6 +7087,7 @@ export const CreatePaymentDocument = gql`
         type: $type
         typeVersion: $typeVersion
         parameters: $parameters
+        paymentMethod: $paymentMethod
       }
     ) {
       __typename
@@ -6627,6 +7164,157 @@ export const ListPaymentsDocument = gql`
           endCursor
           hasPreviousPage
           startCursor
+        }
+      }
+    }
+  }
+`;
+export const ListPaymentMethodsDocument = gql`
+  query listPaymentMethods(
+    $email: String!
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $last: Int
+  ) {
+    paymentMethods(
+      filter: {
+        user: { email: { equalTo: $email }, ledger: { ik: $ledgerIk } }
+      }
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      nodes {
+        __typename
+        id
+        created
+        ... on CardPaymentMethod {
+          brand
+          last4
+          expiryMonth
+          expiryYear
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        hasPreviousPage
+        startCursor
+      }
+    }
+  }
+`;
+export const GetPaymentMethodDocument = gql`
+  query getPaymentMethod($id: ID!) {
+    paymentMethod(paymentMethod: { id: $id }) {
+      __typename
+      id
+      created
+      ... on CardPaymentMethod {
+        brand
+        last4
+        expiryMonth
+        expiryYear
+      }
+    }
+  }
+`;
+export const DeletePaymentMethodDocument = gql`
+  mutation deletePaymentMethod($id: ID!) {
+    deletePaymentMethod(paymentMethod: { id: $id }) {
+      __typename
+      ... on DeletePaymentMethodResult {
+        success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const CreatePaymentMethodSetupDocument = gql`
+  mutation createPaymentMethodSetup(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $email: String!
+  ) {
+    createPaymentMethodSetup(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      user: { email: $email }
+    ) {
+      __typename
+      ... on CreatePaymentMethodSetupResult {
+        paymentMethodSetup {
+          id
+          ik
+          clientSecret
+          status
+          mode
+          created
+          currency {
+            code
+          }
+          paymentMethod {
+            __typename
+            id
+            created
+            ... on CardPaymentMethod {
+              brand
+              last4
+              expiryMonth
+              expiryYear
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const GetPaymentMethodSetupDocument = gql`
+  query getPaymentMethodSetup($ik: SafeString!, $ledgerIk: SafeString!) {
+    paymentMethodSetup(
+      paymentMethodSetup: { ik: $ik, ledger: { ik: $ledgerIk } }
+    ) {
+      id
+      ik
+      clientSecret
+      status
+      mode
+      created
+      currency {
+        code
+      }
+      paymentMethod {
+        __typename
+        id
+        created
+        ... on CardPaymentMethod {
+          brand
+          last4
+          expiryMonth
+          expiryYear
         }
       }
     }
@@ -6918,6 +7606,38 @@ export function getSdk(
             { ...requestHeaders, ...wrappedRequestHeaders },
           ),
         "syncCustomTxs",
+        "mutation",
+        variables,
+      );
+    },
+    syncCustomAccountsByLinkIk(
+      variables: SyncCustomAccountsByLinkIkMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<SyncCustomAccountsByLinkIkMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<SyncCustomAccountsByLinkIkMutation>(
+            SyncCustomAccountsByLinkIkDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "syncCustomAccountsByLinkIk",
+        "mutation",
+        variables,
+      );
+    },
+    syncCustomTxsByLinkIk(
+      variables: SyncCustomTxsByLinkIkMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<SyncCustomTxsByLinkIkMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<SyncCustomTxsByLinkIkMutation>(
+            SyncCustomTxsByLinkIkDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "syncCustomTxsByLinkIk",
         "mutation",
         variables,
       );
@@ -7233,6 +7953,86 @@ export function getSdk(
             ...wrappedRequestHeaders,
           }),
         "listPayments",
+        "query",
+        variables,
+      );
+    },
+    listPaymentMethods(
+      variables: ListPaymentMethodsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<ListPaymentMethodsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<ListPaymentMethodsQuery>(
+            ListPaymentMethodsDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "listPaymentMethods",
+        "query",
+        variables,
+      );
+    },
+    getPaymentMethod(
+      variables: GetPaymentMethodQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetPaymentMethodQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetPaymentMethodQuery>(
+            GetPaymentMethodDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getPaymentMethod",
+        "query",
+        variables,
+      );
+    },
+    deletePaymentMethod(
+      variables: DeletePaymentMethodMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<DeletePaymentMethodMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<DeletePaymentMethodMutation>(
+            DeletePaymentMethodDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "deletePaymentMethod",
+        "mutation",
+        variables,
+      );
+    },
+    createPaymentMethodSetup(
+      variables: CreatePaymentMethodSetupMutationVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<CreatePaymentMethodSetupMutation> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<CreatePaymentMethodSetupMutation>(
+            CreatePaymentMethodSetupDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "createPaymentMethodSetup",
+        "mutation",
+        variables,
+      );
+    },
+    getPaymentMethodSetup(
+      variables: GetPaymentMethodSetupQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+    ): Promise<GetPaymentMethodSetupQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<GetPaymentMethodSetupQuery>(
+            GetPaymentMethodSetupDocument,
+            variables,
+            { ...requestHeaders, ...wrappedRequestHeaders },
+          ),
+        "getPaymentMethodSetup",
         "query",
         variables,
       );
