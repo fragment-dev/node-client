@@ -15,6 +15,7 @@ export {
   LedgerTypes,
   LinkType,
   PaymentCurrencyCode,
+  PaymentMethodSetupStatus,
   PaymentMode,
   PaymentStatus,
   PostLinesAs,

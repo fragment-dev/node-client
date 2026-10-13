@@ -285,26 +285,27 @@ export var LinkType;
     /** A Unit Link */
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (LinkType = {}));
-/**
- * EXPERIMENTAL — subject to change.
- *
- * The currencies a Payment can be denominated in.
- */
+/** The currencies a Payment can be denominated in. */
 export var PaymentCurrencyCode;
 (function (PaymentCurrencyCode) {
     PaymentCurrencyCode["Usd"] = "USD";
 })(PaymentCurrencyCode || (PaymentCurrencyCode = {}));
+/** Status of a Payment Method Setup. */
+export var PaymentMethodSetupStatus;
+(function (PaymentMethodSetupStatus) {
+    PaymentMethodSetupStatus["Canceled"] = "canceled";
+    PaymentMethodSetupStatus["NeedsAction"] = "needs_action";
+    PaymentMethodSetupStatus["NeedsPaymentMethod"] = "needs_payment_method";
+    PaymentMethodSetupStatus["Processing"] = "processing";
+    PaymentMethodSetupStatus["Saved"] = "saved";
+})(PaymentMethodSetupStatus || (PaymentMethodSetupStatus = {}));
 /** Mode of a Payment. */
 export var PaymentMode;
 (function (PaymentMode) {
     PaymentMode["Production"] = "production";
     PaymentMode["Sandbox"] = "sandbox";
 })(PaymentMode || (PaymentMode = {}));
-/**
- * EXPERIMENTAL — subject to change.
- *
- * Status of a Payment.
- */
+/** Status of a Payment. */
 export var PaymentStatus;
 (function (PaymentStatus) {
     PaymentStatus["Accepted"] = "accepted";
@@ -341,7 +342,7 @@ export var SceneEventType;
 (function (SceneEventType) {
     /** A simulated Ledger Entry. */
     SceneEventType["Entry"] = "entry";
-    /** EXPERIMENTAL: One lifecycle transition of a simulated Payment. */
+    /** One lifecycle transition of a simulated Payment. */
     SceneEventType["Payment"] = "payment";
 })(SceneEventType || (SceneEventType = {}));
 /**
@@ -376,7 +377,7 @@ export var SchemaLedgerEntryStatus;
     /** The Ledger Entry is disabled. */
     SchemaLedgerEntryStatus["Disabled"] = "disabled";
 })(SchemaLedgerEntryStatus || (SchemaLedgerEntryStatus = {}));
-/** EXPERIMENTAL: A lifecycle transition of a Payment. */
+/** A lifecycle transition of a Payment. */
 export var SchemaPaymentAccountingEventKey;
 (function (SchemaPaymentAccountingEventKey) {
     /** The payment was captured and is guaranteed to settle. */
@@ -1104,6 +1105,69 @@ export const SyncCustomTxsDocument = gql `
     }
   }
 `;
+export const SyncCustomAccountsByLinkIkDocument = gql `
+  mutation syncCustomAccountsByLinkIk(
+    $linkIk: SafeString!
+    $accounts: [CustomAccountInput!]!
+  ) {
+    syncCustomAccounts(link: { ik: $linkIk }, accounts: $accounts) {
+      __typename
+      ... on SyncCustomAccountsResult {
+        accounts {
+          id
+          externalId
+          name
+          currency {
+            code
+            customCurrencyId
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const SyncCustomTxsByLinkIkDocument = gql `
+  mutation syncCustomTxsByLinkIk(
+    $linkIk: SafeString!
+    $txs: [CustomTxInput!]!
+  ) {
+    syncCustomTxs(link: { ik: $linkIk }, txs: $txs) {
+      __typename
+      ... on SyncCustomTxsResult {
+        txs {
+          __typename
+          linkId
+          id
+          externalId
+          externalAccountId
+          amount
+          description
+          posted
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const DeleteCustomTxsDocument = gql `
   mutation deleteCustomTxs($txs: [ID!]!) {
     deleteCustomTxs(txs: $txs) {
@@ -1744,6 +1808,7 @@ export const CreatePaymentDocument = gql `
     $type: SafeString!
     $typeVersion: Int!
     $parameters: JSON
+    $paymentMethod: PaymentMethodMatchInput
   ) {
     createPayment(
       ik: $ik
@@ -1752,6 +1817,7 @@ export const CreatePaymentDocument = gql `
         type: $type
         typeVersion: $typeVersion
         parameters: $parameters
+        paymentMethod: $paymentMethod
       }
     ) {
       __typename
@@ -1833,6 +1899,157 @@ export const ListPaymentsDocument = gql `
     }
   }
 `;
+export const ListPaymentMethodsDocument = gql `
+  query listPaymentMethods(
+    $email: String!
+    $ledgerIk: SafeString!
+    $after: String
+    $first: Int
+    $before: String
+    $last: Int
+  ) {
+    paymentMethods(
+      filter: {
+        user: { email: { equalTo: $email }, ledger: { ik: $ledgerIk } }
+      }
+      after: $after
+      first: $first
+      before: $before
+      last: $last
+    ) {
+      nodes {
+        __typename
+        id
+        created
+        ... on CardPaymentMethod {
+          brand
+          last4
+          expiryMonth
+          expiryYear
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        hasPreviousPage
+        startCursor
+      }
+    }
+  }
+`;
+export const GetPaymentMethodDocument = gql `
+  query getPaymentMethod($id: ID!) {
+    paymentMethod(paymentMethod: { id: $id }) {
+      __typename
+      id
+      created
+      ... on CardPaymentMethod {
+        brand
+        last4
+        expiryMonth
+        expiryYear
+      }
+    }
+  }
+`;
+export const DeletePaymentMethodDocument = gql `
+  mutation deletePaymentMethod($id: ID!) {
+    deletePaymentMethod(paymentMethod: { id: $id }) {
+      __typename
+      ... on DeletePaymentMethodResult {
+        success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const CreatePaymentMethodSetupDocument = gql `
+  mutation createPaymentMethodSetup(
+    $ik: SafeString!
+    $ledgerIk: SafeString!
+    $email: String!
+  ) {
+    createPaymentMethodSetup(
+      ik: $ik
+      ledger: { ik: $ledgerIk }
+      user: { email: $email }
+    ) {
+      __typename
+      ... on CreatePaymentMethodSetupResult {
+        paymentMethodSetup {
+          id
+          ik
+          clientSecret
+          status
+          mode
+          created
+          currency {
+            code
+          }
+          paymentMethod {
+            __typename
+            id
+            created
+            ... on CardPaymentMethod {
+              brand
+              last4
+              expiryMonth
+              expiryYear
+            }
+          }
+        }
+        isIkReplay
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const GetPaymentMethodSetupDocument = gql `
+  query getPaymentMethodSetup($ik: SafeString!, $ledgerIk: SafeString!) {
+    paymentMethodSetup(
+      paymentMethodSetup: { ik: $ik, ledger: { ik: $ledgerIk } }
+    ) {
+      id
+      ik
+      clientSecret
+      status
+      mode
+      created
+      currency {
+        code
+      }
+      paymentMethod {
+        __typename
+        id
+        created
+        ... on CardPaymentMethod {
+          brand
+          last4
+          expiryMonth
+          expiryYear
+        }
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -1892,6 +2109,12 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         syncCustomTxs(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomTxs", "mutation", variables);
+        },
+        syncCustomAccountsByLinkIk(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomAccountsByLinkIkDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomAccountsByLinkIk", "mutation", variables);
+        },
+        syncCustomTxsByLinkIk(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(SyncCustomTxsByLinkIkDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "syncCustomTxsByLinkIk", "mutation", variables);
         },
         deleteCustomTxs(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(DeleteCustomTxsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteCustomTxs", "mutation", variables);
@@ -1967,6 +2190,21 @@ export function getSdk(client, withWrapper = defaultWrapper) {
                 ...requestHeaders,
                 ...wrappedRequestHeaders,
             }), "listPayments", "query", variables);
+        },
+        listPaymentMethods(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ListPaymentMethodsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listPaymentMethods", "query", variables);
+        },
+        getPaymentMethod(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentMethodDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getPaymentMethod", "query", variables);
+        },
+        deletePaymentMethod(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(DeletePaymentMethodDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deletePaymentMethod", "mutation", variables);
+        },
+        createPaymentMethodSetup(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(CreatePaymentMethodSetupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createPaymentMethodSetup", "mutation", variables);
+        },
+        getPaymentMethodSetup(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentMethodSetupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getPaymentMethodSetup", "query", variables);
         },
     };
 }

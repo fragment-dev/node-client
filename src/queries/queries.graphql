@@ -660,6 +660,64 @@ mutation syncCustomTxs($linkId: ID!, $txs: [CustomTxInput!]!) {
   }
 }
 
+mutation syncCustomAccountsByLinkIk(
+  $linkIk: SafeString!
+  $accounts: [CustomAccountInput!]!
+) {
+  syncCustomAccounts(link: { ik: $linkIk }, accounts: $accounts) {
+    __typename
+    ... on SyncCustomAccountsResult {
+      accounts {
+        id
+        externalId
+        name
+        currency {
+          code
+          customCurrencyId
+        }
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation syncCustomTxsByLinkIk($linkIk: SafeString!, $txs: [CustomTxInput!]!) {
+  syncCustomTxs(link: { ik: $linkIk }, txs: $txs) {
+    __typename
+    ... on SyncCustomTxsResult {
+      txs {
+        __typename
+        linkId
+        id
+        externalId
+        externalAccountId
+        amount
+        description
+        posted
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
 mutation deleteCustomTxs($txs: [ID!]!) {
   deleteCustomTxs(txs: $txs) {
     __typename
@@ -1282,11 +1340,17 @@ mutation createPayment(
   $type: SafeString!
   $typeVersion: Int!
   $parameters: JSON
+  $paymentMethod: PaymentMethodMatchInput
 ) {
   createPayment(
     ik: $ik
     ledger: { ik: $ledgerIk }
-    payment: { type: $type, typeVersion: $typeVersion, parameters: $parameters }
+    payment: {
+      type: $type
+      typeVersion: $typeVersion
+      parameters: $parameters
+      paymentMethod: $paymentMethod
+    }
   ) {
     __typename
     ... on CreatePaymentResult {
@@ -1360,6 +1424,150 @@ query listPayments(
         endCursor
         hasPreviousPage
         startCursor
+      }
+    }
+  }
+}
+
+query listPaymentMethods(
+  $email: String!
+  $ledgerIk: SafeString!
+  $after: String
+  $first: Int
+  $before: String
+  $last: Int
+) {
+  paymentMethods(
+    filter: { user: { email: { equalTo: $email }, ledger: { ik: $ledgerIk } } }
+    after: $after
+    first: $first
+    before: $before
+    last: $last
+  ) {
+    nodes {
+      __typename
+      id
+      created
+      ... on CardPaymentMethod {
+        brand
+        last4
+        expiryMonth
+        expiryYear
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      hasPreviousPage
+      startCursor
+    }
+  }
+}
+
+query getPaymentMethod($id: ID!) {
+  paymentMethod(paymentMethod: { id: $id }) {
+    __typename
+    id
+    created
+    ... on CardPaymentMethod {
+      brand
+      last4
+      expiryMonth
+      expiryYear
+    }
+  }
+}
+
+mutation deletePaymentMethod($id: ID!) {
+  deletePaymentMethod(paymentMethod: { id: $id }) {
+    __typename
+    ... on DeletePaymentMethodResult {
+      success
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation createPaymentMethodSetup(
+  $ik: SafeString!
+  $ledgerIk: SafeString!
+  $email: String!
+) {
+  createPaymentMethodSetup(
+    ik: $ik
+    ledger: { ik: $ledgerIk }
+    user: { email: $email }
+  ) {
+    __typename
+    ... on CreatePaymentMethodSetupResult {
+      paymentMethodSetup {
+        id
+        ik
+        clientSecret
+        status
+        mode
+        created
+        currency {
+          code
+        }
+        paymentMethod {
+          __typename
+          id
+          created
+          ... on CardPaymentMethod {
+            brand
+            last4
+            expiryMonth
+            expiryYear
+          }
+        }
+      }
+      isIkReplay
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+query getPaymentMethodSetup($ik: SafeString!, $ledgerIk: SafeString!) {
+  paymentMethodSetup(
+    paymentMethodSetup: { ik: $ik, ledger: { ik: $ledgerIk } }
+  ) {
+    id
+    ik
+    clientSecret
+    status
+    mode
+    created
+    currency {
+      code
+    }
+    paymentMethod {
+      __typename
+      id
+      created
+      ... on CardPaymentMethod {
+        brand
+        last4
+        expiryMonth
+        expiryYear
       }
     }
   }
