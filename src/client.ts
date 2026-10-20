@@ -18,6 +18,9 @@ import { DEFAULT_RETRY_CONFIG, type RetryConfig } from "./retryConfig.js";
 
 type RetryableErrorObject<T extends object> = T & { retryable: boolean };
 
+const isRetryableHttpStatus = (status: number): boolean =>
+  status === 429 || status >= 500;
+
 const getRetryableField = <T extends object>(error: T): boolean => {
   if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
     if (typeof (error as RetryableErrorObject<T>).retryable === "boolean") {
@@ -85,8 +88,32 @@ const createRequestWrapper =
     };
 
     return retry(async (bail): ReturnType<typeof request> => {
+      if (operationType !== "query" && operationType !== "mutation") {
+        bail(
+          new FragmentError({
+            message: `Unknown operation type: ${operationType}`,
+          }),
+        );
+        return {} as never;
+      }
+
+      let data: Awaited<ReturnType<typeof request>>;
+      try {
+        data = await request(requestHeaders);
+      } catch (error) {
+        if (!(error instanceof ClientError)) {
+          bail(error as Error);
+          return {} as never;
+        }
+        const err = new FragmentError({ cause: error });
+        if (isRetryableHttpStatus(error.response.status)) {
+          throw err;
+        }
+        bail(err);
+        return {} as never;
+      }
+
       if (operationType === "mutation") {
-        const data = await request(requestHeaders);
         const dataKeys = Object.keys(data as any);
         if (dataKeys.length > 1) {
           bail(
@@ -158,33 +185,8 @@ const createRequestWrapper =
             }
             break;
         }
-        return data;
       }
-
-      if (operationType === "query") {
-        try {
-          const data = await request(requestHeaders);
-          return data;
-        } catch (error) {
-          if (error instanceof ClientError) {
-            bail(
-              new FragmentError({
-                cause: error,
-              })
-            );
-          } else {
-            bail(error as Error);
-          }
-        }
-      }
-
-      bail(
-        new FragmentError({
-          message: `Unknown operation type: ${operationType}`,
-        })
-      );
-
-      return {} as never;
+      return data;
     }, retryConfig);
   };
 
