@@ -5,6 +5,7 @@ import { version } from "../generated/version.js";
 import { getToken } from "./getToken.js";
 import { AddLedgerEntriesError, BadRequestError, FragmentError, InternalError, } from "./errors.js";
 import { DEFAULT_RETRY_CONFIG } from "./retryConfig.js";
+const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
 const getRetryableField = (error) => {
     if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
         if (typeof error.retryable === "boolean") {
@@ -42,8 +43,28 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => async (request
         ["X-Fragment-Client"]: `node-client@${version}`,
     };
     return retry(async (bail) => {
+        if (operationType !== "query" && operationType !== "mutation") {
+            bail(new FragmentError({
+                message: `Unknown operation type: ${operationType}`,
+            }));
+            return {};
+        }
+        let data;
+        try {
+            data = await request(requestHeaders);
+        }
+        catch (error) {
+            if (!(error instanceof ClientError)) {
+                throw error;
+            }
+            const err = new FragmentError({ cause: error });
+            if (isRetryableHttpStatus(error.response.status)) {
+                throw err;
+            }
+            bail(err);
+            return {};
+        }
         if (operationType === "mutation") {
-            const data = await request(requestHeaders);
             const dataKeys = Object.keys(data);
             if (dataKeys.length > 1) {
                 bail(new FragmentError({
@@ -111,28 +132,8 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => async (request
                     }
                     break;
             }
-            return data;
         }
-        if (operationType === "query") {
-            try {
-                const data = await request(requestHeaders);
-                return data;
-            }
-            catch (error) {
-                if (error instanceof ClientError) {
-                    bail(new FragmentError({
-                        cause: error,
-                    }));
-                }
-                else {
-                    bail(error);
-                }
-            }
-        }
-        bail(new FragmentError({
-            message: `Unknown operation type: ${operationType}`,
-        }));
-        return {};
+        return data;
     }, retryConfig);
 };
 export const createFragmentClient = ({ params, getSdk, retryConfig = DEFAULT_RETRY_CONFIG, }) => {
