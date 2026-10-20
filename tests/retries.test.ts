@@ -226,6 +226,19 @@ describe("HTTP error retries", () => {
     expect(onRetry).toHaveBeenCalledTimes(2);
   });
 
+  it("retries a query that fails at the network layer", async () => {
+    server.use(http.post(apiUrl, () => HttpResponse.error()));
+    const onRetry = vi.fn();
+
+    const error = await makeClient(onRetry)
+      .getLedger({ ik: "ledger-ik" })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error).not.toBeInstanceOf(FragmentError);
+    expect(onRetry).toHaveBeenCalledTimes(3);
+  });
+
   it("retries a query that is rate limited", async () => {
     server.use(respondWithStatus(429, { message: "Too Many Requests" }));
     const onRetry = vi.fn();

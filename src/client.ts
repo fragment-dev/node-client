@@ -102,8 +102,7 @@ const createRequestWrapper =
         data = await request(requestHeaders);
       } catch (error) {
         if (!(error instanceof ClientError)) {
-          bail(error as Error);
-          return {} as never;
+          throw error;
         }
         const err = new FragmentError({ cause: error });
         if (isRetryableHttpStatus(error.response.status)) {
