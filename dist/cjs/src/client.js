@@ -20,6 +20,7 @@ const version_js_1 = require("../generated/version.js");
 const getToken_js_1 = require("./getToken.js");
 const errors_js_1 = require("./errors.js");
 const retryConfig_js_1 = require("./retryConfig.js");
+const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
 const getRetryableField = (error) => {
     if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
         if (typeof error.retryable === "boolean") {
@@ -58,8 +59,28 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
     };
     return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
+        if (operationType !== "query" && operationType !== "mutation") {
+            bail(new errors_js_1.FragmentError({
+                message: `Unknown operation type: ${operationType}`,
+            }));
+            return {};
+        }
+        let data;
+        try {
+            data = yield request(requestHeaders);
+        }
+        catch (error) {
+            if (!(error instanceof graphql_request_1.ClientError)) {
+                throw error;
+            }
+            const err = new errors_js_1.FragmentError({ cause: error });
+            if (isRetryableHttpStatus(error.response.status)) {
+                throw err;
+            }
+            bail(err);
+            return {};
+        }
         if (operationType === "mutation") {
-            const data = yield request(requestHeaders);
             const dataKeys = Object.keys(data);
             if (dataKeys.length > 1) {
                 bail(new errors_js_1.FragmentError({
@@ -126,28 +147,8 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
                     }
                     break;
             }
-            return data;
         }
-        if (operationType === "query") {
-            try {
-                const data = yield request(requestHeaders);
-                return data;
-            }
-            catch (error) {
-                if (error instanceof graphql_request_1.ClientError) {
-                    bail(new errors_js_1.FragmentError({
-                        cause: error,
-                    }));
-                }
-                else {
-                    bail(error);
-                }
-            }
-        }
-        bail(new errors_js_1.FragmentError({
-            message: `Unknown operation type: ${operationType}`,
-        }));
-        return {};
+        return data;
     }), retryConfig);
 });
 const createFragmentClient = ({ params, getSdk, retryConfig = retryConfig_js_1.DEFAULT_RETRY_CONFIG, }) => {

@@ -321,6 +321,21 @@ const result = await fragment.listMultiCurrencyLedgerAccountBalances({
 assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 ```
 
+## Retries
+
+The client retries a request that fails at the network layer or with an HTTP 429 or 5xx, and a mutation whose response is an `InternalError` or `BadRequestError` with `retryable: true`. Retries use exponential backoff, 5 retries from 10ms up to 3s by default. Any other failure throws immediately.
+
+Override the defaults with `retryConfig`, which takes [async-retry](https://github.com/vercel/async-retry) options:
+
+```typescript
+const fragment = createFragmentClient({
+  params: {
+    // ...
+  },
+  retryConfig: { retries: 3, minTimeout: 100, maxTimeout: 2000 },
+});
+```
+
 ## Using custom queries
 
 While the SDK comes with GraphQL queries out of the box, you may want to customize these queries for your product. In order to do that:
