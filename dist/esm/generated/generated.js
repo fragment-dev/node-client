@@ -285,6 +285,13 @@ export var LinkType;
     /** A Unit Link */
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (LinkType = {}));
+/** Status of a Payment attempt. */
+export var PaymentAttemptStatus;
+(function (PaymentAttemptStatus) {
+    PaymentAttemptStatus["Failed"] = "failed";
+    PaymentAttemptStatus["Processing"] = "processing";
+    PaymentAttemptStatus["Succeeded"] = "succeeded";
+})(PaymentAttemptStatus || (PaymentAttemptStatus = {}));
 /** The currencies a Payment can be denominated in. */
 export var PaymentCurrencyCode;
 (function (PaymentCurrencyCode) {
@@ -305,6 +312,13 @@ export var PaymentMode;
     PaymentMode["Production"] = "production";
     PaymentMode["Sandbox"] = "sandbox";
 })(PaymentMode || (PaymentMode = {}));
+/** Status of a Payment refund. */
+export var PaymentRefundStatus;
+(function (PaymentRefundStatus) {
+    PaymentRefundStatus["Failed"] = "failed";
+    PaymentRefundStatus["Processing"] = "processing";
+    PaymentRefundStatus["Settled"] = "settled";
+})(PaymentRefundStatus || (PaymentRefundStatus = {}));
 /** Status of a Payment. */
 export var PaymentStatus;
 (function (PaymentStatus) {
@@ -382,6 +396,10 @@ export var SchemaPaymentAccountingEventKey;
 (function (SchemaPaymentAccountingEventKey) {
     /** The payment was captured and is guaranteed to settle. */
     SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** EXPERIMENTAL: An initiated refund failed. */
+    SchemaPaymentAccountingEventKey["RefundFailed"] = "refund_failed";
+    /** EXPERIMENTAL: A refund of the settled payment is initiated. */
+    SchemaPaymentAccountingEventKey["RefundInitiated"] = "refund_initiated";
     /** The payment settled. */
     SchemaPaymentAccountingEventKey["Settled"] = "settled";
 })(SchemaPaymentAccountingEventKey || (SchemaPaymentAccountingEventKey = {}));
@@ -407,6 +425,10 @@ export var SchemaSystemLineKind;
 (function (SchemaSystemLineKind) {
     /** The line carrying the Fragment fee amount, posted to the Payment Account. */
     SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line removing the refund amount from the Payment Account when a Refund is initiated. */
+    SchemaSystemLineKind["PaymentRefundLine"] = "payment_refund_line";
+    /** The line restoring the refund amount to the Payment Account when a Refund fails. */
+    SchemaSystemLineKind["PaymentRefundReversalLine"] = "payment_refund_reversal_line";
     /** The line carrying the settled payment amount, posted to the Payment Account. */
     SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
 })(SchemaSystemLineKind || (SchemaSystemLineKind = {}));

@@ -215,6 +215,15 @@ export type ChartOfAccountsInput = {
   defaultCurrencyMode?: InputMaybe<CurrencyMode>;
 };
 
+/** An attempt the payer made through checkout. */
+export type CheckoutPaymentAttempt = PaymentAttempt & {
+  __typename?: 'CheckoutPaymentAttempt';
+  /** The ID of this Payment attempt. */
+  id: Scalars['ID']['output'];
+  /** The status of this Payment attempt. */
+  status: PaymentAttemptStatus;
+};
+
 export type CreateCustomCurrencyInput = {
   /** The currency code for custom currencies. It can be up to 36 characters long. This is used for display purposes. */
   customCode: Scalars['String']['input'];
@@ -2477,6 +2486,8 @@ export type Mutation = {
   migrateLedgerEntry: MigrateLedgerEntryResponse;
   /** This mutation is used to [reconcile](https://fragment.dev/guides/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
   reconcileTx: ReconcileTxResponse;
+  /** Refund a settled Payment. */
+  refundPayment: RefundPaymentResponse;
   /** Reverses a Ledger Entry */
   reverseLedgerEntry: ReverseLedgerEntryResponse;
   /**
@@ -2607,6 +2618,14 @@ export type MutationReconcileTxArgs = {
 
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationRefundPaymentArgs = {
+  ik: Scalars['SafeString']['input'];
+  payment: PaymentMatchInput;
+  refund: RefundPaymentInput;
+};
+
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationReverseLedgerEntryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2677,6 +2696,8 @@ export type Payment = {
   __typename?: 'Payment';
   /** The amount of this Payment, in whole cents. */
   amount: Scalars['Int96']['output'];
+  /** The Payment's attempts, newest first. */
+  attempts: PaymentAttemptsConnection;
   /** The credential the payments SDK presents to `confirmPayment`. */
   clientSecret: Scalars['String']['output'];
   created: Scalars['DateTime']['output'];
@@ -2702,27 +2723,107 @@ export type Payment = {
   typeVersion: Scalars['Int']['output'];
 };
 
+/** One try at charging a Payment. */
+export type PaymentAttempt = {
+  /** The ID of this Payment attempt. */
+  id: Scalars['ID']['output'];
+  /** The status of this Payment attempt. */
+  status: PaymentAttemptStatus;
+};
+
+/** Status of a Payment attempt. */
+export enum PaymentAttemptStatus {
+  Failed = 'failed',
+  Processing = 'processing',
+  Succeeded = 'succeeded'
+}
+
+/** A paginated list of Payment attempts. */
+export type PaymentAttemptsConnection = {
+  __typename?: 'PaymentAttemptsConnection';
+  /** The current page of results. */
+  nodes: Array<PaymentAttempt>;
+  /** The pagination info for this list. */
+  pageInfo: PageInfo;
+};
+
+/** The payer abandoned or failed the 3DS check. */
+export type PaymentCard3DsCanceledEvent = PaymentEvent & {
+  __typename?: 'PaymentCard3DSCanceledEvent';
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. Always `needs_payment_method`, even while a newer attempt keeps the Payment `processing`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
 /** The card network captured the Payment. */
 export type PaymentCardCapturedEvent = PaymentEvent & {
   __typename?: 'PaymentCardCapturedEvent';
+  /** The captured attempt. `null` on events recorded before attempts. */
+  attempt?: Maybe<PaymentAttempt>;
+  /** The status of the attempt after this event. Always `succeeded`. `null` on events recorded before attempt statuses. */
+  attemptStatus?: Maybe<PaymentAttemptStatus>;
   /** The ID of this Payment event. */
   id: Scalars['ID']['output'];
   /** The `initiated` Ledger Entry, `null` where the Payment Type defines none. */
   ledgerEntry?: Maybe<LedgerEntry>;
   /** When this event occurred. */
   occurredAt: Scalars['DateTime']['output'];
-  /** The status of the Payment after this event. */
+  /** The status of the Payment after this event. Always `accepted`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
+/** The card was declined, or the charge refused. */
+export type PaymentCardDeclinedEvent = PaymentEvent & {
+  __typename?: 'PaymentCardDeclinedEvent';
+  /** The attempt that failed. */
+  attempt: PaymentAttempt;
+  /** The status of the attempt after this event. Always `failed`. */
+  attemptStatus: PaymentAttemptStatus;
+  /** The payment processor's reason for the decline, `null` when it gave none. */
+  declineCode?: Maybe<Scalars['String']['output']>;
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. Always `needs_payment_method`, even while a newer attempt keeps the Payment `processing`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
   status: PaymentStatus;
 };
 
 /** The payer went through checkout. */
 export type PaymentCheckoutEvent = PaymentEvent & {
   __typename?: 'PaymentCheckoutEvent';
+  /** The attempt checkout started. `null` on events recorded before attempts. */
+  attempt?: Maybe<PaymentAttempt>;
+  /** The status of the attempt after this event. Always `processing`. `null` on events recorded before attempt statuses. */
+  attemptStatus?: Maybe<PaymentAttemptStatus>;
   /** The ID of this Payment event. */
   id: Scalars['ID']['output'];
   /** When this event occurred. */
   occurredAt: Scalars['DateTime']['output'];
-  /** The status of the Payment after this event. */
+  /** The status of the Payment after this event. Always `processing`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
   status: PaymentStatus;
 };
 
@@ -2733,7 +2834,12 @@ export type PaymentCreatedEvent = PaymentEvent & {
   id: Scalars['ID']['output'];
   /** When this event occurred. */
   occurredAt: Scalars['DateTime']['output'];
-  /** The status of the Payment after this event. */
+  /** The status of the Payment after this event: `needs_payment_method` for checkout, `processing` for a saved Payment Method. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
   status: PaymentStatus;
 };
 
@@ -2759,7 +2865,10 @@ export type PaymentEvent = {
   id: Scalars['ID']['output'];
   /** When this event occurred. */
   occurredAt: Scalars['DateTime']['output'];
-  /** The status of the Payment after this event. */
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
   status: PaymentStatus;
 };
 
@@ -2772,12 +2881,14 @@ export type PaymentEventsConnection = {
   pageInfo: PageInfo;
 };
 
-/** Specify a Ledger Payment by using `ledger` and `ik`. */
+/** Specify a Payment by `id`, or by `ledger` and `ik`. */
 export type PaymentMatchInput = {
+  /** The FRAGMENT ID of the Payment. */
+  id?: InputMaybe<Scalars['ID']['input']>;
   /** The Idempotency Key the Payment was created with. */
-  ik: Scalars['SafeString']['input'];
+  ik?: InputMaybe<Scalars['SafeString']['input']>;
   /** The Ledger the Payment belongs to. */
-  ledger: LedgerMatchInput;
+  ledger?: InputMaybe<LedgerMatchInput>;
 };
 
 /** A payment method saved for a User. */
@@ -2857,6 +2968,28 @@ export enum PaymentMode {
   Sandbox = 'sandbox'
 }
 
+/** A refund issued against a Payment. */
+export type PaymentRefund = {
+  __typename?: 'PaymentRefund';
+  /** The amount of this Payment Refund, in whole cents. */
+  amount: Scalars['Int96']['output'];
+  /** When this Payment Refund was created. */
+  created: Scalars['DateTime']['output'];
+  /** The ID of this Payment Refund. */
+  id: Scalars['ID']['output'];
+  /** The [Idempotency Key](https://fragment.dev/api-reference/api-overview#idempotency) the Payment Refund was created with. */
+  ik: Scalars['SafeString']['output'];
+  /** The status of this Payment Refund. */
+  status: PaymentRefundStatus;
+};
+
+/** Status of a Payment refund. */
+export enum PaymentRefundStatus {
+  Failed = 'failed',
+  Processing = 'processing',
+  Settled = 'settled'
+}
+
 /** The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
   __typename?: 'PaymentSettledEvent';
@@ -2866,7 +2999,12 @@ export type PaymentSettledEvent = PaymentEvent & {
   ledgerEntry: LedgerEntry;
   /** When this event occurred. */
   occurredAt: Scalars['DateTime']['output'];
-  /** The status of the Payment after this event. */
+  /** The status of the Payment after this event. Always `settled`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
   status: PaymentStatus;
 };
 
@@ -2955,7 +3093,7 @@ export type Query = {
   link?: Maybe<Link>;
   /** Get all links in a workspace */
   links: LinksConnection;
-  /** Get a single Payment by its Idempotency Key. */
+  /** Get a single Payment by its ID or Idempotency Key in a Ledger. */
   payment?: Maybe<Payment>;
   /** Get a Payment Method saved for a User. */
   paymentMethod?: Maybe<PaymentMethod>;
@@ -3122,6 +3260,25 @@ export type ReconciliationReport = {
   intervals: Array<AgingInterval>;
 };
 
+/** The Payment Refund to create. */
+export type RefundPaymentInput = {
+  /** The amount to refund, in whole cents. */
+  amount: Scalars['Int96']['input'];
+};
+
+export type RefundPaymentResponse = BadRequestError | InternalError | RefundPaymentResult;
+
+/** The created Payment Refund. */
+export type RefundPaymentResult = {
+  __typename?: 'RefundPaymentResult';
+  /** Whether an earlier call with the same `ik` created this Payment Refund. */
+  isIkReplay: Scalars['Boolean']['output'];
+  /** The Payment after reserving the refund amount. */
+  payment: Payment;
+  /** The created Payment Refund. */
+  refund: PaymentRefund;
+};
+
 export type ReverseLedgerEntryResponse = BadRequestError | InternalError | ReverseLedgerEntryResult;
 
 export type ReverseLedgerEntryResult = {
@@ -3132,6 +3289,15 @@ export type ReverseLedgerEntryResult = {
   reversedLedgerEntry: LedgerEntry;
   /** The reversal Ledger Entry that was created */
   reversingLedgerEntry: LedgerEntry;
+};
+
+/** An attempt that charged a saved Payment Method. */
+export type SavedPaymentMethodPaymentAttempt = PaymentAttempt & {
+  __typename?: 'SavedPaymentMethodPaymentAttempt';
+  /** The ID of this Payment attempt. */
+  id: Scalars['ID']['output'];
+  /** The status of this Payment attempt. */
+  status: PaymentAttemptStatus;
 };
 
 /** A simulated Ledger Entry posted as a part of a Scene. */
@@ -3537,6 +3703,10 @@ export type SchemaMatchInput = {
 export enum SchemaPaymentAccountingEventKey {
   /** The payment was captured and is guaranteed to settle. */
   Initiated = 'initiated',
+  /** EXPERIMENTAL: An initiated refund failed. */
+  RefundFailed = 'refund_failed',
+  /** EXPERIMENTAL: A refund of the settled payment is initiated. */
+  RefundInitiated = 'refund_initiated',
   /** The payment settled. */
   Settled = 'settled'
 }
@@ -3548,6 +3718,10 @@ export enum SchemaPaymentAccountingEventKey {
 export type SchemaPaymentAccountingInput = {
   /** Posted when the payment is captured. Optional. */
   initiated?: InputMaybe<SchemaPaymentEntryInput>;
+  /** EXPERIMENTAL: Posted when an initiated refund fails. Optional. */
+  refund_failed?: InputMaybe<SchemaPaymentEntryInput>;
+  /** EXPERIMENTAL: Posted when a refund of the settled payment is initiated. Optional. */
+  refund_initiated?: InputMaybe<SchemaPaymentEntryInput>;
   /** Posted when the payment settles. Every Payment Type must define it. */
   settled: SchemaPaymentEntryInput;
 };
@@ -3657,6 +3831,10 @@ export type SchemaRepeatedConfigInput = {
 export enum SchemaSystemLineKind {
   /** The line carrying the Fragment fee amount, posted to the Payment Account. */
   PaymentFeeLine = 'payment_fee_line',
+  /** The line removing the refund amount from the Payment Account when a Refund is initiated. */
+  PaymentRefundLine = 'payment_refund_line',
+  /** The line restoring the refund amount to the Payment Account when a Refund fails. */
+  PaymentRefundReversalLine = 'payment_refund_reversal_line',
   /** The line carrying the settled payment amount, posted to the Payment Account. */
   PaymentSettlementLine = 'payment_settlement_line'
 }
