@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = void 0;
+exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -289,6 +289,13 @@ var LinkType;
     /** A Unit Link */
     LinkType["UnitLink"] = "UnitLink";
 })(LinkType || (exports.LinkType = LinkType = {}));
+/** Status of a Payment attempt. */
+var PaymentAttemptStatus;
+(function (PaymentAttemptStatus) {
+    PaymentAttemptStatus["Failed"] = "failed";
+    PaymentAttemptStatus["Processing"] = "processing";
+    PaymentAttemptStatus["Succeeded"] = "succeeded";
+})(PaymentAttemptStatus || (exports.PaymentAttemptStatus = PaymentAttemptStatus = {}));
 /** The currencies a Payment can be denominated in. */
 var PaymentCurrencyCode;
 (function (PaymentCurrencyCode) {
@@ -309,6 +316,13 @@ var PaymentMode;
     PaymentMode["Production"] = "production";
     PaymentMode["Sandbox"] = "sandbox";
 })(PaymentMode || (exports.PaymentMode = PaymentMode = {}));
+/** Status of a Payment refund. */
+var PaymentRefundStatus;
+(function (PaymentRefundStatus) {
+    PaymentRefundStatus["Failed"] = "failed";
+    PaymentRefundStatus["Processing"] = "processing";
+    PaymentRefundStatus["Settled"] = "settled";
+})(PaymentRefundStatus || (exports.PaymentRefundStatus = PaymentRefundStatus = {}));
 /** Status of a Payment. */
 var PaymentStatus;
 (function (PaymentStatus) {
@@ -386,6 +400,10 @@ var SchemaPaymentAccountingEventKey;
 (function (SchemaPaymentAccountingEventKey) {
     /** The payment was captured and is guaranteed to settle. */
     SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
+    /** EXPERIMENTAL: An initiated refund failed. */
+    SchemaPaymentAccountingEventKey["RefundFailed"] = "refund_failed";
+    /** EXPERIMENTAL: A refund of the settled payment is initiated. */
+    SchemaPaymentAccountingEventKey["RefundInitiated"] = "refund_initiated";
     /** The payment settled. */
     SchemaPaymentAccountingEventKey["Settled"] = "settled";
 })(SchemaPaymentAccountingEventKey || (exports.SchemaPaymentAccountingEventKey = SchemaPaymentAccountingEventKey = {}));
@@ -411,6 +429,10 @@ var SchemaSystemLineKind;
 (function (SchemaSystemLineKind) {
     /** The line carrying the Fragment fee amount, posted to the Payment Account. */
     SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line removing the refund amount from the Payment Account when a Refund is initiated. */
+    SchemaSystemLineKind["PaymentRefundLine"] = "payment_refund_line";
+    /** The line restoring the refund amount to the Payment Account when a Refund fails. */
+    SchemaSystemLineKind["PaymentRefundReversalLine"] = "payment_refund_reversal_line";
     /** The line carrying the settled payment amount, posted to the Payment Account. */
     SchemaSystemLineKind["PaymentSettlementLine"] = "payment_settlement_line";
 })(SchemaSystemLineKind || (exports.SchemaSystemLineKind = SchemaSystemLineKind = {}));
