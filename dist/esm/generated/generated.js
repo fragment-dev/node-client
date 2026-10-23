@@ -1869,6 +1869,49 @@ export const CreatePaymentDocument = gql `
     }
   }
 `;
+export const RetryPaymentDocument = gql `
+  mutation retryPayment(
+    $attemptIk: SafeString!
+    $paymentIk: SafeString!
+    $ledgerIk: SafeString!
+    $paymentMethod: PaymentMethodMatchInput
+  ) {
+    retryPayment(
+      attemptIk: $attemptIk
+      payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+      paymentMethod: $paymentMethod
+    ) {
+      __typename
+      ... on RetryPaymentResult {
+        isIkReplay
+        attempt {
+          id
+          status
+        }
+        payment {
+          id
+          ik
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 export const GetPaymentDocument = gql `
   query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
     payment(payment: { ik: $ik, ledger: { ik: $ledgerIk } }) {
@@ -2200,6 +2243,9 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         createPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreatePaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createPayment", "mutation", variables);
+        },
+        retryPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(RetryPaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "retryPayment", "mutation", variables);
         },
         getPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentDocument, variables, {

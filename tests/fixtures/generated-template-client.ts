@@ -2488,6 +2488,8 @@ export type Mutation = {
   reconcileTx: ReconcileTxResponse;
   /** Refund a settled Payment. */
   refundPayment: RefundPaymentResponse;
+  /** Retry a Payment on a saved Payment Method after its latest attempt was declined, rejected or canceled. */
+  retryPayment: RetryPaymentResponse;
   /** Reverses a Ledger Entry */
   reverseLedgerEntry: ReverseLedgerEntryResponse;
   /**
@@ -2622,6 +2624,14 @@ export type MutationRefundPaymentArgs = {
   ik: Scalars['SafeString']['input'];
   payment: PaymentMatchInput;
   refund: RefundPaymentInput;
+};
+
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationRetryPaymentArgs = {
+  attemptIk: Scalars['SafeString']['input'];
+  payment: PaymentMatchInput;
+  paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
 };
 
 
@@ -2990,6 +3000,26 @@ export enum PaymentRefundStatus {
   Settled = 'settled'
 }
 
+/** The Customer retried the Payment on a saved payment method. */
+export type PaymentRetryEvent = PaymentEvent & {
+  __typename?: 'PaymentRetryEvent';
+  /** The attempt the Retry started. */
+  attempt: SavedPaymentMethodPaymentAttempt;
+  /** The status of the attempt after this event. Always `processing`. */
+  attemptStatus: PaymentAttemptStatus;
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. Always `processing`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
 /** The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
   __typename?: 'PaymentSettledEvent';
@@ -3277,6 +3307,19 @@ export type RefundPaymentResult = {
   payment: Payment;
   /** The created Payment Refund. */
   refund: PaymentRefund;
+};
+
+export type RetryPaymentResponse = BadRequestError | InternalError | RetryPaymentResult;
+
+/** The Payment and the attempt the Retry started. */
+export type RetryPaymentResult = {
+  __typename?: 'RetryPaymentResult';
+  /** The attempt this `attemptIk` started. Its outcome events name it. */
+  attempt: SavedPaymentMethodPaymentAttempt;
+  /** Whether an earlier call with the same `attemptIk` started this attempt. */
+  isIkReplay: Scalars['Boolean']['output'];
+  /** The retried Payment. */
+  payment: Payment;
 };
 
 export type ReverseLedgerEntryResponse = BadRequestError | InternalError | ReverseLedgerEntryResult;

@@ -2309,6 +2309,8 @@ export type Mutation = {
     reconcileTx: ReconcileTxResponse;
     /** Refund a settled Payment. */
     refundPayment: RefundPaymentResponse;
+    /** Retry a Payment on a saved Payment Method after its latest attempt was declined, rejected or canceled. */
+    retryPayment: RetryPaymentResponse;
     /** Reverses a Ledger Entry */
     reverseLedgerEntry: ReverseLedgerEntryResponse;
     /**
@@ -2409,6 +2411,12 @@ export type MutationRefundPaymentArgs = {
     ik: Scalars["SafeString"]["input"];
     payment: PaymentMatchInput;
     refund: RefundPaymentInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationRetryPaymentArgs = {
+    attemptIk: Scalars["SafeString"]["input"];
+    payment: PaymentMatchInput;
+    paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationReverseLedgerEntryArgs = {
@@ -2634,7 +2642,7 @@ export type PaymentEvent = {
 export type PaymentEventsConnection = {
     __typename?: "PaymentEventsConnection";
     /** The current page of results. */
-    nodes: Array<PaymentCard3DsCanceledEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCheckoutEvent | PaymentCreatedEvent | PaymentSettledEvent>;
+    nodes: Array<PaymentCard3DsCanceledEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCheckoutEvent | PaymentCreatedEvent | PaymentRetryEvent | PaymentSettledEvent>;
     /** The pagination info for this list. */
     pageInfo: PageInfo;
 };
@@ -2736,6 +2744,25 @@ export declare enum PaymentRefundStatus {
     Processing = "processing",
     Settled = "settled"
 }
+/** The Customer retried the Payment on a saved payment method. */
+export type PaymentRetryEvent = PaymentEvent & {
+    __typename?: "PaymentRetryEvent";
+    /** The attempt the Retry started. */
+    attempt: SavedPaymentMethodPaymentAttempt;
+    /** The status of the attempt after this event. Always `processing`. */
+    attemptStatus: PaymentAttemptStatus;
+    /** The ID of this Payment event. */
+    id: Scalars["ID"]["output"];
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. Always `processing`. */
+    paymentStatus: PaymentStatus;
+    /**
+     * The status of the Payment after this event.
+     * @deprecated Use `paymentStatus` on each event type.
+     */
+    status: PaymentStatus;
+};
 /** The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
     __typename?: "PaymentSettledEvent";
@@ -2975,6 +3002,17 @@ export type RefundPaymentResult = {
     payment: Payment;
     /** The created Payment Refund. */
     refund: PaymentRefund;
+};
+export type RetryPaymentResponse = BadRequestError | InternalError | RetryPaymentResult;
+/** The Payment and the attempt the Retry started. */
+export type RetryPaymentResult = {
+    __typename?: "RetryPaymentResult";
+    /** The attempt this `attemptIk` started. Its outcome events name it. */
+    attempt: SavedPaymentMethodPaymentAttempt;
+    /** Whether an earlier call with the same `attemptIk` started this attempt. */
+    isIkReplay: Scalars["Boolean"]["output"];
+    /** The retried Payment. */
+    payment: Payment;
 };
 export type ReverseLedgerEntryResponse = BadRequestError | InternalError | ReverseLedgerEntryResult;
 export type ReverseLedgerEntryResult = {
@@ -5201,6 +5239,46 @@ export type CreatePaymentMutation = {
         retryable: boolean;
     };
 };
+export type RetryPaymentMutationVariables = Exact<{
+    attemptIk: Scalars["SafeString"]["input"];
+    paymentIk: Scalars["SafeString"]["input"];
+    ledgerIk: Scalars["SafeString"]["input"];
+    paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
+}>;
+export type RetryPaymentMutation = {
+    __typename?: "Mutation";
+    retryPayment: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "RetryPaymentResult";
+        isIkReplay: boolean;
+        attempt: {
+            __typename?: "SavedPaymentMethodPaymentAttempt";
+            id: string;
+            status: PaymentAttemptStatus;
+        };
+        payment: {
+            __typename?: "Payment";
+            id: string;
+            ik: string;
+            status: PaymentStatus;
+            amount: string;
+            mode: PaymentMode;
+            currency: {
+                __typename?: "PaymentCurrency";
+                code: PaymentCurrencyCode;
+            };
+        };
+    };
+};
 export type GetPaymentQueryVariables = Exact<{
     ik: Scalars["SafeString"]["input"];
     ledgerIk: Scalars["SafeString"]["input"];
@@ -5438,6 +5516,7 @@ export declare const GetAccountDataMigrationsDocument: import("graphql").Documen
 export declare const GetEntriesToMigrateForLedgerAccountDataMigrationDocument: import("graphql").DocumentNode;
 export declare const CreateCustomCurrencyDocument: import("graphql").DocumentNode;
 export declare const CreatePaymentDocument: import("graphql").DocumentNode;
+export declare const RetryPaymentDocument: import("graphql").DocumentNode;
 export declare const GetPaymentDocument: import("graphql").DocumentNode;
 export declare const ListPaymentsDocument: import("graphql").DocumentNode;
 export declare const ListPaymentMethodsDocument: import("graphql").DocumentNode;
@@ -5484,6 +5563,7 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     getEntriesToMigrateForLedgerAccountDataMigration(variables: GetEntriesToMigrateForLedgerAccountDataMigrationQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetEntriesToMigrateForLedgerAccountDataMigrationQuery>;
     createCustomCurrency(variables: CreateCustomCurrencyMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateCustomCurrencyMutation>;
     createPayment(variables: CreatePaymentMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreatePaymentMutation>;
+    retryPayment(variables: RetryPaymentMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<RetryPaymentMutation>;
     getPayment(variables: GetPaymentQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetPaymentQuery>;
     listPayments(variables: ListPaymentsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListPaymentsQuery>;
     listPaymentMethods(variables: ListPaymentMethodsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListPaymentMethodsQuery>;

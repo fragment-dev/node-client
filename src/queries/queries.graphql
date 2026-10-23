@@ -1379,6 +1379,48 @@ mutation createPayment(
   }
 }
 
+mutation retryPayment(
+  $attemptIk: SafeString!
+  $paymentIk: SafeString!
+  $ledgerIk: SafeString!
+  $paymentMethod: PaymentMethodMatchInput
+) {
+  retryPayment(
+    attemptIk: $attemptIk
+    payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+    paymentMethod: $paymentMethod
+  ) {
+    __typename
+    ... on RetryPaymentResult {
+      isIkReplay
+      attempt {
+        id
+        status
+      }
+      payment {
+        id
+        ik
+        status
+        amount
+        mode
+        currency {
+          code
+        }
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
 query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
   payment(payment: { ik: $ik, ledger: { ik: $ledgerIk } }) {
     id
