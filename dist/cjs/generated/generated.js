@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = void 0;
+exports.getSdk = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.RetryPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -1873,6 +1873,49 @@ exports.CreatePaymentDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.RetryPaymentDocument = (0, graphql_tag_1.gql) `
+  mutation retryPayment(
+    $attemptIk: SafeString!
+    $paymentIk: SafeString!
+    $ledgerIk: SafeString!
+    $paymentMethod: PaymentMethodMatchInput
+  ) {
+    retryPayment(
+      attemptIk: $attemptIk
+      payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+      paymentMethod: $paymentMethod
+    ) {
+      __typename
+      ... on RetryPaymentResult {
+        isIkReplay
+        attempt {
+          id
+          status
+        }
+        payment {
+          id
+          ik
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 exports.GetPaymentDocument = (0, graphql_tag_1.gql) `
   query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
     payment(payment: { ik: $ik, ledger: { ik: $ledgerIk } }) {
@@ -2189,6 +2232,9 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         createPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.CreatePaymentDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createPayment", "mutation", variables);
+        },
+        retryPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.RetryPaymentDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "retryPayment", "mutation", variables);
         },
         getPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetPaymentDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getPayment", "query", variables);
