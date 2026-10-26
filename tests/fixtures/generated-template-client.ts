@@ -2486,8 +2486,15 @@ export type Mutation = {
   migrateLedgerEntry: MigrateLedgerEntryResponse;
   /** This mutation is used to [reconcile](https://fragment.dev/guides/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
   reconcileTx: ReconcileTxResponse;
-  /** Refund a settled Payment. */
+  /**
+   * Refund a settled Payment.
+   *
+   * The Payment's Payment Type must define the `refund_initiated` and `refund_failed` Ledger Entries.
+   * A Payment can be refunded at most 10 times.
+   */
   refundPayment: RefundPaymentResponse;
+  /** Retry a Payment on a saved Payment Method after its latest attempt was declined, rejected or canceled. */
+  retryPayment: RetryPaymentResponse;
   /** Reverses a Ledger Entry */
   reverseLedgerEntry: ReverseLedgerEntryResponse;
   /**
@@ -2626,6 +2633,14 @@ export type MutationRefundPaymentArgs = {
 
 
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationRetryPaymentArgs = {
+  attemptIk: Scalars['SafeString']['input'];
+  payment: PaymentMatchInput;
+  paymentMethod?: InputMaybe<PaymentMethodMatchInput>;
+};
+
+
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationReverseLedgerEntryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2715,6 +2730,10 @@ export type Payment = {
   mode: PaymentMode;
   /** Parameters the Payment was created with. */
   parameters: Scalars['JSON']['output'];
+  /** The amount refunded from this Payment, in whole cents. */
+  refundedAmount: Scalars['Int96']['output'];
+  /** The Payment's refunds, newest first. */
+  refunds: PaymentRefundsConnection;
   /** The status of this Payment. */
   status: PaymentStatus;
   /** The Payment Type in the Schema this Payment was created from. */
@@ -2983,12 +3002,105 @@ export type PaymentRefund = {
   status: PaymentRefundStatus;
 };
 
+/** A refund against the Payment failed. */
+export type PaymentRefundFailedEvent = PaymentEvent & {
+  __typename?: 'PaymentRefundFailedEvent';
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** The refund reversal's Ledger Entry. */
+  ledgerEntry: LedgerEntry;
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. */
+  paymentStatus: PaymentStatus;
+  /** The Payment Refund this event describes. */
+  refund: PaymentRefund;
+  /** The status of the refund after this event. Always `failed`. */
+  refundStatus: PaymentRefundStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
+/** A refund was initiated against the Payment. */
+export type PaymentRefundInitiatedEvent = PaymentEvent & {
+  __typename?: 'PaymentRefundInitiatedEvent';
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** The refund's Ledger Entry. */
+  ledgerEntry: LedgerEntry;
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. */
+  paymentStatus: PaymentStatus;
+  /** The Payment Refund this event describes. */
+  refund: PaymentRefund;
+  /** The status of the refund after this event. Always `processing`. */
+  refundStatus: PaymentRefundStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
+/** A refund against the Payment settled. */
+export type PaymentRefundSettledEvent = PaymentEvent & {
+  __typename?: 'PaymentRefundSettledEvent';
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. */
+  paymentStatus: PaymentStatus;
+  /** The Payment Refund this event describes. */
+  refund: PaymentRefund;
+  /** The status of the refund after this event. Always `settled`. */
+  refundStatus: PaymentRefundStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
+
 /** Status of a Payment refund. */
 export enum PaymentRefundStatus {
   Failed = 'failed',
   Processing = 'processing',
   Settled = 'settled'
 }
+
+/** A paginated list of Payment refunds. */
+export type PaymentRefundsConnection = {
+  __typename?: 'PaymentRefundsConnection';
+  /** The current page of results. */
+  nodes: Array<PaymentRefund>;
+  /** The pagination info for this list. */
+  pageInfo: PageInfo;
+};
+
+/** The Customer retried the Payment on a saved payment method. */
+export type PaymentRetryEvent = PaymentEvent & {
+  __typename?: 'PaymentRetryEvent';
+  /** The attempt the Retry started. */
+  attempt: SavedPaymentMethodPaymentAttempt;
+  /** The status of the attempt after this event. Always `processing`. */
+  attemptStatus: PaymentAttemptStatus;
+  /** The ID of this Payment event. */
+  id: Scalars['ID']['output'];
+  /** When this event occurred. */
+  occurredAt: Scalars['DateTime']['output'];
+  /** The status of the Payment after this event. Always `processing`. */
+  paymentStatus: PaymentStatus;
+  /**
+   * The status of the Payment after this event.
+   * @deprecated Use `paymentStatus` on each event type.
+   */
+  status: PaymentStatus;
+};
 
 /** The Payment settled. */
 export type PaymentSettledEvent = PaymentEvent & {
@@ -3264,6 +3376,8 @@ export type ReconciliationReport = {
 export type RefundPaymentInput = {
   /** The amount to refund, in whole cents. */
   amount: Scalars['Int96']['input'];
+  /** Values for the parameters only the refund entries use. */
+  parameters?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 export type RefundPaymentResponse = BadRequestError | InternalError | RefundPaymentResult;
@@ -3277,6 +3391,19 @@ export type RefundPaymentResult = {
   payment: Payment;
   /** The created Payment Refund. */
   refund: PaymentRefund;
+};
+
+export type RetryPaymentResponse = BadRequestError | InternalError | RetryPaymentResult;
+
+/** The Payment and the attempt the Retry started. */
+export type RetryPaymentResult = {
+  __typename?: 'RetryPaymentResult';
+  /** The attempt this `attemptIk` started. Its outcome events name it. */
+  attempt: SavedPaymentMethodPaymentAttempt;
+  /** Whether an earlier call with the same `attemptIk` started this attempt. */
+  isIkReplay: Scalars['Boolean']['output'];
+  /** The retried Payment. */
+  payment: Payment;
 };
 
 export type ReverseLedgerEntryResponse = BadRequestError | InternalError | ReverseLedgerEntryResult;

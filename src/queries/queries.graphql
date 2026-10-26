@@ -1364,6 +1364,124 @@ mutation createPayment(
         currency {
           code
         }
+        refundedAmount
+        refunds {
+          nodes {
+            id
+            ik
+            amount
+            status
+            created
+          }
+        }
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation retryPayment(
+  $attemptIk: SafeString!
+  $paymentIk: SafeString!
+  $ledgerIk: SafeString!
+  $paymentMethod: PaymentMethodMatchInput
+) {
+  retryPayment(
+    attemptIk: $attemptIk
+    payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+    paymentMethod: $paymentMethod
+  ) {
+    __typename
+    ... on RetryPaymentResult {
+      isIkReplay
+      attempt {
+        id
+        status
+      }
+      payment {
+        id
+        ik
+        status
+        amount
+        mode
+        currency {
+          code
+        }
+        refundedAmount
+        refunds {
+          nodes {
+            id
+            ik
+            amount
+            status
+            created
+          }
+        }
+      }
+    }
+    ... on BadRequestError {
+      code
+      message
+      retryable
+    }
+    ... on InternalError {
+      code
+      message
+      retryable
+    }
+  }
+}
+
+mutation refundPayment(
+  $ik: SafeString!
+  $paymentIk: SafeString!
+  $ledgerIk: SafeString!
+  $amount: Int96!
+  $parameters: JSON
+) {
+  refundPayment(
+    ik: $ik
+    payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+    refund: { amount: $amount, parameters: $parameters }
+  ) {
+    __typename
+    ... on RefundPaymentResult {
+      isIkReplay
+      refund {
+        id
+        ik
+        amount
+        status
+        created
+      }
+      payment {
+        id
+        ik
+        status
+        amount
+        mode
+        currency {
+          code
+        }
+        refundedAmount
+        refunds {
+          nodes {
+            id
+            ik
+            amount
+            status
+            created
+          }
+        }
       }
     }
     ... on BadRequestError {
@@ -1395,6 +1513,16 @@ query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
     mode
     parameters
     created
+    refundedAmount
+    refunds {
+      nodes {
+        id
+        ik
+        amount
+        status
+        created
+      }
+    }
   }
 }
 
@@ -1418,6 +1546,16 @@ query listPayments(
         type
         typeVersion
         created
+        refundedAmount
+        refunds {
+          nodes {
+            id
+            ik
+            amount
+            status
+            created
+          }
+        }
       }
       pageInfo {
         hasNextPage
