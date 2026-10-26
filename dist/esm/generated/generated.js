@@ -1854,6 +1854,126 @@ export const CreatePaymentDocument = gql `
           currency {
             code
           }
+          refundedAmount
+          refunds {
+            nodes {
+              id
+              ik
+              amount
+              status
+              created
+            }
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const RetryPaymentDocument = gql `
+  mutation retryPayment(
+    $attemptIk: SafeString!
+    $paymentIk: SafeString!
+    $ledgerIk: SafeString!
+    $paymentMethod: PaymentMethodMatchInput
+  ) {
+    retryPayment(
+      attemptIk: $attemptIk
+      payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+      paymentMethod: $paymentMethod
+    ) {
+      __typename
+      ... on RetryPaymentResult {
+        isIkReplay
+        attempt {
+          id
+          status
+        }
+        payment {
+          id
+          ik
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+          refundedAmount
+          refunds {
+            nodes {
+              id
+              ik
+              amount
+              status
+              created
+            }
+          }
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const RefundPaymentDocument = gql `
+  mutation refundPayment(
+    $ik: SafeString!
+    $paymentIk: SafeString!
+    $ledgerIk: SafeString!
+    $amount: Int96!
+    $parameters: JSON
+  ) {
+    refundPayment(
+      ik: $ik
+      payment: { ik: $paymentIk, ledger: { ik: $ledgerIk } }
+      refund: { amount: $amount, parameters: $parameters }
+    ) {
+      __typename
+      ... on RefundPaymentResult {
+        isIkReplay
+        refund {
+          id
+          ik
+          amount
+          status
+          created
+        }
+        payment {
+          id
+          ik
+          status
+          amount
+          mode
+          currency {
+            code
+          }
+          refundedAmount
+          refunds {
+            nodes {
+              id
+              ik
+              amount
+              status
+              created
+            }
+          }
         }
       }
       ... on BadRequestError {
@@ -1886,6 +2006,16 @@ export const GetPaymentDocument = gql `
       mode
       parameters
       created
+      refundedAmount
+      refunds {
+        nodes {
+          id
+          ik
+          amount
+          status
+          created
+        }
+      }
     }
   }
 `;
@@ -1910,6 +2040,16 @@ export const ListPaymentsDocument = gql `
           type
           typeVersion
           created
+          refundedAmount
+          refunds {
+            nodes {
+              id
+              ik
+              amount
+              status
+              created
+            }
+          }
         }
         pageInfo {
           hasNextPage
@@ -2200,6 +2340,12 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         createPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(CreatePaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createPayment", "mutation", variables);
+        },
+        retryPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(RetryPaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "retryPayment", "mutation", variables);
+        },
+        refundPayment(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(RefundPaymentDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "refundPayment", "mutation", variables);
         },
         getPayment(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentDocument, variables, {
