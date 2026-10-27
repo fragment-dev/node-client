@@ -3,4 +3,4 @@
 /**
  * A string representing the current version of the package.
  */
-export const version = '2.4.2' as const;
+export const version = '2.4.3' as const;
