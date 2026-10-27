@@ -20,15 +20,80 @@ const version_js_1 = require("../generated/version.js");
 const getToken_js_1 = require("./getToken.js");
 const errors_js_1 = require("./errors.js");
 const retryConfig_js_1 = require("./retryConfig.js");
-const getRetryableField = (error) => {
-    if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
-        if (typeof error.retryable === "boolean") {
-            return error.retryable;
-        }
+const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
+// graphql-request's node-fetch rejects a failed connection with a FetchError of
+// type "system"; any other rejection is not a transport failure.
+const isNetworkError = (error) => error instanceof Error &&
+    error.name === "FetchError" &&
+    error.type === "system";
+const classifyRequestError = (error) => {
+    if (error instanceof graphql_request_1.ClientError) {
+        return {
+            error: new errors_js_1.FragmentError({ cause: error }),
+            retryable: isRetryableHttpStatus(error.response.status),
+        };
     }
-    return false;
+    return { error: error, retryable: isNetworkError(error) };
+};
+const classifyMutationData = (data, operationName) => {
+    var _a;
+    const payloads = data;
+    const dataKeys = Object.keys(payloads);
+    if (dataKeys.length > 1) {
+        return {
+            error: new errors_js_1.FragmentError({
+                message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
+            }),
+            retryable: false,
+        };
+    }
+    const [graphQlOperationName] = dataKeys;
+    const payload = payloads[graphQlOperationName];
+    const { __typename: typeName, code, message } = payload;
+    const retryable = payload.retryable === true;
+    switch (typeName) {
+        case "InternalError":
+            return {
+                error: new errors_js_1.InternalError({ cause: payload, message }),
+                retryable,
+            };
+        case "AddLedgerEntriesError":
+            // The errors for each Ledger Entry responsible for the failure are
+            // what tell a caller which entries to fix, so they are surfaced
+            // rather than collapsed into the top-level message.
+            return {
+                error: new errors_js_1.AddLedgerEntriesError({
+                    code,
+                    cause: payload,
+                    message,
+                    errors: (_a = payload.errors) !== null && _a !== void 0 ? _a : [],
+                }),
+                retryable,
+            };
+        case "BadRequestError":
+            return {
+                error: new errors_js_1.BadRequestError({ code, cause: payload, message }),
+                retryable,
+            };
+        default:
+            if (typeName.endsWith("Error")) {
+                return {
+                    error: new errors_js_1.FragmentError({
+                        message: `Encountered unsupported error type: ${typeName}`,
+                        cause: payload,
+                    }),
+                    retryable: false,
+                };
+            }
+            return { data };
+    }
 };
 const createRequestWrapper = (tokenCache, params, retryConfig) => (request, operationName, operationType) => __awaiter(void 0, void 0, void 0, function* () {
+    if (operationType !== "query" && operationType !== "mutation") {
+        throw new errors_js_1.FragmentError({
+            message: `Unknown operation type: ${operationType}`,
+        });
+    }
     const { clientId, clientSecret, scope, authUrl } = params;
     const updateToken = () => __awaiter(void 0, void 0, void 0, function* () {
         const { access_token, expiry_time } = yield (0, getToken_js_1.getToken)({
@@ -56,98 +121,20 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
         Authorization: `Bearer ${tokenCache.token.access_token}`,
         ["X-Fragment-Client"]: `node-client@${version_js_1.version}`,
     };
-    return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
+    const classifyData = (data) => {
         if (operationType === "mutation") {
-            const data = yield request(requestHeaders);
-            const dataKeys = Object.keys(data);
-            if (dataKeys.length > 1) {
-                bail(new errors_js_1.FragmentError({
-                    message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
-                }));
-            }
-            const [graphQlOperationName] = dataKeys;
-            const typeName = data[graphQlOperationName]
-                .__typename;
-            const { code, message } = data[graphQlOperationName];
-            const retryable = getRetryableField(data[graphQlOperationName]);
-            switch (typeName) {
-                case "InternalError": {
-                    const err = new errors_js_1.InternalError({
-                        cause: data[graphQlOperationName],
-                        message,
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                case "AddLedgerEntriesError": {
-                    // The errors for each Ledger Entry responsible for the failure are
-                    // what tell a caller which entries to fix, so they are surfaced
-                    // rather than collapsed into the top-level message.
-                    const err = new errors_js_1.AddLedgerEntriesError({
-                        code,
-                        cause: data[graphQlOperationName],
-                        message,
-                        errors: ((_a = data[graphQlOperationName].errors) !== null && _a !== void 0 ? _a : []),
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                case "BadRequestError": {
-                    const err = new errors_js_1.BadRequestError({
-                        code: code,
-                        cause: data[graphQlOperationName],
-                        message,
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                default:
-                    if (typeName.endsWith("Error")) {
-                        bail(new errors_js_1.FragmentError({
-                            message: `Encountered unsupported error type: ${typeName}`,
-                            cause: data[graphQlOperationName],
-                        }));
-                    }
-                    break;
-            }
-            return data;
+            return classifyMutationData(data, operationName);
         }
-        if (operationType === "query") {
-            try {
-                const data = yield request(requestHeaders);
-                return data;
-            }
-            catch (error) {
-                if (error instanceof graphql_request_1.ClientError) {
-                    bail(new errors_js_1.FragmentError({
-                        cause: error,
-                    }));
-                }
-                else {
-                    bail(error);
-                }
-            }
-        }
-        bail(new errors_js_1.FragmentError({
-            message: `Unknown operation type: ${operationType}`,
-        }));
-        return {};
+        return { data };
+    };
+    return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
+        const attempt = yield request(requestHeaders).then(classifyData, classifyRequestError);
+        if ("data" in attempt)
+            return attempt.data;
+        if (attempt.retryable)
+            throw attempt.error;
+        bail(attempt.error);
+        return undefined;
     }), retryConfig);
 });
 const createFragmentClient = ({ params, getSdk, retryConfig = retryConfig_js_1.DEFAULT_RETRY_CONFIG, }) => {
