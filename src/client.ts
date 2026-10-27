@@ -28,13 +28,15 @@ const isNetworkError = (error: unknown): boolean =>
   error.name === "FetchError" &&
   (error as { type?: unknown }).type === "system";
 
-const classifyRequestError = (error: unknown): Attempt<never> =>
-  error instanceof ClientError
-    ? {
-        error: new FragmentError({ cause: error }),
-        retryable: isRetryableHttpStatus(error.response.status),
-      }
-    : { error: error as Error, retryable: isNetworkError(error) };
+const classifyRequestError = (error: unknown): Attempt<never> => {
+  if (error instanceof ClientError) {
+    return {
+      error: new FragmentError({ cause: error }),
+      retryable: isRetryableHttpStatus(error.response.status),
+    };
+  }
+  return { error: error as Error, retryable: isNetworkError(error) };
+};
 
 const classifyMutationData = <T>(
   data: T,
@@ -80,15 +82,16 @@ const classifyMutationData = <T>(
         retryable,
       };
     default:
-      return typeName.endsWith("Error")
-        ? {
-            error: new FragmentError({
-              message: `Encountered unsupported error type: ${typeName}`,
-              cause: payload,
-            }),
-            retryable: false,
-          }
-        : { data };
+      if (typeName.endsWith("Error")) {
+        return {
+          error: new FragmentError({
+            message: `Encountered unsupported error type: ${typeName}`,
+            cause: payload,
+          }),
+          retryable: false,
+        };
+      }
+      return { data };
   }
 };
 
@@ -155,12 +158,16 @@ const createRequestWrapper =
       ["X-Fragment-Client"]: `node-client@${version}`,
     };
 
+    const classifyData = <T>(data: T): Attempt<T> => {
+      if (operationType === "mutation") {
+        return classifyMutationData(data, operationName);
+      }
+      return { data };
+    };
+
     return retry(async (bail) => {
       const attempt = await request(requestHeaders).then(
-        (data) =>
-          operationType === "mutation"
-            ? classifyMutationData(data, operationName)
-            : { data },
+        classifyData,
         classifyRequestError,
       );
       if ("data" in attempt) return attempt.data;

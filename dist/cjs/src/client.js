@@ -26,12 +26,15 @@ const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
 const isNetworkError = (error) => error instanceof Error &&
     error.name === "FetchError" &&
     error.type === "system";
-const classifyRequestError = (error) => error instanceof graphql_request_1.ClientError
-    ? {
-        error: new errors_js_1.FragmentError({ cause: error }),
-        retryable: isRetryableHttpStatus(error.response.status),
+const classifyRequestError = (error) => {
+    if (error instanceof graphql_request_1.ClientError) {
+        return {
+            error: new errors_js_1.FragmentError({ cause: error }),
+            retryable: isRetryableHttpStatus(error.response.status),
+        };
     }
-    : { error: error, retryable: isNetworkError(error) };
+    return { error: error, retryable: isNetworkError(error) };
+};
 const classifyMutationData = (data, operationName) => {
     var _a;
     const payloads = data;
@@ -73,15 +76,16 @@ const classifyMutationData = (data, operationName) => {
                 retryable,
             };
         default:
-            return typeName.endsWith("Error")
-                ? {
+            if (typeName.endsWith("Error")) {
+                return {
                     error: new errors_js_1.FragmentError({
                         message: `Encountered unsupported error type: ${typeName}`,
                         cause: payload,
                     }),
                     retryable: false,
-                }
-                : { data };
+                };
+            }
+            return { data };
     }
 };
 const createRequestWrapper = (tokenCache, params, retryConfig) => (request, operationName, operationType) => __awaiter(void 0, void 0, void 0, function* () {
@@ -117,10 +121,14 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
         Authorization: `Bearer ${tokenCache.token.access_token}`,
         ["X-Fragment-Client"]: `node-client@${version_js_1.version}`,
     };
+    const classifyData = (data) => {
+        if (operationType === "mutation") {
+            return classifyMutationData(data, operationName);
+        }
+        return { data };
+    };
     return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
-        const attempt = yield request(requestHeaders).then((data) => operationType === "mutation"
-            ? classifyMutationData(data, operationName)
-            : { data }, classifyRequestError);
+        const attempt = yield request(requestHeaders).then(classifyData, classifyRequestError);
         if ("data" in attempt)
             return attempt.data;
         if (attempt.retryable)

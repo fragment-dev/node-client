@@ -11,12 +11,15 @@ const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
 const isNetworkError = (error) => error instanceof Error &&
     error.name === "FetchError" &&
     error.type === "system";
-const classifyRequestError = (error) => error instanceof ClientError
-    ? {
-        error: new FragmentError({ cause: error }),
-        retryable: isRetryableHttpStatus(error.response.status),
+const classifyRequestError = (error) => {
+    if (error instanceof ClientError) {
+        return {
+            error: new FragmentError({ cause: error }),
+            retryable: isRetryableHttpStatus(error.response.status),
+        };
     }
-    : { error: error, retryable: isNetworkError(error) };
+    return { error: error, retryable: isNetworkError(error) };
+};
 const classifyMutationData = (data, operationName) => {
     const payloads = data;
     const dataKeys = Object.keys(payloads);
@@ -57,15 +60,16 @@ const classifyMutationData = (data, operationName) => {
                 retryable,
             };
         default:
-            return typeName.endsWith("Error")
-                ? {
+            if (typeName.endsWith("Error")) {
+                return {
                     error: new FragmentError({
                         message: `Encountered unsupported error type: ${typeName}`,
                         cause: payload,
                     }),
                     retryable: false,
-                }
-                : { data };
+                };
+            }
+            return { data };
     }
 };
 const createRequestWrapper = (tokenCache, params, retryConfig) => async (request, operationName, operationType) => {
@@ -101,10 +105,14 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => async (request
         Authorization: `Bearer ${tokenCache.token.access_token}`,
         ["X-Fragment-Client"]: `node-client@${version}`,
     };
+    const classifyData = (data) => {
+        if (operationType === "mutation") {
+            return classifyMutationData(data, operationName);
+        }
+        return { data };
+    };
     return retry(async (bail) => {
-        const attempt = await request(requestHeaders).then((data) => operationType === "mutation"
-            ? classifyMutationData(data, operationName)
-            : { data }, classifyRequestError);
+        const attempt = await request(requestHeaders).then(classifyData, classifyRequestError);
         if ("data" in attempt)
             return attempt.data;
         if (attempt.retryable)

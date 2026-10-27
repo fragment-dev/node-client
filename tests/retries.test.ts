@@ -168,9 +168,11 @@ describe("HTTP error retries", () => {
     let failures = 0;
     return http.post(apiUrl, () => {
       failures += 1;
-      return failures <= 2
-        ? HttpResponse.json({ message: "Service Unavailable" }, { status: 503 })
-        : undefined;
+      if (failures > 2) return undefined;
+      return HttpResponse.json(
+        { message: "Service Unavailable" },
+        { status: 503 },
+      );
     });
   };
 
