@@ -21,15 +21,69 @@ const getToken_js_1 = require("./getToken.js");
 const errors_js_1 = require("./errors.js");
 const retryConfig_js_1 = require("./retryConfig.js");
 const isRetryableHttpStatus = (status) => status === 429 || status >= 500;
-const getRetryableField = (error) => {
-    if (Object.prototype.hasOwnProperty.call(error, "retryable")) {
-        if (typeof error.retryable === "boolean") {
-            return error.retryable;
-        }
+const classifyRequestError = (error) => error instanceof graphql_request_1.ClientError
+    ? {
+        error: new errors_js_1.FragmentError({ cause: error }),
+        retryable: isRetryableHttpStatus(error.response.status),
     }
-    return false;
+    : { error: error, retryable: true };
+const classifyMutationData = (data, operationName) => {
+    var _a;
+    const payloads = data;
+    const dataKeys = Object.keys(payloads);
+    if (dataKeys.length > 1) {
+        return {
+            error: new errors_js_1.FragmentError({
+                message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
+            }),
+            retryable: false,
+        };
+    }
+    const [graphQlOperationName] = dataKeys;
+    const payload = payloads[graphQlOperationName];
+    const { __typename: typeName, code, message } = payload;
+    const retryable = payload.retryable === true;
+    // `cause` carries the raw GraphQL error payload, which is not an Error instance.
+    const cause = payload;
+    switch (typeName) {
+        case "InternalError":
+            return { error: new errors_js_1.InternalError({ cause, message }), retryable };
+        case "AddLedgerEntriesError":
+            // The errors for each Ledger Entry responsible for the failure are
+            // what tell a caller which entries to fix, so they are surfaced
+            // rather than collapsed into the top-level message.
+            return {
+                error: new errors_js_1.AddLedgerEntriesError({
+                    code,
+                    cause,
+                    message,
+                    errors: (_a = payload.errors) !== null && _a !== void 0 ? _a : [],
+                }),
+                retryable,
+            };
+        case "BadRequestError":
+            return {
+                error: new errors_js_1.BadRequestError({ code, cause, message }),
+                retryable,
+            };
+        default:
+            return typeName.endsWith("Error")
+                ? {
+                    error: new errors_js_1.FragmentError({
+                        message: `Encountered unsupported error type: ${typeName}`,
+                        cause,
+                    }),
+                    retryable: false,
+                }
+                : { data };
+    }
 };
 const createRequestWrapper = (tokenCache, params, retryConfig) => (request, operationName, operationType) => __awaiter(void 0, void 0, void 0, function* () {
+    if (operationType !== "query" && operationType !== "mutation") {
+        throw new errors_js_1.FragmentError({
+            message: `Unknown operation type: ${operationType}`,
+        });
+    }
     const { clientId, clientSecret, scope, authUrl } = params;
     const updateToken = () => __awaiter(void 0, void 0, void 0, function* () {
         const { access_token, expiry_time } = yield (0, getToken_js_1.getToken)({
@@ -58,97 +112,15 @@ const createRequestWrapper = (tokenCache, params, retryConfig) => (request, oper
         ["X-Fragment-Client"]: `node-client@${version_js_1.version}`,
     };
     return (0, async_retry_1.default)((bail) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
-        if (operationType !== "query" && operationType !== "mutation") {
-            bail(new errors_js_1.FragmentError({
-                message: `Unknown operation type: ${operationType}`,
-            }));
-            return {};
-        }
-        let data;
-        try {
-            data = yield request(requestHeaders);
-        }
-        catch (error) {
-            if (!(error instanceof graphql_request_1.ClientError)) {
-                throw error;
-            }
-            const err = new errors_js_1.FragmentError({ cause: error });
-            if (isRetryableHttpStatus(error.response.status)) {
-                throw err;
-            }
-            bail(err);
-            return {};
-        }
-        if (operationType === "mutation") {
-            const dataKeys = Object.keys(data);
-            if (dataKeys.length > 1) {
-                bail(new errors_js_1.FragmentError({
-                    message: `You can only invoke a single mutation with a mutation operation. You specified ${dataKeys.length} for operation ${operationName}.`,
-                }));
-            }
-            const [graphQlOperationName] = dataKeys;
-            const typeName = data[graphQlOperationName]
-                .__typename;
-            const { code, message } = data[graphQlOperationName];
-            const retryable = getRetryableField(data[graphQlOperationName]);
-            switch (typeName) {
-                case "InternalError": {
-                    const err = new errors_js_1.InternalError({
-                        cause: data[graphQlOperationName],
-                        message,
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                case "AddLedgerEntriesError": {
-                    // The errors for each Ledger Entry responsible for the failure are
-                    // what tell a caller which entries to fix, so they are surfaced
-                    // rather than collapsed into the top-level message.
-                    const err = new errors_js_1.AddLedgerEntriesError({
-                        code,
-                        cause: data[graphQlOperationName],
-                        message,
-                        errors: ((_a = data[graphQlOperationName].errors) !== null && _a !== void 0 ? _a : []),
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                case "BadRequestError": {
-                    const err = new errors_js_1.BadRequestError({
-                        code: code,
-                        cause: data[graphQlOperationName],
-                        message,
-                    });
-                    if (!retryable) {
-                        bail(err);
-                    }
-                    else {
-                        throw err;
-                    }
-                    break;
-                }
-                default:
-                    if (typeName.endsWith("Error")) {
-                        bail(new errors_js_1.FragmentError({
-                            message: `Encountered unsupported error type: ${typeName}`,
-                            cause: data[graphQlOperationName],
-                        }));
-                    }
-                    break;
-            }
-        }
-        return data;
+        const attempt = yield request(requestHeaders).then((data) => operationType === "mutation"
+            ? classifyMutationData(data, operationName)
+            : { data }, classifyRequestError);
+        if ("data" in attempt)
+            return attempt.data;
+        if (attempt.retryable)
+            throw attempt.error;
+        bail(attempt.error);
+        return undefined;
     }), retryConfig);
 });
 const createFragmentClient = ({ params, getSdk, retryConfig = retryConfig_js_1.DEFAULT_RETRY_CONFIG, }) => {
