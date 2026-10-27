@@ -12,22 +12,21 @@ import {
   BadRequestError,
   FragmentError,
   InternalError,
-  type LedgerEntryBatchError,
+  type MutationErrorPayload,
 } from "./errors.js";
 import { DEFAULT_RETRY_CONFIG, type RetryConfig } from "./retryConfig.js";
 
 type Attempt<T> = { data: T } | { error: Error; retryable: boolean };
 
-type MutationErrorPayload = {
-  __typename: string;
-  code?: string;
-  message?: string;
-  retryable?: boolean;
-  errors?: LedgerEntryBatchError[];
-};
-
 const isRetryableHttpStatus = (status: number): boolean =>
   status === 429 || status >= 500;
+
+// graphql-request's node-fetch rejects a failed connection with a FetchError of
+// type "system"; any other rejection is not a transport failure.
+const isNetworkError = (error: unknown): boolean =>
+  error instanceof Error &&
+  error.name === "FetchError" &&
+  (error as { type?: unknown }).type === "system";
 
 const classifyRequestError = (error: unknown): Attempt<never> =>
   error instanceof ClientError
@@ -35,7 +34,7 @@ const classifyRequestError = (error: unknown): Attempt<never> =>
         error: new FragmentError({ cause: error }),
         retryable: isRetryableHttpStatus(error.response.status),
       }
-    : { error: error as Error, retryable: true };
+    : { error: error as Error, retryable: isNetworkError(error) };
 
 const classifyMutationData = <T>(
   data: T,
@@ -55,12 +54,13 @@ const classifyMutationData = <T>(
   const payload = payloads[graphQlOperationName];
   const { __typename: typeName, code, message } = payload;
   const retryable = payload.retryable === true;
-  // `cause` carries the raw GraphQL error payload, which is not an Error instance.
-  const cause = payload as unknown as Error;
 
   switch (typeName) {
     case "InternalError":
-      return { error: new InternalError({ cause, message }), retryable };
+      return {
+        error: new InternalError({ cause: payload, message }),
+        retryable,
+      };
     case "AddLedgerEntriesError":
       // The errors for each Ledger Entry responsible for the failure are
       // what tell a caller which entries to fix, so they are surfaced
@@ -68,7 +68,7 @@ const classifyMutationData = <T>(
       return {
         error: new AddLedgerEntriesError({
           code,
-          cause,
+          cause: payload,
           message,
           errors: payload.errors ?? [],
         }),
@@ -76,7 +76,7 @@ const classifyMutationData = <T>(
       };
     case "BadRequestError":
       return {
-        error: new BadRequestError({ code, cause, message }),
+        error: new BadRequestError({ code, cause: payload, message }),
         retryable,
       };
     default:
@@ -84,7 +84,7 @@ const classifyMutationData = <T>(
         ? {
             error: new FragmentError({
               message: `Encountered unsupported error type: ${typeName}`,
-              cause,
+              cause: payload,
             }),
             retryable: false,
           }

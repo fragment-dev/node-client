@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { http, graphql, HttpResponse, type JsonBodyType } from "msw";
+import { GraphQLClient } from "graphql-request";
 import { createFragmentClient } from "../src/client.js";
 import {
   BadRequestError,
@@ -53,6 +54,7 @@ beforeAll(() => {
 
 afterEach(() => {
   server.resetHandlers();
+  vi.restoreAllMocks();
 });
 
 const makeClient = (retryConfig?: RetryConfig) =>
@@ -209,6 +211,19 @@ describe("HTTP error retries", () => {
     await expect(promise).rejects.toThrow(Error);
     await expect(promise).rejects.not.toBeInstanceOf(FragmentError);
     expect(onRetry).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry a query that fails with a non-network error", async () => {
+    const abortError = Object.assign(new Error("aborted"), {
+      name: "AbortError",
+    });
+    vi.spyOn(GraphQLClient.prototype, "request").mockRejectedValue(abortError);
+    const onRetry = vi.fn();
+
+    const promise = makeRetryingClient(onRetry).getLedger({ ik: "ledger-ik" });
+
+    await expect(promise).rejects.toBe(abortError);
+    expect(onRetry).not.toHaveBeenCalled();
   });
 
   it("retries a query that is rate limited", async () => {

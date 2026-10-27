@@ -1,13 +1,22 @@
 import { ClientError } from "graphql-request";
 
+/** The error object a mutation returns in place of its result, such as `{ __typename: "BadRequestError", ... }`. */
+export type MutationErrorPayload = {
+  __typename: string;
+  code?: string;
+  message?: string;
+  retryable?: boolean;
+  errors?: LedgerEntryBatchError[];
+};
+
 type FragmentErrorParams = {
-  cause?: ClientError | Error;
+  cause?: ClientError | Error | MutationErrorPayload;
   message?: string;
   code?: string;
 };
 
 export class FragmentError extends Error {
-  readonly cause?: ClientError | Error;
+  readonly cause?: ClientError | Error | MutationErrorPayload;
   readonly status?: number;
 
   readonly code?: string;
