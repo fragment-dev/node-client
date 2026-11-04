@@ -300,8 +300,6 @@ export var PaymentCurrencyCode;
 /** Status of a Payment Method Setup. */
 export var PaymentMethodSetupStatus;
 (function (PaymentMethodSetupStatus) {
-    PaymentMethodSetupStatus["Canceled"] = "canceled";
-    PaymentMethodSetupStatus["NeedsAction"] = "needs_action";
     PaymentMethodSetupStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentMethodSetupStatus["Processing"] = "processing";
     PaymentMethodSetupStatus["Saved"] = "saved";
@@ -351,6 +349,16 @@ export var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (ReadBalanceConsistencyMode = {}));
+/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+export var ReadBalancesConsistencyMode;
+(function (ReadBalancesConsistencyMode) {
+    /** Each balance is an independent eventually consistent read. Any Ledger Account qualifies. */
+    ReadBalancesConsistencyMode["Eventual"] = "eventual";
+    /** Each balance is an independent strongly consistent read, so the own and child balances of one pair may come from different moments. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    ReadBalancesConsistencyMode["Strong"] = "strong";
+    /** Every balance is read from one snapshot, so a Ledger Entry in flight between two of the Ledger Accounts is either in all of them or in none. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    ReadBalancesConsistencyMode["Transactional"] = "transactional";
+})(ReadBalancesConsistencyMode || (ReadBalancesConsistencyMode = {}));
 /** The kind of thing a Scene Event simulates. */
 export var SceneEventType;
 (function (SceneEventType) {
@@ -2212,6 +2220,66 @@ export const GetPaymentMethodSetupDocument = gql `
     }
   }
 `;
+export const CreateWebhookSubscriptionDocument = gql `
+  mutation createWebhookSubscription($url: String!) {
+    createWebhookSubscription(input: { url: $url }) {
+      __typename
+      ... on CreateWebhookSubscriptionResult {
+        signingSecret
+        subscription {
+          id
+          url
+          created
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+export const ListWebhookSubscriptionsDocument = gql `
+  query listWebhookSubscriptions($after: String, $first: Int) {
+    webhookSubscriptions(after: $after, first: $first) {
+      nodes {
+        id
+        url
+        created
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+export const DeleteWebhookSubscriptionDocument = gql `
+  mutation deleteWebhookSubscription($id: ID!) {
+    deleteWebhookSubscription(id: $id) {
+      __typename
+      ... on DeleteWebhookSubscriptionResult {
+        success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 export function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -2373,6 +2441,15 @@ export function getSdk(client, withWrapper = defaultWrapper) {
         },
         getPaymentMethodSetup(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(GetPaymentMethodSetupDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "getPaymentMethodSetup", "query", variables);
+        },
+        createWebhookSubscription(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(CreateWebhookSubscriptionDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "createWebhookSubscription", "mutation", variables);
+        },
+        listWebhookSubscriptions(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(ListWebhookSubscriptionsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "listWebhookSubscriptions", "query", variables);
+        },
+        deleteWebhookSubscription(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(DeleteWebhookSubscriptionDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), "deleteWebhookSubscription", "mutation", variables);
         },
     };
 }

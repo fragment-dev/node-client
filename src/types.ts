@@ -22,6 +22,7 @@ export {
   PaymentStatus,
   PostLinesAs,
   ReadBalanceConsistencyMode,
+  ReadBalancesConsistencyMode,
   SceneEventType,
   SchemaConsistencyMode,
   SchemaLedgerAccountStatus,
