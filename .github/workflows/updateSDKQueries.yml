@@ -63,6 +63,26 @@ jobs:
         working-directory: ./node-client
         run: yarn update-test-schema
 
+      # create-pull-request pushes to one reused `update-sdk-queries` branch,
+      # which git can't create while `update-sdk-queries/*` branches exist.
+      # Branches with an open PR are kept.
+      - name: Delete stale update-sdk-queries/* branches
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$REPO/git/matching-refs/heads/update-sdk-queries/" --jq '.[].ref' |
+            sed 's#^refs/heads/##' |
+            while read -r branch; do
+              open_count=$(gh pr list --repo "$REPO" --head "$branch" --state open --json number --jq length)
+              if [ "$open_count" = 0 ]; then
+                echo "Deleting $branch"
+                gh api -X DELETE "repos/$REPO/git/refs/heads/$branch"
+              else
+                echo "Keeping $branch: it has an open PR"
+              fi
+            done
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@153407881ec5c347639a548ade7d8ad1d6740e38 # vr
         with:
