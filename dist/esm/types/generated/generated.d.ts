@@ -405,6 +405,15 @@ export type CreatePaymentResult = {
     /** The Payment that was created. */
     payment: Payment;
 };
+export type CreateWebhookSubscriptionInput = {
+    url: Scalars["String"]["input"];
+};
+export type CreateWebhookSubscriptionResponse = BadRequestError | CreateWebhookSubscriptionResult | InternalError;
+export type CreateWebhookSubscriptionResult = {
+    __typename?: "CreateWebhookSubscriptionResult";
+    signingSecret: Scalars["String"]["output"];
+    subscription: WebhookSubscription;
+};
 export type Currency = {
     __typename?: "Currency";
     /** The currency code. This is an [enum type](https://fragment.dev/api-reference/api-types#scalars-and-enums-currencycode) . */
@@ -711,6 +720,11 @@ export type DeletePaymentMethodResult = {
 export type DeleteSchemaResponse = BadRequestError | DeleteSchemaResult | InternalError;
 export type DeleteSchemaResult = {
     __typename?: "DeleteSchemaResult";
+    success: Scalars["Boolean"]["output"];
+};
+export type DeleteWebhookSubscriptionResponse = BadRequestError | DeleteWebhookSubscriptionResult | InternalError;
+export type DeleteWebhookSubscriptionResult = {
+    __typename?: "DeleteWebhookSubscriptionResult";
     success: Scalars["Boolean"]["output"];
 };
 export type DeletedCustomTx = {
@@ -1351,6 +1365,35 @@ export type LedgerAccountUnreconciledTxsArgs = {
     first?: InputMaybe<Scalars["Int"]["input"]>;
     last?: InputMaybe<Scalars["Int"]["input"]>;
 };
+/** The balances of one Ledger Account in one currency. */
+export type LedgerAccountBalance = {
+    __typename?: "LedgerAccountBalance";
+    /** Total of all lines in this Ledger Account and its child Ledger Accounts. */
+    balance: Scalars["Int96"]["output"];
+    /** Total of all lines in child Ledger Accounts. */
+    childBalance: Scalars["Int96"]["output"];
+    /** The currency of these balances. */
+    currency: Currency;
+    /** The Ledger Account these balances belong to. */
+    ledgerAccount: LedgerAccount;
+    /** Total of all lines in this Ledger Account, excluding child Ledger Accounts. */
+    ownBalance: Scalars["Int96"]["output"];
+};
+/** One Ledger Account and the currency of the balance to read. */
+export type LedgerAccountBalanceMatchInput = {
+    /** The currency of the balance to read. */
+    currency: CurrencyMatchInput;
+    /** The Ledger Account, by ID or by Ledger and path. */
+    ledgerAccount: LedgerAccountMatchInput;
+};
+/** A list of Ledger Account balances. It is always one page, in the order the balances were requested. */
+export type LedgerAccountBalancesConnection = {
+    __typename?: "LedgerAccountBalancesConnection";
+    /** The balances, in the order they were requested. */
+    nodes: Array<LedgerAccountBalance>;
+    /** Pagination info for this list. It never has another page. */
+    pageInfo: PageInfo;
+};
 /** The clearing status of a Ledger Account. */
 export declare enum LedgerAccountClearingStatus {
     /** The account has no outstanding balances. */
@@ -1577,9 +1620,10 @@ export type LedgerAccountsFilterSet = {
     /** Use this to filter Ledger Accounts by their parent account IDs */
     parentLedgerAccount?: InputMaybe<LedgerAccountFilter>;
     /**
-     * A filter that must match the account path. Wildcards ('*') may be used only for template variables, and will only match a single variable each.
-     * For example: 'assets-root/accounts-receivable/merchant:*' would match: 'assets-root/accounts-receivable/merchant:1' and 'assets-root/accounts-receivable/merchant:1/child'.
-     * Wildcards may not be used outside of template variables. For example, passing in 'assets-root/*' as a filter is invalid and would raise a GraphQL error.
+     * A filter that must match the account path. Wildcards ('*') may be used in place of template variables, and will only match a single variable each.
+     * For example: 'assets-root/accounts-receivable/merchant:*' would match 'assets-root/accounts-receivable/merchant:1' and 'assets-root/accounts-receivable/merchant:2', but not 'assets-root/accounts-receivable/merchant:1/child'.
+     * To list every descendant of a Ledger Account at any depth, use a trailing '/*' in 'matches', e.g. 'assets-root/*'. This returns every account under 'assets-root', but not 'assets-root' itself.
+     * A single pattern cannot combine a trailing '/*' with a template wildcard, and wildcards may not appear anywhere else in the path.
      */
     path?: InputMaybe<StringMatchFilter>;
     /** Use this to filter Ledger Accounts by their type */
@@ -1642,6 +1686,8 @@ export type LedgerEntriesConnection = {
     pageInfo: PageInfo;
 };
 export type LedgerEntriesFilterSet = {
+    /** Use this filter to filter Ledger Entries by their `created` timestamp. This is the wall-clock time when the Ledger Entry was created. */
+    created?: InputMaybe<DateTimeFilter>;
     /** Use this filter to filter Ledger Entries by their `posted` date. */
     date?: InputMaybe<DateFilter>;
     /** Use this to filter Ledger Entries by groups. The response will include entries that contain or do not contain specific groups. */
@@ -2283,6 +2329,7 @@ export type Mutation = {
     createPayment: CreatePaymentResponse;
     /** Save a Payment Method for a User without charging it. */
     createPaymentMethodSetup: CreatePaymentMethodSetupResponse;
+    createWebhookSubscription: CreateWebhookSubscriptionResponse;
     /** Delete Txs on a Custom Link. Once deleted, a Tx will not show up in listing queries, but can be resolved by if you lookup by its Fragment ID. */
     deleteCustomTxs: DeleteCustomTxsResponse;
     /**
@@ -2295,6 +2342,7 @@ export type Mutation = {
     deletePaymentMethod: DeletePaymentMethodResponse;
     /** Delete a Schema */
     deleteSchema: DeleteSchemaResponse;
+    deleteWebhookSubscription: DeleteWebhookSubscriptionResponse;
     /** Instantiates a Ledger Account from a template in the Ledger's Schema before any Ledger Entry is posted to it. Creates any missing templated ancestors. */
     instantiateLedgerAccount: InstantiateLedgerAccountResponse;
     /**
@@ -2382,6 +2430,10 @@ export type MutationCreatePaymentMethodSetupArgs = {
     user: UserMatchInput;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationCreateWebhookSubscriptionArgs = {
+    input: CreateWebhookSubscriptionInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteCustomTxsArgs = {
     txs: Array<Scalars["ID"]["input"]>;
 };
@@ -2396,6 +2448,10 @@ export type MutationDeletePaymentMethodArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationDeleteSchemaArgs = {
     schema: SchemaMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
+export type MutationDeleteWebhookSubscriptionArgs = {
+    id: Scalars["ID"]["input"];
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-mutations) */
 export type MutationInstantiateLedgerAccountArgs = {
@@ -2709,8 +2765,6 @@ export type PaymentMethodSetupMatchInput = {
 };
 /** Status of a Payment Method Setup. */
 export declare enum PaymentMethodSetupStatus {
-    Canceled = "canceled",
-    NeedsAction = "needs_action",
     NeedsPaymentMethod = "needs_payment_method",
     Processing = "processing",
     Saved = "saved"
@@ -2923,6 +2977,8 @@ export type Query = {
     ledger?: Maybe<Ledger>;
     /** Get a Ledger Account by ID */
     ledgerAccount?: Maybe<LedgerAccount>;
+    /** Read the balances of several Ledger Accounts in one query, at most 50 account and currency pairs. Each pair may be listed once. */
+    ledgerAccountBalances: LedgerAccountBalancesConnection;
     /** Get Ledger Entry by ID. */
     ledgerEntry?: Maybe<LedgerEntry>;
     /** Query a Ledger Entry Group given its Ledger, key, and value. */
@@ -2951,6 +3007,7 @@ export type Query = {
     schemas: SchemaConnection;
     /** Get a Tx by ID */
     tx?: Maybe<Tx>;
+    webhookSubscriptions: WebhookSubscriptionsConnection;
     /** Get the current Workspace */
     workspace: Workspace;
 };
@@ -2972,6 +3029,11 @@ export type QueryLedgerArgs = {
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerAccountArgs = {
     ledgerAccount: LedgerAccountMatchInput;
+};
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryLedgerAccountBalancesArgs = {
+    balances: Array<LedgerAccountBalanceMatchInput>;
+    consistencyMode: ReadBalancesConsistencyMode;
 };
 /** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
 export type QueryLedgerEntryArgs = {
@@ -3036,6 +3098,11 @@ export type QuerySchemasArgs = {
 export type QueryTxArgs = {
     tx: TxMatchInput;
 };
+/** View the API guide [here](https://fragment.dev/api-reference/api-queries) */
+export type QueryWebhookSubscriptionsArgs = {
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+};
 /** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 export declare enum ReadBalanceConsistencyMode {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
@@ -3044,6 +3111,15 @@ export declare enum ReadBalanceConsistencyMode {
     Strong = "strong",
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     UseAccount = "use_account"
+}
+/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+export declare enum ReadBalancesConsistencyMode {
+    /** Each balance is an independent eventually consistent read. Any Ledger Account qualifies. */
+    Eventual = "eventual",
+    /** Each balance is an independent strongly consistent read, so the own and child balances of one pair may come from different moments. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    Strong = "strong",
+    /** Every balance is read from one snapshot, so a Ledger Entry in flight between two of the Ledger Accounts is either in all of them or in none. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    Transactional = "transactional"
 }
 export type ReconcileTxResponse = BadRequestError | InternalError | ReconcileTxResult;
 export type ReconcileTxResult = {
@@ -3881,6 +3957,17 @@ export type UserFilter = {
 export type UserMatchInput = {
     /** The User's email. */
     email: Scalars["String"]["input"];
+};
+export type WebhookSubscription = {
+    __typename?: "WebhookSubscription";
+    created: Scalars["DateTime"]["output"];
+    id: Scalars["ID"]["output"];
+    url: Scalars["String"]["output"];
+};
+export type WebhookSubscriptionsConnection = {
+    __typename?: "WebhookSubscriptionsConnection";
+    nodes: Array<WebhookSubscription>;
+    pageInfo: PageInfo;
 };
 export type Workspace = {
     __typename?: "Workspace";
@@ -5663,6 +5750,73 @@ export type GetPaymentMethodSetupQuery = {
         } | null;
     };
 };
+export type CreateWebhookSubscriptionMutationVariables = Exact<{
+    url: Scalars["String"]["input"];
+}>;
+export type CreateWebhookSubscriptionMutation = {
+    __typename?: "Mutation";
+    createWebhookSubscription: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "CreateWebhookSubscriptionResult";
+        signingSecret: string;
+        subscription: {
+            __typename?: "WebhookSubscription";
+            id: string;
+            url: string;
+            created: string;
+        };
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    };
+};
+export type ListWebhookSubscriptionsQueryVariables = Exact<{
+    after?: InputMaybe<Scalars["String"]["input"]>;
+    first?: InputMaybe<Scalars["Int"]["input"]>;
+}>;
+export type ListWebhookSubscriptionsQuery = {
+    __typename?: "Query";
+    webhookSubscriptions: {
+        __typename?: "WebhookSubscriptionsConnection";
+        nodes: Array<{
+            __typename?: "WebhookSubscription";
+            id: string;
+            url: string;
+            created: string;
+        }>;
+        pageInfo: {
+            __typename?: "PageInfo";
+            hasNextPage: boolean;
+            endCursor?: string | null;
+        };
+    };
+};
+export type DeleteWebhookSubscriptionMutationVariables = Exact<{
+    id: Scalars["ID"]["input"];
+}>;
+export type DeleteWebhookSubscriptionMutation = {
+    __typename?: "Mutation";
+    deleteWebhookSubscription: {
+        __typename: "BadRequestError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    } | {
+        __typename: "DeleteWebhookSubscriptionResult";
+        success: boolean;
+    } | {
+        __typename: "InternalError";
+        code: string;
+        message: string;
+        retryable: boolean;
+    };
+};
 export declare const StoreSchemaDocument: import("graphql").DocumentNode;
 export declare const DeleteSchemaDocument: import("graphql").DocumentNode;
 export declare const CreateLedgerDocument: import("graphql").DocumentNode;
@@ -5709,6 +5863,9 @@ export declare const GetPaymentMethodDocument: import("graphql").DocumentNode;
 export declare const DeletePaymentMethodDocument: import("graphql").DocumentNode;
 export declare const CreatePaymentMethodSetupDocument: import("graphql").DocumentNode;
 export declare const GetPaymentMethodSetupDocument: import("graphql").DocumentNode;
+export declare const CreateWebhookSubscriptionDocument: import("graphql").DocumentNode;
+export declare const ListWebhookSubscriptionsDocument: import("graphql").DocumentNode;
+export declare const DeleteWebhookSubscriptionDocument: import("graphql").DocumentNode;
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string, variables?: any) => Promise<T>;
 export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
     storeSchema(variables: StoreSchemaMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<StoreSchemaMutation>;
@@ -5757,6 +5914,9 @@ export declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionW
     deletePaymentMethod(variables: DeletePaymentMethodMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeletePaymentMethodMutation>;
     createPaymentMethodSetup(variables: CreatePaymentMethodSetupMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreatePaymentMethodSetupMutation>;
     getPaymentMethodSetup(variables: GetPaymentMethodSetupQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetPaymentMethodSetupQuery>;
+    createWebhookSubscription(variables: CreateWebhookSubscriptionMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<CreateWebhookSubscriptionMutation>;
+    listWebhookSubscriptions(variables?: ListWebhookSubscriptionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<ListWebhookSubscriptionsQuery>;
+    deleteWebhookSubscription(variables: DeleteWebhookSubscriptionMutationVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<DeleteWebhookSubscriptionMutation>;
 };
 export type Sdk = ReturnType<typeof getSdk>;
 export {};

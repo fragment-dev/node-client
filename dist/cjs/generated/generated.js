@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.RefundPaymentDocument = exports.RetryPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = void 0;
+exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalancesConsistencyMode = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.DeleteWebhookSubscriptionDocument = exports.ListWebhookSubscriptionsDocument = exports.CreateWebhookSubscriptionDocument = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.RefundPaymentDocument = exports.RetryPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = exports.SyncCustomTxsDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
 /** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
 var BalanceUpdateConsistencyMode;
@@ -304,8 +304,6 @@ var PaymentCurrencyCode;
 /** Status of a Payment Method Setup. */
 var PaymentMethodSetupStatus;
 (function (PaymentMethodSetupStatus) {
-    PaymentMethodSetupStatus["Canceled"] = "canceled";
-    PaymentMethodSetupStatus["NeedsAction"] = "needs_action";
     PaymentMethodSetupStatus["NeedsPaymentMethod"] = "needs_payment_method";
     PaymentMethodSetupStatus["Processing"] = "processing";
     PaymentMethodSetupStatus["Saved"] = "saved";
@@ -355,6 +353,16 @@ var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (exports.ReadBalanceConsistencyMode = ReadBalanceConsistencyMode = {}));
+/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+var ReadBalancesConsistencyMode;
+(function (ReadBalancesConsistencyMode) {
+    /** Each balance is an independent eventually consistent read. Any Ledger Account qualifies. */
+    ReadBalancesConsistencyMode["Eventual"] = "eventual";
+    /** Each balance is an independent strongly consistent read, so the own and child balances of one pair may come from different moments. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    ReadBalancesConsistencyMode["Strong"] = "strong";
+    /** Every balance is read from one snapshot, so a Ledger Entry in flight between two of the Ledger Accounts is either in all of them or in none. Every Ledger Account must have `totalBalanceUpdates` set to `strong` in its `consistencyConfig`. */
+    ReadBalancesConsistencyMode["Transactional"] = "transactional";
+})(ReadBalancesConsistencyMode || (exports.ReadBalancesConsistencyMode = ReadBalancesConsistencyMode = {}));
 /** The kind of thing a Scene Event simulates. */
 var SceneEventType;
 (function (SceneEventType) {
@@ -2216,6 +2224,66 @@ exports.GetPaymentMethodSetupDocument = (0, graphql_tag_1.gql) `
     }
   }
 `;
+exports.CreateWebhookSubscriptionDocument = (0, graphql_tag_1.gql) `
+  mutation createWebhookSubscription($url: String!) {
+    createWebhookSubscription(input: { url: $url }) {
+      __typename
+      ... on CreateWebhookSubscriptionResult {
+        signingSecret
+        subscription {
+          id
+          url
+          created
+        }
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
+exports.ListWebhookSubscriptionsDocument = (0, graphql_tag_1.gql) `
+  query listWebhookSubscriptions($after: String, $first: Int) {
+    webhookSubscriptions(after: $after, first: $first) {
+      nodes {
+        id
+        url
+        created
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+exports.DeleteWebhookSubscriptionDocument = (0, graphql_tag_1.gql) `
+  mutation deleteWebhookSubscription($id: ID!) {
+    deleteWebhookSubscription(id: $id) {
+      __typename
+      ... on DeleteWebhookSubscriptionResult {
+        success
+      }
+      ... on BadRequestError {
+        code
+        message
+        retryable
+      }
+      ... on InternalError {
+        code
+        message
+        retryable
+      }
+    }
+  }
+`;
 const defaultWrapper = (action, _operationName, _operationType, _variables) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
@@ -2356,6 +2424,15 @@ function getSdk(client, withWrapper = defaultWrapper) {
         },
         getPaymentMethodSetup(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(exports.GetPaymentMethodSetupDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "getPaymentMethodSetup", "query", variables);
+        },
+        createWebhookSubscription(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.CreateWebhookSubscriptionDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "createWebhookSubscription", "mutation", variables);
+        },
+        listWebhookSubscriptions(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.ListWebhookSubscriptionsDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "listWebhookSubscriptions", "query", variables);
+        },
+        deleteWebhookSubscription(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(exports.DeleteWebhookSubscriptionDocument, variables, Object.assign(Object.assign({}, requestHeaders), wrappedRequestHeaders)), "deleteWebhookSubscription", "mutation", variables);
         },
     };
 }
