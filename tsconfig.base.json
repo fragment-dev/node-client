@@ -5,5 +5,5 @@
     "declarationMap": true
   },
   "include": ["src/**/*.ts", "generated/**/*.ts"],
-  "exclude": ["node_modules", "src/codegen.ts"]
+  "exclude": ["node_modules", "src/codegen.ts", "src/webhookCodegen.ts"]
 }
