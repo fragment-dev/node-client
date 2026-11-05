@@ -27,7 +27,7 @@ const readFixture = (name: string): string =>
 const settledBody = readFixture("PaymentSettledEvent.json");
 
 const signedHeaders = (
-  payload: string,
+  payload: string | Buffer,
   { secret = SECRET, at = new Date() }: { secret?: string; at?: Date } = {},
 ): Record<string, string> => ({
   "webhook-id": "msg_test",
@@ -61,6 +61,9 @@ const without = (body: string, path: string[]): string => {
   delete parent[path[path.length - 1] ?? ""];
   return JSON.stringify(parsed);
 };
+
+const withBom = (body: string): Uint8Array =>
+  Uint8Array.from([0xef, 0xbb, 0xbf, ...new TextEncoder().encode(body)]);
 
 const withType = (body: string, type: string): string =>
   JSON.stringify({ ...JSON.parse(body), type });
@@ -225,6 +228,26 @@ describe("verifyWebhook", () => {
     const verified = verifyWebhook({
       ...signed(settledBody),
       payload: new TextEncoder().encode(settledBody),
+    });
+    expect(verified.event).toEqual(JSON.parse(settledBody));
+  });
+
+  it("rejects a BOM prepended after signing", () => {
+    expect(() =>
+      verifyWebhook({ ...signed(settledBody), payload: withBom(settledBody) }),
+    ).toThrow(
+      expect.objectContaining({
+        code: WebhookVerificationErrorCode.invalid_signature,
+      }),
+    );
+  });
+
+  it("accepts a body signed with its BOM", () => {
+    const payload = withBom(settledBody);
+    const verified = verifyWebhook({
+      payload,
+      headers: signedHeaders(Buffer.from(payload)),
+      secret: SECRET,
     });
     expect(verified.event).toEqual(JSON.parse(settledBody));
   });
