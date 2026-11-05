@@ -94,12 +94,16 @@ export const verifyWebhook = ({ payload, headers, secret, }) => {
     const timestamp = readHeader(headers, "webhook-timestamp");
     const signature = readHeader(headers, "webhook-signature");
     checkTimestamp(timestamp);
-    const body = typeof payload === "string" ? payload : new TextDecoder().decode(payload);
-    checkSignature(body, {
+    // The signature covers the exact bytes; decoding first would drop a leading BOM.
+    const signedPayload = typeof payload === "string"
+        ? payload
+        : Buffer.from(payload.buffer, payload.byteOffset, payload.byteLength);
+    checkSignature(signedPayload, {
         "webhook-id": id,
         "webhook-timestamp": timestamp,
         "webhook-signature": signature,
     }, secret);
+    const body = typeof payload === "string" ? payload : new TextDecoder().decode(payload);
     const parsed = parseJson(body);
     validate(validateEnvelope, parsed, "webhook envelope");
     const event = parsed;
