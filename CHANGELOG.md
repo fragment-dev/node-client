@@ -8,14 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
-## [Unreleased]
-
-### Fixed
-
-- `verifyWebhook` checks the signature over the exact bytes of a `Uint8Array`
-  payload. It decoded the payload first, which dropped a leading UTF-8 byte
-  order mark before the check.
-
 ## [2.5.0]
 
 ### Added
