@@ -375,6 +375,8 @@ app.post(
 );
 ```
 
+The last `{ known: true }` arm handles every other known event type; without it, `.exhaustive()` stops compiling as soon as an SDK upgrade adds an event type the receiver does not handle.
+
 `verifyWebhook` throws a `WebhookVerificationError` whose `code` says what failed:
 
 | Code                         | Meaning                                                                     |
