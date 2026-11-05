@@ -323,6 +323,62 @@ const result = await fragment.listMultiCurrencyLedgerAccountBalances({
 assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 ```
 
+## Verify a webhook
+
+Fragment webhooks follow the [Standard Webhooks](https://www.standardwebhooks.com/) specification. `verifyWebhook` checks the signature, validates the body, and returns a typed event.
+
+Pass in the raw request body to `verifyWebhook`, before any JSON parsing. Event types your SDK version does not know about come back with `known: false`.
+
+This example below uses [`ts-pattern`](https://github.com/gvergnaud/ts-pattern) to ensure that all event types are handled.
+
+```typescript
+import express from "express";
+import { match } from "ts-pattern";
+import {
+  verifyWebhook,
+  WebhookVerificationError,
+} from "@fragment-dev/node-client";
+
+const app = express();
+
+app.post(
+  "/fragment/webhooks",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    try {
+      const verified = verifyWebhook({
+        payload: req.body,
+        headers: req.headers,
+        secret: process.env.FRAGMENT_WEBHOOK_SECRET!,
+      });
+      match(verified)
+        .with({ known: false }, ({ event }) => {
+          console.log(`Ignoring ${event.type}`);
+        })
+        .with(
+          { known: true, event: { type: "payment.settled" } },
+          ({ event }) => {
+            console.log(`Payment ${event.data.payment.ik} settled`);
+          },
+        )
+        .with({ known: true }, ({ event }) => {
+          console.log(`Received ${event.type}`);
+        })
+        .exhaustive();
+      res.sendStatus(200);
+    } catch (error) {
+      if (error instanceof WebhookVerificationError) {
+        res.status(400).send(error.code);
+        return;
+      }
+      throw error;
+    }
+  },
+);
+```
+
+An SDK upgrade can ship with new event types. This may break code like the above which requires all event types to be handled.
+
 ## Using custom queries
 
 While the SDK comes with GraphQL queries out of the box, you may want to customize these queries for your product. In order to do that:

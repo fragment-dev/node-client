@@ -55,6 +55,17 @@ jobs:
           cp ../graphql-queries/queries.graphql src/queries/queries.graphql
           cp ../graphql-queries/template-schema/schema.json ../graphql-queries/template-schema/*.graphql tests/template-schema/
 
+      # graphql-queries carries webhooks/ only once the workspaces sync has published it.
+      - name: Copy webhook schema and examples
+        working-directory: ./node-client
+        run: |
+          if [ -d ../graphql-queries/webhooks ]; then
+            mkdir -p src/webhooks
+            cp ../graphql-queries/webhooks/webhook.schema.json src/webhooks/webhook.schema.json
+            rm -rf tests/fixtures/webhooks
+            cp -R ../graphql-queries/webhooks/examples tests/fixtures/webhooks
+          fi
+
       - name: Build
         working-directory: ./node-client
         run: yarn build

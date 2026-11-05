@@ -1,0 +1,291 @@
+export type WebhookEvent = PaymentCreatedEvent | PaymentCheckoutEvent | PaymentRetryEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCard3DSCanceledEvent | PaymentSettledEvent | PaymentRefundInitiatedEvent | PaymentRefundSettledEvent | PaymentRefundFailedEvent;
+export interface PaymentCreatedEvent {
+    id: string;
+    type: "payment.created";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+        };
+    };
+}
+export interface PaymentCheckoutEvent {
+    id: string;
+    type: "payment.checkout";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            attempt: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentRetryEvent {
+    id: string;
+    type: "payment.retry";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            attempt: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentCardCapturedEvent {
+    id: string;
+    type: "payment.card_captured";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            attempt: {
+                id: string;
+            };
+            ledgerEntry: {
+                id: string;
+            } | null;
+        };
+    };
+}
+export interface PaymentCardDeclinedEvent {
+    id: string;
+    type: "payment.card_declined";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            attempt: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentCard3DSCanceledEvent {
+    id: string;
+    type: "payment.card_3ds_canceled";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            attempt: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentSettledEvent {
+    id: string;
+    type: "payment.settled";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentRefundInitiatedEvent {
+    id: string;
+    type: "payment.refund_initiated";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            refund: {
+                id: string;
+                ik: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentRefundSettledEvent {
+    id: string;
+    type: "payment.refund_settled";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            refund: {
+                id: string;
+                ik: string;
+            };
+        };
+    };
+}
+export interface PaymentRefundFailedEvent {
+    id: string;
+    type: "payment.refund_failed";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            refund: {
+                id: string;
+                ik: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface UnknownWebhookEvent {
+    id: string;
+    type: string;
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+    };
+}
+//# sourceMappingURL=webhooks.d.ts.map
