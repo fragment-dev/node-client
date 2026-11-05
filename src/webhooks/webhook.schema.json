@@ -1,0 +1,772 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:fragment:webhooks",
+  "title": "Fragment webhook envelope and Payment events",
+  "definitions": {
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentCreatedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.created" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                }
+              },
+              "required": ["occurredAt"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentCheckoutEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.checkout" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "attempt": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "attempt"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentRetryEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.retry" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "attempt": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "attempt"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentCardCapturedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.card_captured" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "attempt": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                },
+                "ledgerEntry": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "minLength": 1 }
+                      },
+                      "required": ["id"],
+                      "additionalProperties": true
+                    },
+                    { "type": "null" }
+                  ]
+                }
+              },
+              "required": ["occurredAt", "attempt", "ledgerEntry"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentCardDeclinedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.card_declined" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "attempt": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "attempt"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentCard3DSCanceledEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.card_3ds_canceled" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "attempt": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "attempt"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentSettledEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.settled" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "ledgerEntry": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "ledgerEntry"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentRefundInitiatedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.refund_initiated" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "refund": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "ik": { "type": "string", "minLength": 1 }
+                  },
+                  "required": ["id", "ik"],
+                  "additionalProperties": true
+                },
+                "ledgerEntry": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "refund", "ledgerEntry"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentRefundSettledEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.refund_settled" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "refund": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "ik": { "type": "string", "minLength": 1 }
+                  },
+                  "required": ["id", "ik"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "refund"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "PaymentRefundFailedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "payment.refund_failed" },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "refund": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "minLength": 1 },
+                    "ik": { "type": "string", "minLength": 1 }
+                  },
+                  "required": ["id", "ik"],
+                  "additionalProperties": true
+                },
+                "ledgerEntry": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "refund", "ledgerEntry"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
+    "KnownEvent": {
+      "anyOf": [
+        { "$ref": "#/definitions/PaymentCreatedEvent" },
+        { "$ref": "#/definitions/PaymentCheckoutEvent" },
+        { "$ref": "#/definitions/PaymentRetryEvent" },
+        { "$ref": "#/definitions/PaymentCardCapturedEvent" },
+        { "$ref": "#/definitions/PaymentCardDeclinedEvent" },
+        { "$ref": "#/definitions/PaymentCard3DSCanceledEvent" },
+        { "$ref": "#/definitions/PaymentSettledEvent" },
+        { "$ref": "#/definitions/PaymentRefundInitiatedEvent" },
+        { "$ref": "#/definitions/PaymentRefundSettledEvent" },
+        { "$ref": "#/definitions/PaymentRefundFailedEvent" }
+      ]
+    }
+  },
+  "allOf": [
+    { "$ref": "#/definitions/Envelope" },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "payment.created",
+              "payment.checkout",
+              "payment.retry",
+              "payment.card_captured",
+              "payment.card_declined",
+              "payment.card_3ds_canceled",
+              "payment.settled",
+              "payment.refund_initiated",
+              "payment.refund_settled",
+              "payment.refund_failed"
+            ]
+          }
+        },
+        "required": ["type"],
+        "additionalProperties": true
+      },
+      "then": { "$ref": "#/definitions/KnownEvent" }
+    }
+  ]
+}
