@@ -325,9 +325,11 @@ assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 
 ## Verify a webhook
 
-Fragment signs every webhook it sends following the [Standard Webhooks](https://www.standardwebhooks.com/) specification. `verifyWebhook` checks the signature and timestamp against your subscription's signing secret, validates the body, and returns a typed event. It is synchronous and needs no client, so you can call it from any request handler.
+Fragment webhooks follow the [Standard Webhooks](https://www.standardwebhooks.com/) specification. `verifyWebhook` checks the signature, validates the body, and returns a typed event.
 
-Verify the raw request body exactly as it arrived, before any JSON parsing: the signature covers the bytes Fragment sent. Events of a type your version of the SDK does not know come back with `known: false`, with only their envelope validated, so new event types never break your receiver. This example dispatches with [`ts-pattern`](https://github.com/gvergnaud/ts-pattern), which is a choice for your codebase rather than a dependency of the SDK.
+Pass in the raw request body to `verifyWebhook`, before any JSON parsing. Event types your SDK version does not know about come back with `known: false`.
+
+This example below uses [`ts-pattern`](https://github.com/gvergnaud/ts-pattern) to ensure that all event types are handled.
 
 ```typescript
 import express from "express";
@@ -375,17 +377,7 @@ app.post(
 );
 ```
 
-The last `{ known: true }` arm handles every other known event type; without it, `.exhaustive()` stops compiling as soon as an SDK upgrade adds an event type the receiver does not handle.
-
-`verifyWebhook` throws a `WebhookVerificationError` whose `code` says what failed:
-
-| Code                         | Meaning                                                                     |
-| ---------------------------- | --------------------------------------------------------------------------- |
-| `missing_headers`            | A `webhook-id`, `webhook-timestamp` or `webhook-signature` header is absent |
-| `timestamp_out_of_tolerance` | The `webhook-timestamp` is not within five minutes of the current time      |
-| `invalid_signature`          | The signature does not match the body and secret                            |
-| `invalid_json`               | The body is not valid JSON                                                  |
-| `invalid_payload`            | The body does not match the webhook schema; the message names the path      |
+An SDK upgrade can ship with new event types. This may break code like the above which requires all event types to be handled.
 
 ## Using custom queries
 
