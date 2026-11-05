@@ -323,6 +323,68 @@ const result = await fragment.listMultiCurrencyLedgerAccountBalances({
 assert(result.ledger?.ledgerAccounts?.nodes, "Failed to list ledger accounts");
 ```
 
+## Verify a webhook
+
+Fragment signs every webhook it sends following the [Standard Webhooks](https://www.standardwebhooks.com/) specification. `verifyWebhook` checks the signature and timestamp against your subscription's signing secret, validates the body, and returns a typed event. It is synchronous and needs no client, so you can call it from any request handler.
+
+Verify the raw request body exactly as it arrived, before any JSON parsing: the signature covers the bytes Fragment sent. Events of a type your version of the SDK does not know come back with `known: false`, with only their envelope validated, so new event types never break your receiver. This example dispatches with [`ts-pattern`](https://github.com/gvergnaud/ts-pattern), which is a choice for your codebase rather than a dependency of the SDK.
+
+```typescript
+import express from "express";
+import { match } from "ts-pattern";
+import {
+  verifyWebhook,
+  WebhookVerificationError,
+} from "@fragment-dev/node-client";
+
+const app = express();
+
+app.post(
+  "/fragment/webhooks",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    try {
+      const verified = verifyWebhook({
+        payload: req.body,
+        headers: req.headers,
+        secret: process.env.FRAGMENT_WEBHOOK_SECRET!,
+      });
+      match(verified)
+        .with({ known: false }, ({ event }) => {
+          console.log(`Ignoring ${event.type}`);
+        })
+        .with(
+          { known: true, event: { type: "payment.settled" } },
+          ({ event }) => {
+            console.log(`Payment ${event.data.payment.ik} settled`);
+          },
+        )
+        .with({ known: true }, ({ event }) => {
+          console.log(`Received ${event.type}`);
+        })
+        .exhaustive();
+      res.sendStatus(200);
+    } catch (error) {
+      if (error instanceof WebhookVerificationError) {
+        res.status(400).send(error.code);
+        return;
+      }
+      throw error;
+    }
+  },
+);
+```
+
+`verifyWebhook` throws a `WebhookVerificationError` whose `code` says what failed:
+
+| Code                         | Meaning                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `missing_headers`            | A `webhook-id`, `webhook-timestamp` or `webhook-signature` header is absent |
+| `timestamp_out_of_tolerance` | The `webhook-timestamp` is not within five minutes of the current time      |
+| `invalid_signature`          | The signature does not match the body and secret                            |
+| `invalid_json`               | The body is not valid JSON                                                  |
+| `invalid_payload`            | The body does not match the webhook schema; the message names the path      |
+
 ## Using custom queries
 
 While the SDK comes with GraphQL queries out of the box, you may want to customize these queries for your product. In order to do that:
