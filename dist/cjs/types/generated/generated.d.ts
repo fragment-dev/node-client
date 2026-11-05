@@ -2589,6 +2589,10 @@ export type PaymentAttemptsConnection = {
 /** The payer abandoned or failed the 3DS check. */
 export type PaymentCard3DsCanceledEvent = PaymentEvent & {
     __typename?: "PaymentCard3DSCanceledEvent";
+    /** The attempt the payer canceled or failed 3DS on. */
+    attempt: CheckoutPaymentAttempt | SavedPaymentMethodPaymentAttempt;
+    /** The status of the attempt after this event. Always `failed`. */
+    attemptStatus: PaymentAttemptStatus;
     /** The ID of this Payment event. */
     id: Scalars["ID"]["output"];
     /** When this event occurred. */
@@ -2769,12 +2773,12 @@ export declare enum PaymentMethodSetupStatus {
     Processing = "processing",
     Saved = "saved"
 }
-/** A list of Payment Methods, all in one page. */
+/** A page of Payment Methods. */
 export type PaymentMethodsConnection = {
     __typename?: "PaymentMethodsConnection";
-    /** Every Payment Method in the list. */
+    /** The Payment Methods in this page. */
     nodes: Array<CardPaymentMethod>;
-    /** The pagination info for this list. It never reports another page. */
+    /** The pagination info for this page. */
     pageInfo: PageInfo;
 };
 /** Filter the list of saved Payment Methods returned. */
