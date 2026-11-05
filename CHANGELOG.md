@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
-## [Unreleased]
+## [2.5.0]
 
 ### Added
 
