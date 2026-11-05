@@ -13,21 +13,21 @@ const BANNER =
 
 type WebhookSchema = { definitions: Record<string, Schema> };
 
-const definitionName = (ref: Schema): string => {
+const getDefinitionName = (ref: Schema): string => {
   if (typeof ref !== "object" || ref.$ref === undefined) {
     throw new Error(`Expected a $ref, got ${JSON.stringify(ref)}`);
   }
   return ref.$ref.replace(/^#\/definitions\//, "");
 };
 
-const knownEventNames = (knownEvent: Schema): string[] => {
+const getKnownEventNames = (knownEvent: Schema): string[] => {
   if (typeof knownEvent !== "object" || knownEvent.anyOf === undefined) {
     throw new Error("Expected KnownEvent to be an anyOf of $refs");
   }
-  return knownEvent.anyOf.map(definitionName);
+  return knownEvent.anyOf.map(getDefinitionName);
 };
 
-const eventType = (definition: Schema): string => {
+const getEventType = (definition: Schema): string => {
   const type =
     typeof definition === "object" ? definition.properties?.type : undefined;
   if (typeof type !== "object" || typeof type.const !== "string") {
@@ -36,15 +36,15 @@ const eventType = (definition: Schema): string => {
   return type.const;
 };
 
-const withoutAdditionalProperties = (node: unknown): unknown => {
+const stripAdditionalProperties = (node: unknown): unknown => {
   if (Array.isArray(node)) {
-    return node.map(withoutAdditionalProperties);
+    return node.map(stripAdditionalProperties);
   }
   if (node !== null && typeof node === "object") {
     return Object.fromEntries(
       Object.entries(node)
         .filter(([key]) => key !== "additionalProperties")
-        .map(([key, value]) => [key, withoutAdditionalProperties(value)]),
+        .map(([key, value]) => [key, stripAdditionalProperties(value)]),
     );
   }
   return node;
@@ -54,7 +54,7 @@ const generateTypes = async (
   definitions: Record<string, Schema>,
   eventNames: string[],
 ): Promise<string> => {
-  const { Envelope, ...events } = withoutAdditionalProperties(
+  const { Envelope, ...events } = stripAdditionalProperties(
     definitions,
   ) as Record<string, JSONSchema>;
   const options = {
@@ -82,23 +82,25 @@ const generateValidators = (
     validator(definition, { includeErrors: true, allErrors: false }).toModule();
   const eventValidators = eventNames.map((name) => ({
     name,
-    type: eventType(definitions[name]),
+    type: getEventType(definitions[name]),
     module: compileValidator(definitions[name]),
   }));
   return [
     BANNER,
     "/* eslint-disable @typescript-eslint/ban-ts-comment */",
     "// @ts-nocheck",
-    'import type { Validator } from "../src/webhookTypes.js";',
+    'import type { Validator } from "../src/webhooks.js";',
     "",
     `export const validateEnvelope: Validator = ${compileValidator(definitions.Envelope)}`,
     "",
     ...eventValidators.map(
       ({ name, module }) => `const validate${name}: Validator = ${module}\n`,
     ),
-    "export const eventValidators: Readonly<Record<string, Validator | undefined>> = {",
-    ...eventValidators.map(({ name, type }) => `  "${type}": validate${name},`),
-    "};",
+    "export const eventValidators: ReadonlyMap<string, Validator> = new Map([",
+    ...eventValidators.map(
+      ({ name, type }) => `  ["${type}", validate${name}],`,
+    ),
+    "]);",
     "",
   ].join("\n");
 };
@@ -115,7 +117,7 @@ const main = async (): Promise<void> => {
   const schema: WebhookSchema = JSON.parse(
     readFileSync(path.resolve(process.cwd(), SCHEMA_FILENAME), "utf-8"),
   );
-  const eventNames = knownEventNames(schema.definitions.KnownEvent);
+  const eventNames = getKnownEventNames(schema.definitions.KnownEvent);
   await writePrettified(
     TYPES_FILENAME,
     await generateTypes(schema.definitions, eventNames),

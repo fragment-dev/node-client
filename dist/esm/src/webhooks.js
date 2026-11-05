@@ -14,12 +14,13 @@ export var WebhookVerificationErrorCode;
 export class WebhookVerificationError extends FragmentError {
     code;
     constructor({ code, message, cause }) {
-        super({ code, message, cause });
+        super({ code, message, cause: cause instanceof Error ? cause : undefined });
         this.code = code;
     }
 }
+const hasHeaderGetter = (headers) => typeof headers.get === "function";
 const readHeader = (headers, name) => {
-    const value = headers instanceof Headers
+    const value = hasHeaderGetter(headers)
         ? headers.get(name)
         : headers[Object.keys(headers).find((key) => key.toLowerCase() === name) ?? name];
     const header = Array.isArray(value) ? value[0] : value;
@@ -32,9 +33,9 @@ const readHeader = (headers, name) => {
     return header;
 };
 const checkTimestamp = (timestamp) => {
-    const seconds = /^\d+$/.test(timestamp) ? Number(timestamp) : NaN;
-    const skew = Math.abs(Date.now() / 1000 - seconds);
-    if (!(skew <= TIMESTAMP_TOLERANCE_IN_SECONDS)) {
+    if (!/^\d+$/.test(timestamp) ||
+        Math.abs(Date.now() / 1000 - Number(timestamp)) >
+            TIMESTAMP_TOLERANCE_IN_SECONDS) {
         throw new WebhookVerificationError({
             code: WebhookVerificationErrorCode.timestamp_out_of_tolerance,
             message: `The webhook-timestamp header (${timestamp}) is not within ${TIMESTAMP_TOLERANCE_IN_SECONDS} seconds of now`,
@@ -49,7 +50,7 @@ const checkSignature = (payload, headers, secret) => {
         throw new WebhookVerificationError({
             code: WebhookVerificationErrorCode.invalid_signature,
             message: "The webhook signature does not match the payload",
-            cause: cause instanceof Error ? cause : undefined,
+            cause,
         });
     }
 };
@@ -61,7 +62,7 @@ const parseJson = (payload) => {
         throw new WebhookVerificationError({
             code: WebhookVerificationErrorCode.invalid_json,
             message: "The webhook payload is not valid JSON",
-            cause: cause instanceof Error ? cause : undefined,
+            cause,
         });
     }
 };
@@ -102,7 +103,7 @@ export const verifyWebhook = ({ payload, headers, secret, }) => {
     const parsed = parseJson(body);
     validate(validateEnvelope, parsed, "webhook envelope");
     const event = parsed;
-    const validator = eventValidators[event.type];
+    const validator = eventValidators.get(event.type);
     if (validator === undefined) {
         return { known: false, event };
     }

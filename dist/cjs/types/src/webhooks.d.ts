@@ -1,5 +1,14 @@
 import type { UnknownWebhookEvent, WebhookEvent } from "../generated/webhooks.js";
 import { FragmentError } from "./errors.js";
+export type ValidationError = {
+    keywordLocation: string;
+    instanceLocation: string;
+};
+/** A compiled JSON Schema validator. `errors` holds the first failure after a `false` result. */
+export type Validator = {
+    (value: unknown): boolean;
+    errors?: ValidationError[] | null;
+};
 export declare enum WebhookVerificationErrorCode {
     missing_headers = "missing_headers",
     invalid_signature = "invalid_signature",
@@ -10,7 +19,7 @@ export declare enum WebhookVerificationErrorCode {
 export type WebhookVerificationErrorParams = {
     code: WebhookVerificationErrorCode;
     message: string;
-    cause?: Error;
+    cause?: unknown;
 };
 /** Thrown by `verifyWebhook` when the request is not a webhook Fragment sent. */
 export declare class WebhookVerificationError extends FragmentError {
@@ -18,10 +27,12 @@ export declare class WebhookVerificationError extends FragmentError {
     constructor({ code, message, cause }: WebhookVerificationErrorParams);
 }
 /**
- * The headers of the incoming request: a Fetch `Headers`, or a plain record
- * such as Node's `IncomingHttpHeaders`.
+ * The headers of the incoming request: a Fetch-style `Headers` with `get`, or
+ * a plain record such as Node's `IncomingHttpHeaders`.
  */
-export type WebhookHeaders = Record<string, string | string[] | undefined> | Headers;
+export type WebhookHeaders = Record<string, string | string[] | undefined> | {
+    get(name: string): string | null;
+};
 export type VerifyWebhookArgs = {
     /** The raw request body, before any JSON parsing. */
     payload: string | Uint8Array;

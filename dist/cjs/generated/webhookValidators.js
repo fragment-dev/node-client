@@ -4745,15 +4745,15 @@ const validatePaymentRefundFailedEvent = (function () {
     };
     return ref0;
 })();
-exports.eventValidators = {
-    "payment.created": validatePaymentCreatedEvent,
-    "payment.checkout": validatePaymentCheckoutEvent,
-    "payment.retry": validatePaymentRetryEvent,
-    "payment.card_captured": validatePaymentCardCapturedEvent,
-    "payment.card_declined": validatePaymentCardDeclinedEvent,
-    "payment.card_3ds_canceled": validatePaymentCard3DSCanceledEvent,
-    "payment.settled": validatePaymentSettledEvent,
-    "payment.refund_initiated": validatePaymentRefundInitiatedEvent,
-    "payment.refund_settled": validatePaymentRefundSettledEvent,
-    "payment.refund_failed": validatePaymentRefundFailedEvent,
-};
+exports.eventValidators = new Map([
+    ["payment.created", validatePaymentCreatedEvent],
+    ["payment.checkout", validatePaymentCheckoutEvent],
+    ["payment.retry", validatePaymentRetryEvent],
+    ["payment.card_captured", validatePaymentCardCapturedEvent],
+    ["payment.card_declined", validatePaymentCardDeclinedEvent],
+    ["payment.card_3ds_canceled", validatePaymentCard3DSCanceledEvent],
+    ["payment.settled", validatePaymentSettledEvent],
+    ["payment.refund_initiated", validatePaymentRefundInitiatedEvent],
+    ["payment.refund_settled", validatePaymentRefundSettledEvent],
+    ["payment.refund_failed", validatePaymentRefundFailedEvent],
+]);

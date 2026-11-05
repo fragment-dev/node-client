@@ -12,12 +12,7 @@ are not documented here.
 
 ### Added
 
-- `verifyWebhook` verifies a webhook Fragment sent. Pass the raw request
-  `payload`, the request `headers`, and the subscription's signing `secret`; it
-  checks the Standard Webhooks signature and timestamp, validates the body
-  against the webhook schema, and returns the event as `{ known: true, event }`
-  for the event types this release knows or `{ known: false, event }` for any
-  other type, with the envelope validated.
+- `verifyWebhook` verifies a Fragment webhook and returns a typed event.
 - The webhook event types are exported: `WebhookEvent` (the union of every
   known event, such as `PaymentCreatedEvent` and `PaymentSettledEvent`) and
   `UnknownWebhookEvent`.

@@ -9,7 +9,17 @@ import {
   validateEnvelope,
 } from "../generated/webhookValidators.js";
 import { FragmentError } from "./errors.js";
-import type { Validator } from "./webhookTypes.js";
+
+export type ValidationError = {
+  keywordLocation: string;
+  instanceLocation: string;
+};
+
+/** A compiled JSON Schema validator. `errors` holds the first failure after a `false` result. */
+export type Validator = {
+  (value: unknown): boolean;
+  errors?: ValidationError[] | null;
+};
 
 const TIMESTAMP_TOLERANCE_IN_SECONDS = 5 * 60;
 
@@ -24,7 +34,7 @@ export enum WebhookVerificationErrorCode {
 export type WebhookVerificationErrorParams = {
   code: WebhookVerificationErrorCode;
   message: string;
-  cause?: Error;
+  cause?: unknown;
 };
 
 /** Thrown by `verifyWebhook` when the request is not a webhook Fragment sent. */
@@ -32,18 +42,23 @@ export class WebhookVerificationError extends FragmentError {
   readonly code: WebhookVerificationErrorCode;
 
   constructor({ code, message, cause }: WebhookVerificationErrorParams) {
-    super({ code, message, cause });
+    super({ code, message, cause: cause instanceof Error ? cause : undefined });
     this.code = code;
   }
 }
 
 /**
- * The headers of the incoming request: a Fetch `Headers`, or a plain record
- * such as Node's `IncomingHttpHeaders`.
+ * The headers of the incoming request: a Fetch-style `Headers` with `get`, or
+ * a plain record such as Node's `IncomingHttpHeaders`.
  */
 export type WebhookHeaders =
   | Record<string, string | string[] | undefined>
-  | Headers;
+  | { get(name: string): string | null };
+
+const hasHeaderGetter = (
+  headers: WebhookHeaders,
+): headers is { get(name: string): string | null } =>
+  typeof headers.get === "function";
 
 export type VerifyWebhookArgs = {
   /** The raw request body, before any JSON parsing. */
@@ -58,12 +73,11 @@ export type VerifiedWebhook =
   | { known: false; event: UnknownWebhookEvent };
 
 const readHeader = (headers: WebhookHeaders, name: string): string => {
-  const value =
-    headers instanceof Headers
-      ? headers.get(name)
-      : headers[
-          Object.keys(headers).find((key) => key.toLowerCase() === name) ?? name
-        ];
+  const value = hasHeaderGetter(headers)
+    ? headers.get(name)
+    : headers[
+        Object.keys(headers).find((key) => key.toLowerCase() === name) ?? name
+      ];
   const header = Array.isArray(value) ? value[0] : value;
   if (!header) {
     throw new WebhookVerificationError({
@@ -75,9 +89,11 @@ const readHeader = (headers: WebhookHeaders, name: string): string => {
 };
 
 const checkTimestamp = (timestamp: string): void => {
-  const seconds = /^\d+$/.test(timestamp) ? Number(timestamp) : NaN;
-  const skew = Math.abs(Date.now() / 1000 - seconds);
-  if (!(skew <= TIMESTAMP_TOLERANCE_IN_SECONDS)) {
+  if (
+    !/^\d+$/.test(timestamp) ||
+    Math.abs(Date.now() / 1000 - Number(timestamp)) >
+      TIMESTAMP_TOLERANCE_IN_SECONDS
+  ) {
     throw new WebhookVerificationError({
       code: WebhookVerificationErrorCode.timestamp_out_of_tolerance,
       message: `The webhook-timestamp header (${timestamp}) is not within ${TIMESTAMP_TOLERANCE_IN_SECONDS} seconds of now`,
@@ -99,7 +115,7 @@ const checkSignature = (
     throw new WebhookVerificationError({
       code: WebhookVerificationErrorCode.invalid_signature,
       message: "The webhook signature does not match the payload",
-      cause: cause instanceof Error ? cause : undefined,
+      cause,
     });
   }
 };
@@ -111,7 +127,7 @@ const parseJson = (payload: string): unknown => {
     throw new WebhookVerificationError({
       code: WebhookVerificationErrorCode.invalid_json,
       message: "The webhook payload is not valid JSON",
-      cause: cause instanceof Error ? cause : undefined,
+      cause,
     });
   }
 };
@@ -166,7 +182,7 @@ export const verifyWebhook = ({
   const parsed = parseJson(body);
   validate(validateEnvelope, parsed, "webhook envelope");
   const event = parsed as UnknownWebhookEvent;
-  const validator = eventValidators[event.type];
+  const validator = eventValidators.get(event.type);
   if (validator === undefined) {
     return { known: false, event };
   }

@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Webhook } from "standardwebhooks";
-import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 import type {
   PaymentSettledEvent,
@@ -47,30 +47,23 @@ const signed = (
 const secondsAgo = (seconds: number): Date =>
   new Date(Date.now() - seconds * 1000);
 
-const thrownBy = (fn: () => unknown): WebhookVerificationError => {
-  const spy = vi.fn(fn);
-  expect(spy).toThrow(WebhookVerificationError);
-  const [result] = spy.mock.results;
-  expect(result?.type).toBe("throw");
-  return result?.value as WebhookVerificationError;
+const without = (body: string, path: string[]): string => {
+  const parsed = structuredClone(JSON.parse(body));
+  const parent = path
+    .slice(0, -1)
+    .reduce((node: Record<string, unknown>, key) => {
+      const child = node[key];
+      if (child === null || typeof child !== "object") {
+        throw new Error(`No object at ${key}`);
+      }
+      return child as Record<string, unknown>;
+    }, parsed);
+  delete parent[path[path.length - 1] ?? ""];
+  return JSON.stringify(parsed);
 };
 
-const without = (body: string, path: string[]): string => {
-  const parsed: Record<string, unknown> = JSON.parse(body);
-  const [key, ...rest] = path;
-  if (key === undefined) {
-    return body;
-  }
-  if (rest.length === 0) {
-    const { [key]: removed, ...remaining } = parsed;
-    void removed;
-    return JSON.stringify(remaining);
-  }
-  return JSON.stringify({
-    ...parsed,
-    [key]: JSON.parse(without(JSON.stringify(parsed[key]), rest)),
-  });
-};
+const withType = (body: string, type: string): string =>
+  JSON.stringify({ ...JSON.parse(body), type });
 
 describe("verifyWebhook", () => {
   it.each(fixtureNames.filter((name) => name !== "UnknownEvent.json"))(
@@ -184,20 +177,30 @@ describe("verifyWebhook", () => {
         signed(without(settledBody, ["data", "event", "ledgerEntry"])),
     },
   ])("throws $code when $name", ({ code, args }) => {
-    const error = thrownBy(() => verifyWebhook(args()));
-    expect(error.code).toBe(code);
-    expect(error).toBeInstanceOf(WebhookVerificationError);
+    expect(() => verifyWebhook(args())).toThrow(WebhookVerificationError);
+    expect(() => verifyWebhook(args())).toThrow(
+      expect.objectContaining({ code }),
+    );
   });
 
   it("names the failing path when a known event does not match its schema", () => {
-    const error = thrownBy(() =>
+    expect(() =>
       verifyWebhook(
         signed(without(settledBody, ["data", "event", "ledgerEntry"])),
       ),
-    );
-    expect(error.message).toContain("payment.settled");
-    expect(error.message).toContain("#/data/event/ledgerEntry");
+    ).toThrow(/payment\.settled.*#\/data\/event\/ledgerEntry/);
   });
+
+  it.each(["constructor", "toString", "__proto__", "hasOwnProperty"])(
+    "treats the prototype key %s as an unknown type",
+    (type) => {
+      const body = withType(readFixture("UnknownEvent.json"), type);
+      expect(verifyWebhook(signed(body))).toEqual({
+        known: false,
+        event: JSON.parse(body),
+      });
+    },
+  );
 
   it("passes extra keys through", () => {
     const example = JSON.parse(settledBody);
