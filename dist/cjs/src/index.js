@@ -14,10 +14,14 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GraphQLClient = exports.gql = exports.createFragmentClient = void 0;
+exports.GraphQLClient = exports.gql = exports.WebhookVerificationErrorCode = exports.WebhookVerificationError = exports.verifyWebhook = exports.createFragmentClient = void 0;
 __exportStar(require("./errors.js"), exports);
 var client_js_1 = require("./client.js");
 Object.defineProperty(exports, "createFragmentClient", { enumerable: true, get: function () { return client_js_1.createFragmentClient; } });
+var webhooks_js_1 = require("./webhooks.js");
+Object.defineProperty(exports, "verifyWebhook", { enumerable: true, get: function () { return webhooks_js_1.verifyWebhook; } });
+Object.defineProperty(exports, "WebhookVerificationError", { enumerable: true, get: function () { return webhooks_js_1.WebhookVerificationError; } });
+Object.defineProperty(exports, "WebhookVerificationErrorCode", { enumerable: true, get: function () { return webhooks_js_1.WebhookVerificationErrorCode; } });
 var graphql_tag_1 = require("graphql-tag");
 Object.defineProperty(exports, "gql", { enumerable: true, get: function () { return graphql_tag_1.gql; } });
 var graphql_request_1 = require("graphql-request");

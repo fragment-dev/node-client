@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Releases prior to `2.0.0` were published before this changelog was added and  
 are not documented here.
 
+## [Unreleased]
+
+### Added
+
+- `verifyWebhook` verifies a Fragment webhook and returns a typed event.
+- The webhook event types are exported: `WebhookEvent` (the union of every
+  known event, such as `PaymentCreatedEvent` and `PaymentSettledEvent`) and
+  `UnknownWebhookEvent`.
+- `WebhookVerificationError` is thrown when verification fails. Its `code` is
+  one of `missing_headers`, `timestamp_out_of_tolerance`, `invalid_signature`,
+  `invalid_json`, or `invalid_payload`.
+
 ## [2.4.1]
 
 ### Fixed
