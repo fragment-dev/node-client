@@ -23,20 +23,28 @@
     "prepublishOnly": "yarn build"
   },
   "resolutions": {
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "cross-spawn": "7.0.5",
     "dset": "3.1.4",
     "micromatch": "4.0.8",
     "ws": "8.21.0",
-    "vite": "6.4.3",
+    "vite": "6.4.4",
     "@babel/runtime": "7.27.1",
     "@babel/helpers": "7.27.1",
     "tar": "7.5.22",
-    "qs": "6.16.0",
+    "qs": "6.16.1",
     "brace-expansion@^1.1.7": "1.1.21",
     "brace-expansion@^2.0.1": "2.1.7",
     "brace-expansion@^2.0.2": "2.1.7",
-    "immutable@~3.7.6": "3.8.4"
+    "immutable@~3.7.6": "3.8.4",
+    "handlebars@^4.7.7": "4.7.10",
+    "proxy-addr@~2.0.7": "2.0.8",
+    "shell-quote@^1.7.3": "1.11.0",
+    "source-map-js@^1.2.1": "1.2.2",
+    "ip-address@^10.0.1": "10.7.4",
+    "@vitest/mocker@4.1.11": "4.1.12",
+    "@graphql-tools/executor-legacy-ws@^1.0.6": "1.1.36",
+    "@graphql-tools/executor-legacy-ws@^1.1.10": "1.1.36"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^5.0.5",
