@@ -9,7 +9,8 @@ export type WebhookEvent =
   | PaymentSettledEvent
   | PaymentRefundInitiatedEvent
   | PaymentRefundSettledEvent
-  | PaymentRefundFailedEvent;
+  | PaymentRefundFailedEvent
+  | PaymentDisputeChargebackCreatedEvent;
 
 export interface PaymentCreatedEvent {
   id: string;
@@ -283,6 +284,36 @@ export interface PaymentRefundFailedEvent {
       refund: {
         id: string;
         ik: string;
+      };
+      ledgerEntry: {
+        id: string;
+      };
+    };
+  };
+}
+export interface PaymentDisputeChargebackCreatedEvent {
+  id: string;
+  type: "payment.dispute_chargeback_created";
+  occurredAt: string;
+  data: {
+    workspace: {
+      id: string;
+    };
+    payment: {
+      id: string;
+      ik: string;
+    };
+    ledger: {
+      id: string;
+      ik: string;
+    };
+    schema: {
+      key: string;
+    };
+    event: {
+      occurredAt: string;
+      dispute: {
+        id: string;
       };
       ledgerEntry: {
         id: string;

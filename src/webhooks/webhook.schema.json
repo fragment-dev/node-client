@@ -727,6 +727,82 @@
       "required": ["id", "type", "occurredAt", "data"],
       "additionalProperties": true
     },
+    "PaymentDisputeChargebackCreatedEvent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "const": "payment.dispute_chargeback_created"
+        },
+        "occurredAt": {
+          "type": "string",
+          "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": "object",
+              "properties": { "id": { "type": "string", "minLength": 1 } },
+              "required": ["id"],
+              "additionalProperties": true
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "ledger": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "ik": { "type": "string", "minLength": 1 }
+              },
+              "required": ["id", "ik"],
+              "additionalProperties": true
+            },
+            "schema": {
+              "type": "object",
+              "properties": { "key": { "type": "string", "minLength": 1 } },
+              "required": ["key"],
+              "additionalProperties": true
+            },
+            "event": {
+              "type": "object",
+              "properties": {
+                "occurredAt": {
+                  "type": "string",
+                  "pattern": "^((\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-((0[13578]|1[02])-(0[1-9]|[12]\\d|3[01])|(0[469]|11)-(0[1-9]|[12]\\d|30)|(02)-(0[1-9]|1\\d|2[0-8])))T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|([+-]\\d{2}:?\\d{2}))$"
+                },
+                "dispute": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                },
+                "ledgerEntry": {
+                  "type": "object",
+                  "properties": { "id": { "type": "string", "minLength": 1 } },
+                  "required": ["id"],
+                  "additionalProperties": true
+                }
+              },
+              "required": ["occurredAt", "dispute", "ledgerEntry"],
+              "additionalProperties": true
+            }
+          },
+          "required": ["workspace", "payment", "ledger", "schema", "event"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["id", "type", "occurredAt", "data"],
+      "additionalProperties": true
+    },
     "KnownEvent": {
       "anyOf": [
         { "$ref": "#/definitions/PaymentCreatedEvent" },
@@ -738,7 +814,8 @@
         { "$ref": "#/definitions/PaymentSettledEvent" },
         { "$ref": "#/definitions/PaymentRefundInitiatedEvent" },
         { "$ref": "#/definitions/PaymentRefundSettledEvent" },
-        { "$ref": "#/definitions/PaymentRefundFailedEvent" }
+        { "$ref": "#/definitions/PaymentRefundFailedEvent" },
+        { "$ref": "#/definitions/PaymentDisputeChargebackCreatedEvent" }
       ]
     }
   },
@@ -759,7 +836,8 @@
               "payment.settled",
               "payment.refund_initiated",
               "payment.refund_settled",
-              "payment.refund_failed"
+              "payment.refund_failed",
+              "payment.dispute_chargeback_created"
             ]
           }
         },
