@@ -1364,6 +1364,7 @@ mutation createPayment(
         currency {
           code
         }
+        rail
         refundedAmount
         refunds {
           nodes {
@@ -1416,6 +1417,7 @@ mutation retryPayment(
         currency {
           code
         }
+        rail
         refundedAmount
         refunds {
           nodes {
@@ -1472,6 +1474,7 @@ mutation refundPayment(
         currency {
           code
         }
+        rail
         refundedAmount
         refunds {
           nodes {
@@ -1507,6 +1510,7 @@ query getPayment($ik: SafeString!, $ledgerIk: SafeString!) {
       name
       precision
     }
+    rail
     status
     type
     typeVersion
@@ -1542,6 +1546,7 @@ query listPayments(
         currency {
           code
         }
+        rail
         status
         type
         typeVersion

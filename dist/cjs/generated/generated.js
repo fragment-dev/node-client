@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalancesConsistencyMode = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
-exports.getSdk = exports.DeleteWebhookSubscriptionDocument = exports.ListWebhookSubscriptionsDocument = exports.CreateWebhookSubscriptionDocument = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.RefundPaymentDocument = exports.RetryPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = exports.SyncCustomTxsDocument = void 0;
+exports.ReconcileTxRuntimeDocument = exports.ReconcileTxDocument = exports.AddLedgerEntryRuntimeDocument = exports.MigrateLedgerEntryDocument = exports.ReverseLedgerEntryDocument = exports.AddLedgerEntryDocument = exports.AddLedgerEntriesDocument = exports.InstantiateLedgerAccountDocument = exports.DeleteLedgerDocument = exports.CreateLedgerDocument = exports.DeleteSchemaDocument = exports.StoreSchemaDocument = exports.UnitEnv = exports.TxType = exports.StripeEnv = exports.SchemaSystemLineKind = exports.SchemaPaymentTypeStatus = exports.SchemaPaymentTypeRail = exports.SchemaPaymentTypeDirection = exports.SchemaPaymentAccountingEventKey = exports.SchemaLedgerEntryStatus = exports.SchemaLedgerAccountStatus = exports.SchemaConsistencyMode = exports.SceneEventType = exports.ReadBalancesConsistencyMode = exports.ReadBalanceConsistencyMode = exports.PostLinesAs = exports.PaymentStatus = exports.PaymentRefundStatus = exports.PaymentRail = exports.PaymentMode = exports.PaymentMethodSetupStatus = exports.PaymentDisputeStatus = exports.PaymentDisputeOutcome = exports.PaymentCurrencyCode = exports.PaymentAttemptStatus = exports.LinkType = exports.LedgerTypes = exports.LedgerMigrationStatus = exports.LedgerLinesConsistencyMode = exports.LedgerDataMigrationStatus = exports.LedgerAccountTypes = exports.LedgerAccountClearingStatus = exports.IncreaseEnv = exports.Granularity = exports.ExternalTxSource = exports.ExternalTransferType = exports.CurrencyMode = exports.CurrencyCode = exports.BalanceUpdateConsistencyMode = void 0;
+exports.getSdk = exports.DeleteWebhookSubscriptionDocument = exports.ListWebhookSubscriptionsDocument = exports.CreateWebhookSubscriptionDocument = exports.GetPaymentMethodSetupDocument = exports.CreatePaymentMethodSetupDocument = exports.DeletePaymentMethodDocument = exports.GetPaymentMethodDocument = exports.ListPaymentMethodsDocument = exports.ListPaymentsDocument = exports.GetPaymentDocument = exports.RefundPaymentDocument = exports.RetryPaymentDocument = exports.CreatePaymentDocument = exports.CreateCustomCurrencyDocument = exports.GetEntriesToMigrateForLedgerAccountDataMigrationDocument = exports.GetAccountDataMigrationsDocument = exports.GetEntriesToMigrateForLedgerEntryDataMigrationDocument = exports.GetEntryDataMigrationsDocument = exports.ListLedgerEntryGroupBalancesDocument = exports.GetWorkspaceDocument = exports.ListLedgerEntriesDocument = exports.GetSchemaDocument = exports.GetLedgerAccountBalanceDocument = exports.GetLedgerAccountLinesDocument = exports.ListMultiCurrencyLedgerAccountBalancesDocument = exports.ListLedgerAccountBalancesDocument = exports.ListLedgerAccountsDocument = exports.GetLedgerEntryDocument = exports.GetLedgerDocument = exports.DeleteCustomTxsDocument = exports.SyncCustomTxsByLinkIkDocument = exports.SyncCustomAccountsByLinkIkDocument = exports.SyncCustomTxsDocument = exports.SyncCustomAccountsDocument = exports.CreateCustomLinkDocument = exports.UpdateLedgerDocument = exports.UpdateLedgerEntryDocument = void 0;
 const graphql_tag_1 = require("graphql-tag");
-/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var BalanceUpdateConsistencyMode;
 (function (BalanceUpdateConsistencyMode) {
     BalanceUpdateConsistencyMode["Eventual"] = "eventual";
@@ -301,6 +301,25 @@ var PaymentCurrencyCode;
 (function (PaymentCurrencyCode) {
     PaymentCurrencyCode["Usd"] = "USD";
 })(PaymentCurrencyCode || (exports.PaymentCurrencyCode = PaymentCurrencyCode = {}));
+/** How a closed Payment dispute ended. */
+var PaymentDisputeOutcome;
+(function (PaymentDisputeOutcome) {
+    PaymentDisputeOutcome["ChargebackLost"] = "chargeback_lost";
+    PaymentDisputeOutcome["ChargebackWon"] = "chargeback_won";
+    PaymentDisputeOutcome["InquiryClosedWithoutChargeback"] = "inquiry_closed_without_chargeback";
+    PaymentDisputeOutcome["Prevented"] = "prevented";
+})(PaymentDisputeOutcome || (exports.PaymentDisputeOutcome = PaymentDisputeOutcome = {}));
+/** Status of a Payment dispute. */
+var PaymentDisputeStatus;
+(function (PaymentDisputeStatus) {
+    PaymentDisputeStatus["ChargebackClosed"] = "chargeback_closed";
+    PaymentDisputeStatus["ChargebackUnderReview"] = "chargeback_under_review";
+    PaymentDisputeStatus["InquiryClosed"] = "inquiry_closed";
+    PaymentDisputeStatus["InquiryUnderReview"] = "inquiry_under_review";
+    PaymentDisputeStatus["NeedsChargebackResponse"] = "needs_chargeback_response";
+    PaymentDisputeStatus["NeedsInquiryResponse"] = "needs_inquiry_response";
+    PaymentDisputeStatus["Prevented"] = "prevented";
+})(PaymentDisputeStatus || (exports.PaymentDisputeStatus = PaymentDisputeStatus = {}));
 /** Status of a Payment Method Setup. */
 var PaymentMethodSetupStatus;
 (function (PaymentMethodSetupStatus) {
@@ -314,6 +333,14 @@ var PaymentMode;
     PaymentMode["Production"] = "production";
     PaymentMode["Sandbox"] = "sandbox";
 })(PaymentMode || (exports.PaymentMode = PaymentMode = {}));
+/** A payment network a Payment moves money over. */
+var PaymentRail;
+(function (PaymentRail) {
+    /** The ACH network. */
+    PaymentRail["Ach"] = "ach";
+    /** Card networks. */
+    PaymentRail["Card"] = "card";
+})(PaymentRail || (exports.PaymentRail = PaymentRail = {}));
 /** Status of a Payment refund. */
 var PaymentRefundStatus;
 (function (PaymentRefundStatus) {
@@ -343,7 +370,7 @@ var PostLinesAs;
     /** Lines with a zero amount are skipped, but lines are not aggregated. If all lines have a zero amount, no lines are skipped. */
     PostLinesAs["SkipZeroLines"] = "skip_zero_lines";
 })(PostLinesAs || (exports.PostLinesAs = PostLinesAs = {}));
-/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var ReadBalanceConsistencyMode;
 (function (ReadBalanceConsistencyMode) {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
@@ -353,7 +380,7 @@ var ReadBalanceConsistencyMode;
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     ReadBalanceConsistencyMode["UseAccount"] = "use_account";
 })(ReadBalanceConsistencyMode || (exports.ReadBalanceConsistencyMode = ReadBalanceConsistencyMode = {}));
-/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 var ReadBalancesConsistencyMode;
 (function (ReadBalancesConsistencyMode) {
     /** Each balance is an independent eventually consistent read. Any Ledger Account qualifies. */
@@ -374,7 +401,7 @@ var SceneEventType;
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 var SchemaConsistencyMode;
 (function (SchemaConsistencyMode) {
@@ -408,9 +435,9 @@ var SchemaPaymentAccountingEventKey;
 (function (SchemaPaymentAccountingEventKey) {
     /** The payment was captured and is guaranteed to settle. */
     SchemaPaymentAccountingEventKey["Initiated"] = "initiated";
-    /** EXPERIMENTAL: An initiated refund failed. */
+    /** An initiated refund failed. */
     SchemaPaymentAccountingEventKey["RefundFailed"] = "refund_failed";
-    /** EXPERIMENTAL: A refund of the settled payment is initiated. */
+    /** A refund of the settled payment is initiated. */
     SchemaPaymentAccountingEventKey["RefundInitiated"] = "refund_initiated";
     /** The payment settled. */
     SchemaPaymentAccountingEventKey["Settled"] = "settled";
@@ -423,6 +450,14 @@ var SchemaPaymentTypeDirection;
     /** Money moves out of the Payment Account. */
     SchemaPaymentTypeDirection["Payout"] = "payout";
 })(SchemaPaymentTypeDirection || (exports.SchemaPaymentTypeDirection = SchemaPaymentTypeDirection = {}));
+/** A payment network a Payment Type moves money over. */
+var SchemaPaymentTypeRail;
+(function (SchemaPaymentTypeRail) {
+    /** The ACH network. */
+    SchemaPaymentTypeRail["Ach"] = "ach";
+    /** Card networks. */
+    SchemaPaymentTypeRail["Card"] = "card";
+})(SchemaPaymentTypeRail || (exports.SchemaPaymentTypeRail = SchemaPaymentTypeRail = {}));
 /** The status of a Payment Type. */
 var SchemaPaymentTypeStatus;
 (function (SchemaPaymentTypeStatus) {
@@ -435,8 +470,26 @@ var SchemaPaymentTypeStatus;
  */
 var SchemaSystemLineKind;
 (function (SchemaSystemLineKind) {
+    /** The line removing the countered fee from the Payment Account when a chargeback is contested. */
+    SchemaSystemLineKind["PaymentChargebackCounteredFeeLine"] = "payment_chargeback_countered_fee_line";
+    /** The line restoring the countered fee to the Payment Account when a chargeback is reversed. */
+    SchemaSystemLineKind["PaymentChargebackCounteredFeeReversalLine"] = "payment_chargeback_countered_fee_reversal_line";
+    /** The line removing the dispute fee from the Payment Account when a chargeback opens. */
+    SchemaSystemLineKind["PaymentChargebackFeeLine"] = "payment_chargeback_fee_line";
+    /** The line removing the disputed amount from the Payment Account when a chargeback opens. */
+    SchemaSystemLineKind["PaymentChargebackLine"] = "payment_chargeback_line";
+    /** The line restoring a disputed amount to the Payment Account when a chargeback is reversed. */
+    SchemaSystemLineKind["PaymentChargebackReversalLine"] = "payment_chargeback_reversal_line";
     /** The line carrying the Fragment fee amount, posted to the Payment Account. */
     SchemaSystemLineKind["PaymentFeeLine"] = "payment_fee_line";
+    /** The line restoring the Fragment fee to the Payment Account when a payout fails. */
+    SchemaSystemLineKind["PaymentFeeReversalLine"] = "payment_fee_reversal_line";
+    /** The line removing the payout amount from the Payment Account when a payout is initiated. */
+    SchemaSystemLineKind["PaymentPayoutLine"] = "payment_payout_line";
+    /** The line restoring the payout return amount to the Payment Account when a payout is returned. */
+    SchemaSystemLineKind["PaymentPayoutReturnLine"] = "payment_payout_return_line";
+    /** The line restoring the payout amount to the Payment Account when a payout fails. */
+    SchemaSystemLineKind["PaymentPayoutReversalLine"] = "payment_payout_reversal_line";
     /** The line removing the refund amount from the Payment Account when a Refund is initiated. */
     SchemaSystemLineKind["PaymentRefundLine"] = "payment_refund_line";
     /** The line restoring the refund amount to the Payment Account when a Refund fails. */
@@ -1866,6 +1919,7 @@ exports.CreatePaymentDocument = (0, graphql_tag_1.gql) `
           currency {
             code
           }
+          rail
           refundedAmount
           refunds {
             nodes {
@@ -1919,6 +1973,7 @@ exports.RetryPaymentDocument = (0, graphql_tag_1.gql) `
           currency {
             code
           }
+          rail
           refundedAmount
           refunds {
             nodes {
@@ -1976,6 +2031,7 @@ exports.RefundPaymentDocument = (0, graphql_tag_1.gql) `
           currency {
             code
           }
+          rail
           refundedAmount
           refunds {
             nodes {
@@ -2012,6 +2068,7 @@ exports.GetPaymentDocument = (0, graphql_tag_1.gql) `
         name
         precision
       }
+      rail
       status
       type
       typeVersion
@@ -2048,6 +2105,7 @@ exports.ListPaymentsDocument = (0, graphql_tag_1.gql) `
           currency {
             code
           }
+          rail
           status
           type
           typeVersion

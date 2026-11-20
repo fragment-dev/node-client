@@ -226,7 +226,7 @@ export type BalanceChangeDuringConnection = {
     /** The start time of the period across which the balance changes are requested */
     startTime: Scalars["FirstMoment"]["output"];
 };
-/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** Used to configure the write-consistency of a Ledger Account's balance. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum BalanceUpdateConsistencyMode {
     Eventual = "eventual",
     Strong = "strong"
@@ -257,7 +257,7 @@ export type ChartOfAccountsInput = {
      * The default consistency configuration for all Ledger Accounts in this Schema.
      * If a Ledger Account does not specify its own consistency configuration, it will use the default values provided here.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     defaultConsistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /**
@@ -330,7 +330,7 @@ export type CreateLedgerAccountResult = {
 export type CreateLedgerAccountsInput = {
     /** Ledger Accounts to create as children of this Ledger Account. */
     childLedgerAccounts?: InputMaybe<Array<CreateLedgerAccountsInput>>;
-    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
     consistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /** The currency of this Ledger Account. If this is not set, the workspace level default is used. */
     currency?: InputMaybe<CurrencyMatchInput>;
@@ -338,7 +338,7 @@ export type CreateLedgerAccountsInput = {
     currencyMode?: InputMaybe<CurrencyMode>;
     /** The idempotency key for creating this Ledger Account. */
     ik: Scalars["SafeString"]["input"];
-    /** The External Account to link to this Ledger Account. This can only be specified on leaf Ledger Accounts. See [Reconcile payments](https://fragment.dev/guides/reconcile-payments). */
+    /** The External Account to link to this Ledger Account. This can only be specified on leaf Ledger Accounts. See [Reconcile payments](https://fragment.dev/docs/reconcile-payments). */
     linkedAccount?: InputMaybe<ExternalAccountMatchInput>;
     /** The name of the Ledger Account. */
     name: Scalars["String"]["input"];
@@ -1408,21 +1408,21 @@ export type LedgerAccountClearingStatusFilter = {
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountCondition = {
     __typename?: "LedgerAccountCondition";
-    /** A condition that the `ownBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/guides/read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the `ownBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs/read-balances) for more on the different types of Ledger Account balances. */
     ownBalance?: Maybe<Int96Condition>;
-    /** A condition that the `totalBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/guides/read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the `totalBalance` field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](https://fragment.dev/docs/read-balances) for more on the different types of Ledger Account balances. */
     totalBalance?: Maybe<Int96Condition>;
 };
 /** A set of conditions that a Ledger Account must meet for an operation to succeed. */
 export type LedgerAccountConditionInput = {
-    /** A condition that the ownBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](/guides/read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the ownBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](/docs/read-balances) for more on the different types of Ledger Account balances. */
     ownBalance?: InputMaybe<Int96ConditionInput>;
-    /** A condition that the totalBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](/guides/read-balances) for more on the different types of Ledger Account balances. */
+    /** A condition that the totalBalance field must satisfy. Note that this condition always applies to the latest balance, not to balances at a specific date or time. See [Read balances](/docs/read-balances) for more on the different types of Ledger Account balances. */
     totalBalance?: InputMaybe<Int96ConditionInput>;
 };
 /**
  * The consistency configuration of a Ledger Account's balance updates.
- * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type LedgerAccountConsistencyConfig = {
     __typename?: "LedgerAccountConsistencyConfig";
@@ -1435,7 +1435,7 @@ export type LedgerAccountConsistencyConfig = {
      * Otherwise if not set or set to `eventual`, `ownBalance` updates are applied
      * asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates: BalanceUpdateConsistencyMode;
     /**
@@ -1446,19 +1446,19 @@ export type LedgerAccountConsistencyConfig = {
      * Otherwise if not set or set to `eventual`, updates are applied
      * asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     totalBalanceUpdates?: Maybe<BalanceUpdateConsistencyMode>;
 };
 /**
  * The payload configuring the consistency for this Ledger Account.
- * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type LedgerAccountConsistencyConfigInput = {
     /**
      * The consistency configuration for Ledger Entry Groups affecting this account.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     groups?: InputMaybe<Array<LedgerAccountGroupConsistencyConfigInput>>;
     /**
@@ -1467,7 +1467,7 @@ export type LedgerAccountConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, `lines` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     lines?: InputMaybe<LedgerLinesConsistencyMode>;
     /**
@@ -1476,7 +1476,7 @@ export type LedgerAccountConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
     /**
@@ -1485,7 +1485,7 @@ export type LedgerAccountConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, `totalBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     totalBalanceUpdates?: InputMaybe<BalanceUpdateConsistencyMode>;
 };
@@ -1546,7 +1546,7 @@ export type LedgerAccountGroupConsistencyConfigInput = {
      *
      * Otherwise if unset or set to `eventual`, Ledger Entry Group `ownBalance` updates are applied asynchronously and may not be immediately reflected in queries.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     ownBalanceUpdates: BalanceUpdateConsistencyMode;
 };
@@ -2318,7 +2318,7 @@ export type Mutation = {
     addLedgerEntry: AddLedgerEntryResponse;
     /** Creates a custom currency.  */
     createCustomCurrency: CreateCustomCurrencyResponse;
-    /** Custom Links let you integrate external systems that don't have native support. See [Custom Links](https://fragment.dev/guides/sync-payments#custom-link) */
+    /** Custom Links let you integrate external systems that don't have native support. See [Custom Links](https://fragment.dev/docs/sync-payments#custom-link) */
     createCustomLink: CreateCustomLinkResponse;
     /** Creates a Ledger.  */
     createLedger: CreateLedgerResponse;
@@ -2353,7 +2353,7 @@ export type Mutation = {
      *   2. Post a new Ledger Entry with the new type, typeVersion, and parameters provided
      */
     migrateLedgerEntry: MigrateLedgerEntryResponse;
-    /** This mutation is used to [reconcile](https://fragment.dev/guides/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
+    /** This mutation is used to [reconcile](https://fragment.dev/docs/reconcile-payments#reconcile-a-tx) transactions from an external system into a Ledger Entry. This mutation does not require an idempotency key since a transaction can only be reconciled once per Linked Ledger Account.  If you are reconciling a transfer between two Link Accounts which are both linked to the same Ledger, use a transit account in between to split the transfer into two `reconcileTx` calls. */
     reconcileTx: ReconcileTxResponse;
     /**
      * Refund a settled Payment.
@@ -2371,9 +2371,9 @@ export type Mutation = {
      * Else, the Schema is updated, and every Ledger associated with it is migrated to the latest version.
      */
     storeSchema: StoreSchemaResponse;
-    /** Once you've created a [Custom Link](https://fragment.dev/guides/sync-payments#custom-link), create accounts under it using this mutation. Each Custom Account is an immutable, single-entry view of all the transactions in the external account. You can sync up to 100 Custom Accounts in one API call. */
+    /** Once you've created a [Custom Link](https://fragment.dev/docs/sync-payments#custom-link), create accounts under it using this mutation. Each Custom Account is an immutable, single-entry view of all the transactions in the external account. You can sync up to 100 Custom Accounts in one API call. */
     syncCustomAccounts: SyncCustomAccountsResponse;
-    /** You can create transactions under a Custom Account in a [Custom Link](https://fragment.dev/guides/sync-payments#custom-link) using this mutation. Once you've imported transactions, you can use the reconcileTx mutation to add them to a Ledger via the Linked Ledger Account. You can sync up to 100 Custom Transactions in one API call. */
+    /** You can create transactions under a Custom Account in a [Custom Link](https://fragment.dev/docs/sync-payments#custom-link) using this mutation. Once you've imported transactions, you can use the reconcileTx mutation to add them to a Ledger via the Linked Ledger Account. You can sync up to 100 Custom Transactions in one API call. */
     syncCustomTxs: SyncCustomTxsResponse;
     /** Updates a Ledger. Currently, you can change only the Ledger 'name'. */
     updateLedger: UpdateLedgerResponse;
@@ -2522,7 +2522,7 @@ export type NotFoundError = Error & {
     /** Whether or not the operation is retryable */
     retryable: Scalars["Boolean"]["output"];
 };
-/** An object containing [pagination](https://fragment.dev/guides/query-data#basics-pagination) details. */
+/** An object containing [pagination](https://fragment.dev/docs/query-data#basics-pagination) details. */
 export type PageInfo = {
     __typename?: "PageInfo";
     endCursor?: Maybe<Scalars["String"]["output"]>;
@@ -2542,6 +2542,8 @@ export type Payment = {
     created: Scalars["DateTime"]["output"];
     /** The currency this Payment is denominated in. */
     currency: PaymentCurrency;
+    /** The Payment's disputes, newest first. */
+    disputes: PaymentDisputesConnection;
     /** The log of events that have occurred on this Payment, most recent first. */
     events: PaymentEventsConnection;
     /** The ID of this Payment. */
@@ -2554,12 +2556,16 @@ export type Payment = {
     mode: PaymentMode;
     /** Parameters the Payment was created with. */
     parameters: Scalars["JSON"]["output"];
+    /** The payment network this Payment moves money over. */
+    rail: PaymentRail;
     /** The amount refunded from this Payment, in whole cents. */
     refundedAmount: Scalars["Int96"]["output"];
     /** The Payment's refunds, newest first. */
     refunds: PaymentRefundsConnection;
     /** The status of this Payment. */
     status: PaymentStatus;
+    /** The set of tags attached to this Payment. Ledger Entries inherit these tags. */
+    tags: Array<PaymentTag>;
     /** The Payment Type in the Schema this Payment was created from. */
     type: Scalars["SafeString"]["output"];
     /** The version of the Payment Type. */
@@ -2633,7 +2639,7 @@ export type PaymentCardDeclinedEvent = PaymentEvent & {
     attempt: CheckoutPaymentAttempt | SavedPaymentMethodPaymentAttempt;
     /** The status of the attempt after this event. Always `failed`. */
     attemptStatus: PaymentAttemptStatus;
-    /** The payment processor's reason for the decline, `null` when it gave none. */
+    /** Why the card was declined, such as `insufficient_funds`, `card_country_not_allowed`, or `null` when no reason is known. */
     declineCode?: Maybe<Scalars["String"]["output"]>;
     /** The ID of this Payment event. */
     id: Scalars["ID"]["output"];
@@ -2695,6 +2701,70 @@ export type PaymentCurrency = {
 export declare enum PaymentCurrencyCode {
     Usd = "USD"
 }
+/** A dispute a cardholder opened against a Payment. */
+export type PaymentDispute = {
+    __typename?: "PaymentDispute";
+    /** The disputed amount, in whole cents. Dispute fees are not included. */
+    amount: Scalars["Int96"]["output"];
+    /** The currency of the disputed amount. */
+    currency: PaymentCurrency;
+    /** The ID of this Payment Dispute. */
+    id: Scalars["ID"]["output"];
+    /** How this Payment Dispute ended. */
+    outcome?: Maybe<PaymentDisputeOutcome>;
+    /** When a response to this Payment Dispute is due. */
+    responseDueAt?: Maybe<Scalars["DateTime"]["output"]>;
+    /** The status of this Payment Dispute. */
+    status: PaymentDisputeStatus;
+};
+/** A chargeback opened directly against the Payment, and its `chargeback_settled` Ledger Entry posted. */
+export type PaymentDisputeChargebackCreatedEvent = PaymentEvent & {
+    __typename?: "PaymentDisputeChargebackCreatedEvent";
+    /** The Payment Dispute this event describes. */
+    dispute: PaymentDispute;
+    /** The status of the dispute after this event. Always `needs_chargeback_response`. */
+    disputeStatus: PaymentDisputeStatus;
+    /** The ID of this Payment event. */
+    id: Scalars["ID"]["output"];
+    /** The `chargeback_settled` Ledger Entry. */
+    ledgerEntry: LedgerEntry;
+    /** When this event occurred. */
+    occurredAt: Scalars["DateTime"]["output"];
+    /** The status of the Payment after this event. */
+    paymentStatus: PaymentStatus;
+    /** When a response to the dispute was due after this event, `null` when none was due. */
+    responseDueAt?: Maybe<Scalars["DateTime"]["output"]>;
+    /**
+     * The status of the Payment after this event.
+     * @deprecated Use `paymentStatus` on each event type.
+     */
+    status: PaymentStatus;
+};
+/** How a closed Payment dispute ended. */
+export declare enum PaymentDisputeOutcome {
+    ChargebackLost = "chargeback_lost",
+    ChargebackWon = "chargeback_won",
+    InquiryClosedWithoutChargeback = "inquiry_closed_without_chargeback",
+    Prevented = "prevented"
+}
+/** Status of a Payment dispute. */
+export declare enum PaymentDisputeStatus {
+    ChargebackClosed = "chargeback_closed",
+    ChargebackUnderReview = "chargeback_under_review",
+    InquiryClosed = "inquiry_closed",
+    InquiryUnderReview = "inquiry_under_review",
+    NeedsChargebackResponse = "needs_chargeback_response",
+    NeedsInquiryResponse = "needs_inquiry_response",
+    Prevented = "prevented"
+}
+/** A paginated list of Payment disputes. */
+export type PaymentDisputesConnection = {
+    __typename?: "PaymentDisputesConnection";
+    /** The current page of results. */
+    nodes: Array<PaymentDispute>;
+    /** The pagination info for this list. */
+    pageInfo: PageInfo;
+};
 /** Something that happened to a Payment. */
 export type PaymentEvent = {
     /** The ID of this Payment event. */
@@ -2711,7 +2781,7 @@ export type PaymentEvent = {
 export type PaymentEventsConnection = {
     __typename?: "PaymentEventsConnection";
     /** The current page of results. */
-    nodes: Array<PaymentCard3DsCanceledEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCheckoutEvent | PaymentCreatedEvent | PaymentRefundFailedEvent | PaymentRefundInitiatedEvent | PaymentRefundSettledEvent | PaymentRetryEvent | PaymentSettledEvent>;
+    nodes: Array<PaymentCard3DsCanceledEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCheckoutEvent | PaymentCreatedEvent | PaymentDisputeChargebackCreatedEvent | PaymentRefundFailedEvent | PaymentRefundInitiatedEvent | PaymentRefundSettledEvent | PaymentRetryEvent | PaymentSettledEvent>;
     /** The pagination info for this list. */
     pageInfo: PageInfo;
 };
@@ -2790,6 +2860,13 @@ export type PaymentMethodsFilterSet = {
 export declare enum PaymentMode {
     Production = "production",
     Sandbox = "sandbox"
+}
+/** A payment network a Payment moves money over. */
+export declare enum PaymentRail {
+    /** The ACH network. */
+    Ach = "ach",
+    /** Card networks. */
+    Card = "card"
 }
 /** A refund issued against a Payment. */
 export type PaymentRefund = {
@@ -2929,6 +3006,14 @@ export type PaymentStatusFilter = {
     equalTo?: InputMaybe<PaymentStatus>;
     /** Results can have any of the specified statuses. */
     in?: InputMaybe<Array<PaymentStatus>>;
+};
+/** A tag on a Payment. */
+export type PaymentTag = {
+    __typename?: "PaymentTag";
+    /** The key of this tag. */
+    key: Scalars["SafeString"]["output"];
+    /** The value associated with this tag's key. */
+    value: Scalars["SafeString"]["output"];
 };
 /** A paginated list of Payments. */
 export type PaymentsConnection = {
@@ -3107,7 +3192,7 @@ export type QueryWebhookSubscriptionsArgs = {
     after?: InputMaybe<Scalars["String"]["input"]>;
     first?: InputMaybe<Scalars["Int"]["input"]>;
 };
-/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** The consistency configuration of a Ledger Account's balance queries. If not provided as an argument to a balance query, the default behavior is to read eventually consistent balances. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum ReadBalanceConsistencyMode {
     /** Balance queries will read eventually consistent balances. This is the default behavior if `ReadBalanceConsistencyMode` is not provided as an argument to the balance field. Both Ledger Accounts configured with strongly and eventually consistent balance updates support this enum. */
     Eventual = "eventual",
@@ -3116,7 +3201,7 @@ export declare enum ReadBalanceConsistencyMode {
     /** Balance queries will use the value from the Ledger Account's `ownBalanceUpdates` in its `consistencyConfig`. */
     UseAccount = "use_account"
 }
-/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+/** How a list of Ledger Account balances is read. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
 export declare enum ReadBalancesConsistencyMode {
     /** Each balance is an independent eventually consistent read. Any Ledger Account qualifies. */
     Eventual = "eventual",
@@ -3301,20 +3386,20 @@ export type SchemaConnection = {
 /**
  * The consistency configuration for entities created within Ledgers created by this Schema.
  *
- * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export type SchemaConsistencyConfigInput = {
     /**
      * The consistency mode for the Ledger Entries list query within Ledgers created by this Schema.
      *
-     * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+     * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
      */
     entries?: InputMaybe<SchemaConsistencyMode>;
 };
 /**
  * The consistency modes available for entities created within this Schema.
  *
- * See [Configure consistency](https://fragment.dev/guides/configure-consistency).
+ * See [Configure consistency](https://fragment.dev/docs/configure-consistency).
  */
 export declare enum SchemaConsistencyMode {
     /** Eventually consistent entity updates */
@@ -3388,7 +3473,7 @@ export type SchemaLedgerAccountInput = {
      * Clearing Accounts have balances that should tend to zero. They are used to track in-progress workflows and payments.
      */
     clearing?: InputMaybe<Scalars["Boolean"]["input"]>;
-    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/guides/configure-consistency). */
+    /** The consistency configuration for this ledger account. See [Configure consistency](https://fragment.dev/docs/configure-consistency). */
     consistencyConfig?: InputMaybe<LedgerAccountConsistencyConfigInput>;
     /**
      * The currency of this Ledger Account. If this is not set, and `currencyMode` is
@@ -3545,7 +3630,7 @@ export type SchemaLedgerLineInput = {
      * This field is required if the Ledger Account being posted to is a Linked Ledger Account. Otherwise, this field is disallowed.
      * It supports parameters in its attributes via handlebars syntax.
      *
-     * See the docs on [reconciling payments](https://fragment.dev/guides/reconcile-payments).
+     * See the docs on [reconciling payments](https://fragment.dev/docs/reconcile-payments).
      */
     tx?: InputMaybe<SchemaTxMatchInput>;
 };
@@ -3563,9 +3648,9 @@ export type SchemaMatchInput = {
 export declare enum SchemaPaymentAccountingEventKey {
     /** The payment was captured and is guaranteed to settle. */
     Initiated = "initiated",
-    /** EXPERIMENTAL: An initiated refund failed. */
+    /** An initiated refund failed. */
     RefundFailed = "refund_failed",
-    /** EXPERIMENTAL: A refund of the settled payment is initiated. */
+    /** A refund of the settled payment is initiated. */
     RefundInitiated = "refund_initiated",
     /** The payment settled. */
     Settled = "settled"
@@ -3575,11 +3660,20 @@ export declare enum SchemaPaymentAccountingEventKey {
  * through its lifecycle, keyed by lifecycle transition.
  */
 export type SchemaPaymentAccountingInput = {
+    /** Posted when the fee for contesting a chargeback is collected. */
+    chargeback_countered: SchemaPaymentEntryInput;
+    /** Posted when funds withdrawn for a chargeback are returned. */
+    chargeback_reversed: SchemaPaymentEntryInput;
+    /**
+     * Posted when a chargeback opens, withdrawing the disputed amount and the dispute fee.
+     * createPayment requires the parameters the three chargeback entries use.
+     */
+    chargeback_settled: SchemaPaymentEntryInput;
     /** Posted when the payment is captured. Optional. */
     initiated?: InputMaybe<SchemaPaymentEntryInput>;
-    /** EXPERIMENTAL: Posted when an initiated refund fails. Optional. */
+    /** Posted when an initiated refund fails. Optional. */
     refund_failed?: InputMaybe<SchemaPaymentEntryInput>;
-    /** EXPERIMENTAL: Posted when a refund of the settled payment is initiated. Optional. */
+    /** Posted when a refund of the settled payment is initiated. Optional. */
     refund_initiated?: InputMaybe<SchemaPaymentEntryInput>;
     /** Posted when the payment settles. Every Payment Type must define it. */
     settled: SchemaPaymentEntryInput;
@@ -3628,6 +3722,13 @@ export type SchemaPaymentTypeDetailsInput = {
     amount: Scalars["ParameterizedString"]["input"];
     /** The direction the payment moves money. */
     direction: SchemaPaymentTypeDirection;
+    /**
+     * The payment networks the payment moves money over. List exactly one.
+     * Defaults to `[card]`. A `payin` Payment Type accepts only `card`.
+     */
+    rails?: InputMaybe<Array<SchemaPaymentTypeRail>>;
+    /** Key value pairs on a Payment, inherited by its Ledger Entries */
+    tags?: InputMaybe<Array<SchemaLedgerEntryTagInput>>;
 };
 /** The direction a Payment Type moves money. */
 export declare enum SchemaPaymentTypeDirection {
@@ -3655,6 +3756,13 @@ export type SchemaPaymentTypeInput = {
     /** The version of the Payment Type. */
     typeVersion: Scalars["Int"]["input"];
 };
+/** A payment network a Payment Type moves money over. */
+export declare enum SchemaPaymentTypeRail {
+    /** The ACH network. */
+    Ach = "ach",
+    /** Card networks. */
+    Card = "card"
+}
 /** The status of a Payment Type. */
 export declare enum SchemaPaymentTypeStatus {
     /** The Payment Type is active. */
@@ -3678,8 +3786,26 @@ export type SchemaRepeatedConfigInput = {
  * lines are filled by Fragment when the payment entry is posted.
  */
 export declare enum SchemaSystemLineKind {
+    /** The line removing the countered fee from the Payment Account when a chargeback is contested. */
+    PaymentChargebackCounteredFeeLine = "payment_chargeback_countered_fee_line",
+    /** The line restoring the countered fee to the Payment Account when a chargeback is reversed. */
+    PaymentChargebackCounteredFeeReversalLine = "payment_chargeback_countered_fee_reversal_line",
+    /** The line removing the dispute fee from the Payment Account when a chargeback opens. */
+    PaymentChargebackFeeLine = "payment_chargeback_fee_line",
+    /** The line removing the disputed amount from the Payment Account when a chargeback opens. */
+    PaymentChargebackLine = "payment_chargeback_line",
+    /** The line restoring a disputed amount to the Payment Account when a chargeback is reversed. */
+    PaymentChargebackReversalLine = "payment_chargeback_reversal_line",
     /** The line carrying the Fragment fee amount, posted to the Payment Account. */
     PaymentFeeLine = "payment_fee_line",
+    /** The line restoring the Fragment fee to the Payment Account when a payout fails. */
+    PaymentFeeReversalLine = "payment_fee_reversal_line",
+    /** The line removing the payout amount from the Payment Account when a payout is initiated. */
+    PaymentPayoutLine = "payment_payout_line",
+    /** The line restoring the payout return amount to the Payment Account when a payout is returned. */
+    PaymentPayoutReturnLine = "payment_payout_return_line",
+    /** The line restoring the payout amount to the Payment Account when a payout fails. */
+    PaymentPayoutReversalLine = "payment_payout_reversal_line",
     /** The line removing the refund amount from the Payment Account when a Refund is initiated. */
     PaymentRefundLine = "payment_refund_line",
     /** The line restoring the refund amount to the Payment Account when a Refund fails. */
@@ -5398,6 +5524,7 @@ export type CreatePaymentMutation = {
             status: PaymentStatus;
             amount: string;
             mode: PaymentMode;
+            rail: PaymentRail;
             refundedAmount: string;
             currency: {
                 __typename?: "PaymentCurrency";
@@ -5455,6 +5582,7 @@ export type RetryPaymentMutation = {
             status: PaymentStatus;
             amount: string;
             mode: PaymentMode;
+            rail: PaymentRail;
             refundedAmount: string;
             currency: {
                 __typename?: "PaymentCurrency";
@@ -5511,6 +5639,7 @@ export type RefundPaymentMutation = {
             status: PaymentStatus;
             amount: string;
             mode: PaymentMode;
+            rail: PaymentRail;
             refundedAmount: string;
             currency: {
                 __typename?: "PaymentCurrency";
@@ -5541,6 +5670,7 @@ export type GetPaymentQuery = {
         id: string;
         ik: string;
         amount: string;
+        rail: PaymentRail;
         status: PaymentStatus;
         type: string;
         typeVersion: number;
@@ -5585,6 +5715,7 @@ export type ListPaymentsQuery = {
                 id: string;
                 ik: string;
                 amount: string;
+                rail: PaymentRail;
                 status: PaymentStatus;
                 type: string;
                 typeVersion: number;
