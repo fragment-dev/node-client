@@ -1,4 +1,4 @@
-export type WebhookEvent = PaymentCreatedEvent | PaymentCheckoutEvent | PaymentRetryEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCard3DSCanceledEvent | PaymentSettledEvent | PaymentRefundInitiatedEvent | PaymentRefundSettledEvent | PaymentRefundFailedEvent;
+export type WebhookEvent = PaymentCreatedEvent | PaymentCheckoutEvent | PaymentRetryEvent | PaymentCardCapturedEvent | PaymentCardDeclinedEvent | PaymentCard3DSCanceledEvent | PaymentSettledEvent | PaymentRefundInitiatedEvent | PaymentRefundSettledEvent | PaymentRefundFailedEvent | PaymentDisputeChargebackCreatedEvent | PaymentDisputeInquiryCreatedEvent | PaymentDisputeInquiryEvidenceSubmittedEvent | PaymentDisputeInquiryClosedEvent | PaymentDisputeInquiryEscalatedEvent | PaymentDisputeChargebackEvidenceSubmittedEvent | PaymentDisputeChargebackLostEvent | PaymentDisputeChargebackWonEvent | PaymentDisputeChargebackRefundedEvent;
 export interface PaymentCreatedEvent {
     id: string;
     type: "payment.created";
@@ -271,6 +271,264 @@ export interface PaymentRefundFailedEvent {
             refund: {
                 id: string;
                 ik: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeChargebackCreatedEvent {
+    id: string;
+    type: "payment.dispute_chargeback_created";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeInquiryCreatedEvent {
+    id: string;
+    type: "payment.dispute_inquiry_created";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeInquiryEvidenceSubmittedEvent {
+    id: string;
+    type: "payment.dispute_inquiry_evidence_submitted";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeInquiryClosedEvent {
+    id: string;
+    type: "payment.dispute_inquiry_closed";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeInquiryEscalatedEvent {
+    id: string;
+    type: "payment.dispute_inquiry_escalated";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeChargebackEvidenceSubmittedEvent {
+    id: string;
+    type: "payment.dispute_chargeback_evidence_submitted";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeChargebackLostEvent {
+    id: string;
+    type: "payment.dispute_chargeback_lost";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeChargebackWonEvent {
+    id: string;
+    type: "payment.dispute_chargeback_won";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
+            };
+            ledgerEntry: {
+                id: string;
+            };
+        };
+    };
+}
+export interface PaymentDisputeChargebackRefundedEvent {
+    id: string;
+    type: "payment.dispute_chargeback_refunded";
+    occurredAt: string;
+    data: {
+        workspace: {
+            id: string;
+        };
+        payment: {
+            id: string;
+            ik: string;
+        };
+        ledger: {
+            id: string;
+            ik: string;
+        };
+        schema: {
+            key: string;
+        };
+        event: {
+            occurredAt: string;
+            dispute: {
+                id: string;
             };
             ledgerEntry: {
                 id: string;
